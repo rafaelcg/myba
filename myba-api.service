@@ -1,0 +1,20 @@
+[Unit]
+Description=MyBA AI Ticket Generator API
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/html/myba
+Environment=NODE_ENV=production
+Environment=PORT=3001
+EnvironmentFile=/var/www/html/myba/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=myba-api
+
+[Install]
+WantedBy=multi-user.target

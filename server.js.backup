@@ -1,0 +1,464 @@
+const express = require('express');
+const cors = require('cors');
+const stripe = require('stripe');
+// const { getTokenPlans, calculateDynamicPrice, TOKEN_PLANS } = require('./config/plans');
+require('dotenv').config();
+
+const app = express();
+const port = process.env.PORT || 3001;
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Validate environment variables
+if (!process.env.OPENAI_API_KEY) {
+  console.error('❌ OPENAI_API_KEY environment variable is required');
+  process.exit(1);
+}
+
+// Initialize Stripe
+let stripeClient;
+if (process.env.STRIPE_SECRET_KEY && !process.env.STRIPE_SECRET_KEY.includes('your_stripe')) {
+  stripeClient = stripe(process.env.STRIPE_SECRET_KEY);
+  console.log('💳 Stripe initialized');
+} else {
+  console.log('⚠️  Stripe not configured - payments will be simulated');
+}
+
+// Generate ticket endpoint
+app.post('/api/generate-ticket', async (req, res) => {
+  try {
+    const { prompt, tokensUsed = 1 } = req.body;
+
+    if (!prompt) {
+      return res.status(400).json({
+        error: 'Prompt is required'
+      });
+    }
+
+    // Detect API provider based on key format
+    const apiKey = process.env.OPENAI_API_KEY;
+    const isOpenRouter = apiKey.startsWith('sk-or-');
+    const isOpenAI = apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-');
+    
+    // Configure endpoint and headers based on provider
+    let endpoint, headers, model;
+    
+    if (isOpenRouter) {
+      endpoint = 'https://openrouter.ai/api/v1/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+        'HTTP-Referer': 'http://152.42.141.162/myba',
+        'X-Title': 'MyBA AI Ticket Generator'
+      };
+      model = 'openai/gpt-oss-20b'; // OpenRouter format - using your selected model
+    } else if (isOpenAI) {
+      endpoint = 'https://api.openai.com/v1/chat/completions';
+      headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      };
+      model = 'gpt-3.5-turbo'; // OpenAI format
+    } else {
+      return res.status(500).json({
+        error: 'Invalid API key format. Please use OpenAI (sk-...) or OpenRouter (sk-or-...) API key.'
+      });
+    }
+
+    console.log(`🤖 Using ${isOpenRouter ? 'OpenRouter' : 'OpenAI'} API with model: ${model}`);
+
+    // Make request to appropriate API
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a senior product manager and technical writer who creates exceptional, detailed tickets for software development teams. You understand different ticket types (bugs, features, epics, tasks, improvements) and tailor your responses accordingly. Always use professional language with clear structure and actionable details.`
+          },
+          {
+            role: 'user', 
+            content: prompt
+          }
+        ],
+        max_tokens: 2000,
+        temperature: 0.3
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ error: { message: 'Unknown API error' } }));
+      
+      console.error('OpenAI API Error:', {
+        status: response.status,
+        error: error
+      });
+
+      if (response.status === 401) {
+        return res.status(500).json({
+          error: 'Server API configuration error. Please contact support.'
+        });
+      } else if (response.status === 429) {
+        return res.status(429).json({
+          error: 'Service temporarily overloaded. Please try again in a moment.'
+        });
+      } else if (response.status === 403) {
+        return res.status(500).json({
+          error: 'Service access issue. Please contact support.'
+        });
+      }
+      
+      return res.status(500).json({
+        error: `AI service error: ${error.error?.message || response.statusText}`
+      });
+    }
+
+    const data = await response.json();
+    const content = data.choices[0]?.message?.content;
+    
+    if (!content) {
+      return res.status(500).json({
+        error: 'No content generated from AI service'
+      });
+    }
+
+    // Return successful response
+    res.json({
+      content: content.trim(),
+      tokensConsumed: tokensUsed,
+      usage: data.usage || null
+    });
+
+  } catch (error) {
+    console.error('Server Error:', error);
+    res.status(500).json({
+      error: 'Internal server error'
+    });
+  }
+});
+
+// Get token plans endpoint (temporary simplified version)
+app.get('/api/plans', (req, res) => {
+  try {
+    // Temporary hardcoded plans for testing
+    const plans = [
+      {
+        id: 'starter',
+        name: 'Starter Pack',
+        tokens: 25,
+        price: 3.99,
+        description: 'Perfect for trying out AI-powered tickets',
+        popular: false,
+        features: ['25 AI-generated tickets', 'All ticket types', 'No expiration'],
+        color: '#95a5a6',
+        pricePerToken: 0.16
+      },
+      {
+        id: 'professional',
+        name: 'Professional',
+        tokens: 100,
+        price: 12.99,
+        description: 'Great for active product managers',
+        popular: true,
+        features: ['100 AI-generated tickets', 'Priority processing', 'Usage analytics'],
+        color: '#667eea',
+        pricePerToken: 0.13
+      }
+    ];
+    
+    res.json({
+      plans,
+      stripeEnabled: !!stripeClient,
+      publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    });
+  } catch (error) {
+    console.error('Error fetching plans:', error);
+    res.status(500).json({ error: 'Failed to fetch plans' });
+  }
+});
+
+// Create Stripe checkout session
+app.post('/api/create-checkout-session', async (req, res) => {
+  try {
+    const { planId, userContext = {} } = req.body;
+    
+    if (!stripeClient) {
+      // Simulate payment for development
+      return res.json({
+        simulatedPayment: true,
+        planId,
+        message: 'Stripe not configured - payment simulated',
+        sessionId: `sim_${Date.now()}`
+      });
+    }
+    
+    // Find the plan (temporary hardcoded)
+    const plans = [
+      { id: 'starter', name: 'Starter Pack', tokens: 25, price: 3.99 },
+      { id: 'professional', name: 'Professional', tokens: 100, price: 12.99 }
+    ];
+    const plan = plans.find(p => p.id === planId);
+    if (!plan) {
+      return res.status(400).json({ error: 'Invalid plan ID' });
+    }
+    
+    const finalPrice = plan.price;
+    
+    // Create Stripe checkout session
+    const session = await stripeClient.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [{
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: `MyBA ${plan.name}`,
+            description: `${plan.tokens} AI ticket generation tokens`,
+            images: ['https://images.unsplash.com/photo-1555421689-491a97ff2040?w=400'],
+          },
+          unit_amount: Math.round(finalPrice * 100), // Stripe expects cents
+        },
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: `${process.env.CORS_ORIGIN}/myba/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.CORS_ORIGIN}/myba/?canceled=true`,
+      metadata: {
+        planId: plan.id,
+        tokens: plan.tokens.toString(),
+        userId: userContext.userId || 'anonymous'
+      }
+    });
+    
+    res.json({
+      sessionId: session.id,
+      url: session.url
+    });
+    
+  } catch (error) {
+    console.error('Error creating checkout session:', error);
+    res.status(500).json({ error: 'Failed to create checkout session' });
+  }
+});
+
+// Stripe webhook endpoint
+app.post('/api/webhook/stripe', express.raw({type: 'application/json'}), (req, res) => {
+  if (!stripeClient) {
+    return res.status(400).json({ error: 'Stripe not configured' });
+  }
+  
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripeClient.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      console.log('🎉 Payment successful:', {
+        sessionId: session.id,
+        planId: session.metadata.planId,
+        tokens: session.metadata.tokens,
+        userId: session.metadata.userId,
+        amount: session.amount_total / 100
+      });
+      
+      // Here you would typically:
+      // 1. Add tokens to user's account in your database
+      // 2. Send confirmation email
+      // 3. Log the purchase for analytics
+      // 
+      // For now, we'll just log it since we're using localStorage
+      break;
+      
+    case 'payment_intent.payment_failed':
+      console.log('❌ Payment failed:', event.data.object);
+      break;
+      
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.json({received: true});
+});
+
+// Verify payment session endpoint (for frontend to check payment status)
+app.get('/api/verify-payment/:sessionId', async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    
+    if (!stripeClient) {
+      // Simulate successful payment
+      return res.json({
+        success: true,
+        simulated: true,
+        tokens: 100, // Default for simulation
+        planName: 'Simulated Plan'
+      });
+    }
+    
+    const session = await stripeClient.checkout.sessions.retrieve(sessionId);
+    
+    if (session.payment_status === 'paid') {
+      const plans = [
+        { id: 'starter', name: 'Starter Pack', tokens: 25, price: 3.99 },
+        { id: 'professional', name: 'Professional', tokens: 100, price: 12.99 }
+      ];
+      const plan = plans.find(p => p.id === session.metadata.planId);
+      
+      res.json({
+        success: true,
+        tokens: parseInt(session.metadata.tokens),
+        planName: plan?.name || 'Unknown Plan',
+        amount: session.amount_total / 100
+      });
+    } else {
+      res.json({
+        success: false,
+        status: session.payment_status
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error verifying payment:', error);
+    res.status(500).json({ error: 'Failed to verify payment' });
+  }
+});
+
+// Anonymous session storage (in-memory for now, could be Redis/DB later)
+const anonymousSessions = new Map();
+
+// Get or create anonymous session
+app.post('/api/anonymous-session', (req, res) => {
+  const { fingerprint } = req.body;
+  
+  if (!fingerprint) {
+    return res.status(400).json({ error: 'Fingerprint required' });
+  }
+  
+  let session = anonymousSessions.get(fingerprint);
+  
+  if (!session) {
+    // Create new anonymous session
+    session = {
+      id: fingerprint,
+      tokens: 3, // 3 free tokens for anonymous users
+      used: 0,
+      created: Date.now(),
+      lastUsed: Date.now(),
+      fingerprint
+    };
+    anonymousSessions.set(fingerprint, session);
+    console.log(`🆓 New anonymous user: ${fingerprint.substring(0, 12)}... (3 free tokens)`);
+  } else {
+    session.lastUsed = Date.now();
+  }
+  
+  res.json(session);
+});
+
+// Consume anonymous token
+app.post('/api/anonymous-session/consume', (req, res) => {
+  const { sessionId } = req.body;
+  
+  const session = anonymousSessions.get(sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'Session not found' });
+  }
+  
+  const remaining = session.tokens - session.used;
+  if (remaining <= 0) {
+    return res.status(400).json({ error: 'No tokens remaining' });
+  }
+  
+  session.used += 1;
+  session.lastUsed = Date.now();
+  anonymousSessions.set(sessionId, session);
+  
+  console.log(`🎫 Anonymous token used: ${sessionId.substring(0, 12)}... (${remaining - 1} remaining)`);
+  
+  res.json({
+    success: true,
+    remaining: remaining - 1,
+    used: session.used
+  });
+});
+
+// Transfer anonymous tokens to authenticated user
+app.post('/api/transfer-anonymous-tokens', (req, res) => {
+  const { sessionId, userId, remainingTokens } = req.body;
+  
+  const session = anonymousSessions.get(sessionId);
+  if (!session) {
+    return res.status(404).json({ error: 'Anonymous session not found' });
+  }
+  
+  // In a real app, you'd add these tokens to the user's Stripe customer
+  // For now, we'll just log the transfer
+  console.log(`🎉 Token transfer: ${remainingTokens} tokens from ${sessionId.substring(0, 12)}... to user ${userId}`);
+  
+  // Remove anonymous session after transfer
+  anonymousSessions.delete(sessionId);
+  
+  res.json({
+    success: true,
+    transferredTokens: remainingTokens,
+    message: `${remainingTokens} bonus tokens added to your account!`
+  });
+});
+
+// Cleanup old anonymous sessions (run periodically)
+setInterval(() => {
+  const now = Date.now();
+  const oneDayAgo = now - (24 * 60 * 60 * 1000);
+  
+  let cleaned = 0;
+  for (const [id, session] of anonymousSessions.entries()) {
+    if (session.lastUsed < oneDayAgo) {
+      anonymousSessions.delete(id);
+      cleaned++;
+    }
+  }
+  
+  if (cleaned > 0) {
+    console.log(`🧹 Cleaned up ${cleaned} old anonymous sessions`);
+  }
+}, 60 * 60 * 1000); // Run every hour
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+    stripeEnabled: !!stripeClient,
+    anonymousSessions: anonymousSessions.size
+  });
+});
+
+// Start server
+app.listen(port, () => {
+  const apiKey = process.env.OPENAI_API_KEY;
+  const isOpenRouter = apiKey && apiKey.startsWith('sk-or-');
+  const isOpenAI = apiKey && apiKey.startsWith('sk-') && !apiKey.startsWith('sk-or-');
+  
+  console.log(`🚀 MyBA API Server running on port ${port}`);
+  console.log(`💡 Health check: http://localhost:${port}/api/health`);
+  
+  if (isOpenRouter) {
+    console.log(`🔄 OpenRouter API Key: ✅ Configured (using openai/gpt-oss-20b)`);
+  } else if (isOpenAI) {
+    console.log(`🤖 OpenAI API Key: ✅ Configured`);
+  } else {
+    console.log(`❌ Invalid API key format. Use OpenAI (sk-...) or OpenRouter (sk-or-...) key`);
+  }
+});

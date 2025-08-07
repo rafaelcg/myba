@@ -1,0 +1,35 @@
+{
+  "name": "myba",
+  "private": true,
+  "scripts": {
+    "dev": "vite --port 3000 --host 0.0.0.0",
+    "build": "tsc && vite build",
+    "server": "node server.js",
+    "start": "concurrently \"npm run server\" \"npm run dev\"",
+    "deploy": "npm run build && ./deploy.sh"
+  },
+  "dependencies": {
+    "@clerk/clerk-react": "^4.30.0",
+    "chart.js": "^4.5.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^8.0.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.0",
+    "react-dom": "^18.3.1",
+    "stripe": "^14.9.0",
+    "uuid": "^11.1.0",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^8.2.2",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.1"
+  }
+}

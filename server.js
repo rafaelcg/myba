@@ -35,13 +35,11 @@ const logger = winston.createLogger({
   ]
 });
 
-// Store for tracking API keys (in production, use a database)
-const internalKey = process.env.INTERNAL_API_KEY;
-if (!internalKey) {
-  console.error('INTERNAL_API_KEY is required for admin endpoints. Set it in the environment.');
-  process.exit(1);
-}
-const validApiKeys = new Set([internalKey]);
+// Admin allowlist (Clerk user IDs), comma-separated via env ADMIN_USER_IDS
+const adminUserAllowlist = (process.env.ADMIN_USER_IDS || '')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
 
 // Track suspicious activity
 const suspiciousActivity = new Map();
@@ -89,7 +87,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Request-ID']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-ID']
 };
 
 app.use(cors(corsOptions));
@@ -102,7 +100,7 @@ const createRateLimit = (windowMs, max, message) => rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    const clientId = req.ip + (req.headers['x-api-key'] || '');
+    const clientId = req.ip + (req.auth?.userId || '');
     logger.warn(`Rate limit exceeded for ${clientId} on ${req.path}`);
     
     // Track suspicious activity
@@ -158,20 +156,45 @@ app.use((req, res, next) => {
   next();
 });
 
-// API Key validation middleware
-const validateApiKey = (req, res, next) => {
-  const apiKey = req.headers['x-api-key'];
-  
-  if (!apiKey) {
-    return res.status(401).json({ error: 'API key required' });
+// Admin authentication middleware using Clerk tokens + allowlist
+const requireAdmin = async (req, res, next) => {
+  try {
+    const authHeader = req.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+
+    if (!process.env.CLERK_SECRET_KEY) {
+      logger.error('CLERK_SECRET_KEY is not configured');
+      return res.status(500).json({ error: 'Server auth not configured' });
+    }
+
+    const verified = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY
+    });
+
+    const subjectUserId = verified?.sub;
+    if (!subjectUserId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    if (!adminUserAllowlist.length) {
+      logger.error('ADMIN_USER_IDS not configured; denying admin access');
+      return res.status(500).json({ error: 'Admin access not configured' });
+    }
+
+    if (!adminUserAllowlist.includes(subjectUserId)) {
+      return res.status(403).json({ error: 'Forbidden: admin access required' });
+    }
+
+    req.auth = { userId: subjectUserId, isAdmin: true };
+    next();
+  } catch (err) {
+    logger.warn('Admin token verification failed:', err?.message);
+    return res.status(401).json({ error: 'Unauthorized' });
   }
-  
-  if (!validApiKeys.has(apiKey)) {
-    logger.warn(`Invalid API key attempt: ${apiKey.substring(0, 8)}... from ${req.ip}`);
-    return res.status(401).json({ error: 'Invalid API key' });
-  }
-  
-  next();
 };
 
 // Input validation helper
@@ -1138,8 +1161,8 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Security monitoring endpoint (API key protected)
-app.get('/api/security/status', validateApiKey, (req, res) => {
+// Security monitoring endpoint (admin only)
+app.get('/api/security/status', requireAdmin, (req, res) => {
   const topSuspiciousClients = Array.from(suspiciousActivity.entries())
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
@@ -1166,8 +1189,8 @@ app.get('/api/security/status', validateApiKey, (req, res) => {
   });
 });
 
-// Clear suspicious activity (API key protected)
-app.post('/api/security/clear-violations', validateApiKey, (req, res) => {
+// Clear suspicious activity (admin only)
+app.post('/api/security/clear-violations', requireAdmin, (req, res) => {
   const clearedCount = suspiciousActivity.size;
   suspiciousActivity.clear();
   
@@ -1182,7 +1205,7 @@ app.post('/api/security/clear-violations', validateApiKey, (req, res) => {
 // =============== ADMIN ENDPOINTS ===============
 
 // Get all users with their token stats
-app.get('/api/admin/users', validateApiKey, async (req, res) => {
+app.get('/api/admin/users', requireAdmin, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 20;
@@ -1252,7 +1275,7 @@ app.get('/api/admin/users', validateApiKey, async (req, res) => {
 });
 
 // Get detailed user info
-app.get('/api/admin/users/:userId', validateApiKey, async (req, res) => {
+app.get('/api/admin/users/:userId', requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     const tokenData = userTokens.get(userId);
@@ -1311,7 +1334,7 @@ app.get('/api/admin/users/:userId', validateApiKey, async (req, res) => {
 });
 
 // Update user tokens (admin only)
-app.post('/api/admin/users/:userId/tokens', validateApiKey,
+app.post('/api/admin/users/:userId/tokens', requireAdmin,
   param('userId').isLength({ min: 1 }).withMessage('User ID required'),
   body('tokens').isInt({ min: 0, max: 10000 }).withMessage('Valid token count required'),
   body('reason').isLength({ min: 1, max: 200 }).withMessage('Reason required'),
@@ -1367,7 +1390,7 @@ app.post('/api/admin/users/:userId/tokens', validateApiKey,
 );
 
 // Get system metrics and analytics
-app.get('/api/admin/metrics', validateApiKey, async (req, res) => {
+app.get('/api/admin/metrics', requireAdmin, async (req, res) => {
   try {
     const timeframe = req.query.timeframe || '7d'; // 1d, 7d, 30d
     const now = new Date();
@@ -1468,7 +1491,7 @@ app.get('/api/admin/metrics', validateApiKey, async (req, res) => {
 });
 
 // Get webhook status and history
-app.get('/api/admin/webhooks', validateApiKey, async (req, res) => {
+app.get('/api/admin/webhooks', requireAdmin, async (req, res) => {
   try {
     const webhookStats = {
       stripe: {
@@ -1510,7 +1533,7 @@ app.get('/api/admin/webhooks', validateApiKey, async (req, res) => {
 });
 
 // Get recent activity log
-app.get('/api/admin/activity', validateApiKey, async (req, res) => {
+app.get('/api/admin/activity', requireAdmin, async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
     

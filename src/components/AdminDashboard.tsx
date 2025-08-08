@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
+import { API_BASE_URL } from '../utils/backendService';
 import { UserList } from './admin/UserList';
 import { Analytics } from './admin/Analytics';
 import { SystemHealth } from './admin/SystemHealth';
@@ -13,36 +14,48 @@ interface AdminDashboardProps {
 
 export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
   const { user } = useUser();
+  const { isSignedIn, getToken } = useAuth();
   const [currentView, setCurrentView] = useState<AdminView>('overview');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [apiKey, setApiKey] = useState('');
   const [authError, setAuthError] = useState('');
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
-    // Reset auth when modal opens
-    if (isOpen) {
+    // On open, verify admin access using Clerk token
+    const verify = async () => {
+      if (!isOpen) return;
+      setChecking(true);
       setIsAuthenticated(false);
-      setApiKey('');
       setAuthError('');
-    }
-  }, [isOpen]);
-
-  const handleAuth = async () => {
-    try {
-      const response = await fetch('/myba/api/security/status', {
-        headers: { 'X-API-Key': apiKey }
-      });
-
-      if (response.ok) {
-        setIsAuthenticated(true);
-        setAuthError('');
-      } else {
-        setAuthError('Invalid API key');
+      try {
+        if (!isSignedIn) {
+          setAuthError('Please sign in to access the admin dashboard.');
+          return;
+        }
+        const token = await getToken();
+        if (!token) {
+          setAuthError('Unable to get auth token');
+          return;
+        }
+        const response = await fetch(`${API_BASE_URL}/security/status`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (response.ok) {
+          setIsAuthenticated(true);
+          setAuthError('');
+        } else if (response.status === 403) {
+          setAuthError('You do not have admin access.');
+        } else {
+          setAuthError('Authentication failed');
+        }
+      } catch (err) {
+        setAuthError('Authentication failed');
+      } finally {
+        setChecking(false);
       }
-    } catch (error) {
-      setAuthError('Authentication failed');
-    }
-  };
+    };
+    verify();
+  }, [isOpen, isSignedIn, getToken]);
 
   if (!isOpen) return null;
 
@@ -70,7 +83,7 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
       }}>
         
         {!isAuthenticated ? (
-          // Authentication Screen
+          // Access Gate Screen
           <div style={{
             width: '100%',
             display: 'flex',
@@ -79,52 +92,10 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
             flexDirection: 'column',
             padding: '40px'
           }}>
-            <h2 style={{ marginBottom: '20px', color: '#333' }}>Admin Authentication</h2>
+            <h2 style={{ marginBottom: '20px', color: '#333' }}>Admin Dashboard</h2>
             <p style={{ marginBottom: '20px', color: '#666', textAlign: 'center' }}>
-              Enter the admin API key to access the dashboard
+              {checking ? 'Checking access…' : (authError || 'Verifying your access…')}
             </p>
-            
-            <div style={{ marginBottom: '20px', width: '100%', maxWidth: '400px' }}>
-              <input
-                type="password"
-                placeholder="Admin API Key"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && handleAuth()}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  border: '2px solid #e0e0e0',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  marginBottom: '10px'
-                }}
-              />
-              
-              {authError && (
-                <div style={{ color: '#e74c3c', fontSize: '14px', marginBottom: '10px' }}>
-                  {authError}
-                </div>
-              )}
-              
-              <button
-                onClick={handleAuth}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: '#667eea',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '16px',
-                  cursor: 'pointer',
-                  marginBottom: '20px'
-                }}
-              >
-                Authenticate
-              </button>
-            </div>
-            
             <button
               onClick={onClose}
               style={{
@@ -245,9 +216,9 @@ export function AdminDashboard({ isOpen, onClose }: AdminDashboardProps) {
                 </div>
               )}
               
-              {currentView === 'users' && <UserList apiKey={apiKey} />}
-              {currentView === 'analytics' && <Analytics apiKey={apiKey} />}
-              {currentView === 'system' && <SystemHealth apiKey={apiKey} />}
+              {currentView === 'users' && <UserList />}
+              {currentView === 'analytics' && <Analytics />}
+              {currentView === 'system' && <SystemHealth />}
               {currentView === 'webhooks' && (
                 <div style={{ padding: '20px' }}>
                   <h2 style={{ color: '#2c3e50' }}>Webhook Status</h2>

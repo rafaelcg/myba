@@ -1,19 +1,21 @@
 import { GeneratedTicket } from './mockAI';
 import { analyzeInput, buildEnhancedPrompt } from './promptEngine';
-import { hasTokens, consumeTokens, TOKEN_COSTS } from './tokenSystem';
+import { TOKEN_COSTS } from './tokenSystem';
 
 // Backend API Configuration
-const API_BASE_URL = process.env.NODE_ENV === 'development' 
-  ? 'http://localhost:3001/api' 
-  : `${window.location.protocol}//${window.location.hostname}/myba/api`;
+// Prefer explicit env, then dev detection via Vite, else relative prod path
+const EXPLICIT_BASE = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
+export const API_BASE_URL = EXPLICIT_BASE
+  ? EXPLICIT_BASE.replace(/\/$/, '')
+  : (import.meta.env && (import.meta.env as any).DEV
+      ? 'http://localhost:3002/api'
+      : `${window.location.protocol}//${window.location.hostname}/myba/api`);
 
 // Backend AI Service
 export class BackendAIService {
   async generateTicket(input: string): Promise<GeneratedTicket> {
-    // Check if user has enough tokens
-    if (!hasTokens(TOKEN_COSTS.GENERATE_TICKET)) {
-      throw new Error('Insufficient tokens. Please purchase more tokens to continue generating tickets.');
-    }
+    // NOTE: Token consumption is handled by the calling code (HomePage.tsx)
+    // This service just handles the AI generation API call
 
     // Analyze input for better prompt engineering
     const context = analyzeInput(input);
@@ -50,16 +52,10 @@ export class BackendAIService {
         throw new Error('No content generated');
       }
 
-      // Consume tokens only after successful generation
-      if (!consumeTokens(TOKEN_COSTS.GENERATE_TICKET)) {
-        console.warn('Failed to consume tokens after successful generation');
-      }
-
       return this.parseResponse(data.content, input, context.ticketType);
 
     } catch (error) {
       if (error instanceof Error) {
-        // Don't consume tokens on error
         throw error;
       }
       throw new Error('Failed to generate ticket');
@@ -134,7 +130,12 @@ export async function generateTicketWithBackend(input: string): Promise<Generate
       }
     }
     
-    console.warn('Backend AI service failed, falling back to mock:', error);
+    console.error('Backend AI service failed, falling back to mock:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      url: `${API_BASE_URL}/generate-ticket`
+    });
     
     // Fallback to mock service for other errors
     const { generateTicket } = await import('./mockAI');

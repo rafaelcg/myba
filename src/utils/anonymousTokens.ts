@@ -10,6 +10,8 @@ interface AnonymousSession {
   fingerprint: string;
 }
 
+import { API_BASE_URL } from './backendService';
+
 // Create browser fingerprint (simple but effective)
 function createFingerprint(): string {
   const canvas = document.createElement('canvas');
@@ -43,7 +45,7 @@ export async function getAnonymousSession(): Promise<AnonymousSession | null> {
   
   try {
     // Always try server first (server is source of truth)
-    const response = await fetch('/myba/api/anonymous-session', {
+    const response = await fetch(`${API_BASE_URL}/anonymous-session`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,7 +122,7 @@ export async function consumeAnonymousToken(): Promise<boolean> {
     
     try {
       // Try to consume token on server first
-      const response = await fetch('/myba/api/anonymous-session/consume', {
+      const response = await fetch(`${API_BASE_URL}/anonymous-session/consume`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,7 +193,7 @@ export async function transferToAuthenticatedAccount(userId: string): Promise<bo
     const remaining = session.tokens - session.used;
     if (remaining <= 0) return false;
     
-    const response = await fetch('/myba/api/transfer-anonymous-tokens', {
+    const response = await fetch(`${API_BASE_URL}/transfer-anonymous-tokens`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -225,7 +227,7 @@ export async function getRateLimitStatus(): Promise<{
   error?: string;
 } | null> {
   try {
-    const response = await fetch('/myba/api/anonymous-status');
+    const response = await fetch(`${API_BASE_URL}/anonymous-status`);
     
     if (response.ok) {
       const data = await response.json();

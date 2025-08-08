@@ -11,7 +11,9 @@ import {
   PointElement,
   LineElement
 } from 'chart.js';
+import { API_BASE_URL } from '../../utils/backendService';
 import { Bar, Pie } from 'react-chartjs-2';
+import { useAuth } from '@clerk/clerk-react';
 
 ChartJS.register(
   CategoryScale,
@@ -60,21 +62,19 @@ interface MetricsData {
   };
 }
 
-interface AnalyticsProps {
-  apiKey: string;
-}
-
-export function Analytics({ apiKey }: AnalyticsProps) {
+export function Analytics() {
   const [metrics, setMetrics] = useState<MetricsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [timeframe, setTimeframe] = useState('7d');
+  const { getToken } = useAuth();
 
   const fetchMetrics = async (selectedTimeframe = timeframe) => {
     setLoading(true);
     try {
+      const token = await getToken();
       const response = await fetch(
-        `/myba/api/admin/metrics?timeframe=${selectedTimeframe}`,
-        { headers: { 'X-API-Key': apiKey } }
+        `${API_BASE_URL}/admin/metrics?timeframe=${selectedTimeframe}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.ok) {
@@ -90,7 +90,7 @@ export function Analytics({ apiKey }: AnalyticsProps) {
 
   useEffect(() => {
     fetchMetrics();
-  }, [apiKey]);
+  }, []);
 
   const handleTimeframeChange = (newTimeframe: string) => {
     setTimeframe(newTimeframe);

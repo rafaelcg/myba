@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../utils/backendService';
+import { useAuth } from '@clerk/clerk-react';
 
 interface User {
   userId: string;
@@ -14,11 +16,7 @@ interface User {
   stripeCustomerId?: string;
 }
 
-interface UserListProps {
-  apiKey: string;
-}
-
-export function UserList({ apiKey }: UserListProps) {
+export function UserList() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -27,13 +25,15 @@ export function UserList({ apiKey }: UserListProps) {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [adjustTokens, setAdjustTokens] = useState('');
   const [adjustReason, setAdjustReason] = useState('');
+  const { getToken } = useAuth();
 
   const fetchUsers = async (page = 1, searchTerm = '') => {
     setLoading(true);
     try {
+      const token = await getToken();
       const response = await fetch(
-        `/myba/api/admin/users?page=${page}&limit=20&search=${encodeURIComponent(searchTerm)}`,
-        { headers: { 'X-API-Key': apiKey } }
+        `${API_BASE_URL}/admin/users?page=${page}&limit=20&search=${encodeURIComponent(searchTerm)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.ok) {
@@ -51,7 +51,7 @@ export function UserList({ apiKey }: UserListProps) {
 
   useEffect(() => {
     fetchUsers(currentPage, search);
-  }, [apiKey, currentPage]);
+  }, [currentPage]);
 
   const handleSearch = () => {
     setCurrentPage(1);
@@ -62,11 +62,12 @@ export function UserList({ apiKey }: UserListProps) {
     if (!selectedUser || !adjustTokens || !adjustReason) return;
 
     try {
-      const response = await fetch(`/myba/api/admin/users/${selectedUser.userId}/tokens`, {
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/admin/users/${selectedUser.userId}/tokens`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'X-API-Key': apiKey
+          Authorization: `Bearer ${token}`
         },
         body: JSON.stringify({
           tokens: parseInt(adjustTokens),

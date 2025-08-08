@@ -33,6 +33,7 @@ export function HomePage() {
   const [tokenTransferStatus, setTokenTransferStatus] = useState<{transferred: boolean, tokens: number} | null>(null);
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Handle clicking outside mobile menu
   useEffect(() => {
@@ -209,6 +210,22 @@ export function HomePage() {
     
     loadBalances();
   }, [isSignedIn, user]);
+
+  // Determine admin capability on auth changes
+  useEffect(() => {
+    const checkAdmin = async () => {
+      if (!isSignedIn) { setIsAdmin(false); return; }
+      try {
+        const token = await getToken({ template: undefined }).catch(() => null);
+        if (!token) { setIsAdmin(false); return; }
+        const resp = await fetch(`${API_BASE_URL}/security/status`, { headers: { Authorization: `Bearer ${token}` } });
+        setIsAdmin(resp.ok);
+      } catch {
+        setIsAdmin(false);
+      }
+    };
+    checkAdmin();
+  }, [isSignedIn, user, getToken]);
 
   // Analytics tracking
   useEffect(() => {
@@ -392,14 +409,13 @@ export function HomePage() {
         zIndex: 1001,
         display: 'flex',
         alignItems: 'center',
-        gap: '10px'
+        gap: '10px',
+        flexWrap: 'nowrap'
       }}>
         {/* Desktop Navigation */}
-        <div className="desktop-nav">
-          <AuthButton />
-          
-          {/* Admin Button (only for authenticated users) */}
-          {isSignedIn && (
+        <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'nowrap' }}>
+          {/* Admin (leftmost) */}
+          {isSignedIn && isAdmin && (
             <button
               onClick={() => setShowAdminDashboard(true)}
               style={{
@@ -429,7 +445,7 @@ export function HomePage() {
           )}
           
           
-          {/* Token Manager Button (only for authenticated users) */}
+          {/* Token Manager (middle) */}
           {isSignedIn && (
             <button
               onClick={() => setShowTokenManager(true)}
@@ -446,7 +462,8 @@ export function HomePage() {
                 backdropFilter: 'blur(10px)',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '6px',
+                whiteSpace: 'nowrap'
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
@@ -461,6 +478,8 @@ export function HomePage() {
               🎫 {tokensLoading ? '...' : (authenticatedTokens ? `${authenticatedTokens.remaining}` : '0')}
             </button>
           )}
+          {/* Auth/User (rightmost) */}
+          <AuthButton />
         </div>
         
         {/* Mobile Menu Toggle */}
@@ -497,7 +516,7 @@ export function HomePage() {
       </div>
       
       {/* Mobile Menu Dropdown */}
-      {showMobileMenu && isSignedIn && (
+          {showMobileMenu && isSignedIn && (
         <div style={{
           position: 'fixed',
           top: '70px',
@@ -537,27 +556,29 @@ export function HomePage() {
               🎫 <span>Tokens ({tokensLoading ? '...' : (authenticatedTokens ? authenticatedTokens.remaining : '0')})</span>
             </button>
             
-            <button
-              onClick={() => {
-                setShowAdminDashboard(true);
-                setShowMobileMenu(false);
-              }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '8px',
-                color: 'white',
-                padding: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}
-            >
-              👤 <span>Admin Dashboard</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setShowAdminDashboard(true);
+                  setShowMobileMenu(false);
+                }}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  borderRadius: '8px',
+                  color: 'white',
+                  padding: '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  textAlign: 'left',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px'
+                }}
+              >
+                👤 <span>Admin Dashboard</span>
+              </button>
+            )}
             
           </div>
         </div>

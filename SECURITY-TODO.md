@@ -16,7 +16,7 @@ This document tracks concrete security actions for MyBA, with urgency levels and
 | Reject unsigned webhooks | Require signature verification for Stripe and Clerk; never process unsigned events | Critical | Done (Stripe requires secret; Clerk verified via Svix) |
 | Remove `'unsafe-inline'` from CSP scripts | Tighten `helmet` CSP: drop inline scripts | High | Done |
 | Rebuild frontend to remove hardcoded HTTP API | Rebuild and deploy assets; use same-origin or `VITE_API_BASE_URL` over HTTPS | High | Done (clean build, old bundles removed, index updated) |
-| Replace admin API key-in-browser model | Use server-verified session/roles (Clerk) for admin endpoints | High | Pending |
+| Replace admin API key-in-browser model | Use server-verified session/roles (Clerk) for admin endpoints | High | Done (Clerk JWT + `ADMIN_USER_IDS` allowlist) |
 | Rotate secrets if exposed | Rotate `INTERNAL_API_KEY`, Stripe keys; audit usage | High | Pending |
 | TLS everywhere + HSTS | Ensure HTTPS for site and API; keep HSTS | High | Ongoing |
 | Analytics privacy & consent | Gate identification; minimize PII to PostHog | Medium | Pending |
@@ -54,7 +54,8 @@ This document tracks concrete security actions for MyBA, with urgency levels and
 
 - Replace admin API key-in-browser model
   - Do not pass a long-lived admin key from the browser.
-  - Protect admin endpoints with server-side session/role checks (Clerk roles/claims) and short-lived server-issued tokens if needed.
+  - Protect admin endpoints with server-side session/role checks (Clerk JWT verification) and an allowlist via `ADMIN_USER_IDS`.
+  - Frontend admin views now use `Authorization: Bearer <ClerkToken>`; Admin UI gates on server check.
 
 - Rotate secrets if potentially exposed
   - Rotate `INTERNAL_API_KEY`, Stripe secret/webhook keys, and any other secrets used when HTTP was in place.

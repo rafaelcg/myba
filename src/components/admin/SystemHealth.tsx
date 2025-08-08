@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../utils/backendService';
+import { useAuth } from '@clerk/clerk-react';
 
 interface SystemHealthData {
   timestamp: string;
@@ -37,21 +39,19 @@ interface SystemHealthData {
   };
 }
 
-interface SystemHealthProps {
-  apiKey: string;
-}
-
-export function SystemHealth({ apiKey }: SystemHealthProps) {
+export function SystemHealth() {
   const [healthData, setHealthData] = useState<SystemHealthData | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const { getToken } = useAuth();
 
   const fetchHealthData = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/myba/api/security/status', {
-        headers: { 'X-API-Key': apiKey }
+      const token = await getToken();
+      const response = await fetch(`${API_BASE_URL}/security/status`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       if (response.ok) {
@@ -68,14 +68,14 @@ export function SystemHealth({ apiKey }: SystemHealthProps) {
 
   useEffect(() => {
     fetchHealthData();
-  }, [apiKey]);
+  }, []);
 
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(fetchHealthData, 30000); // Refresh every 30 seconds
     return () => clearInterval(interval);
-  }, [apiKey, autoRefresh]);
+  }, [autoRefresh]);
 
   const formatUptime = (seconds: number) => {
     const days = Math.floor(seconds / 86400);

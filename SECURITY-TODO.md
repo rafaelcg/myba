@@ -15,7 +15,7 @@ This document tracks concrete security actions for MyBA, with urgency levels and
 | Protect token endpoints with server-side auth | Enforce authenticated, subject-matched access to `GET/POST /api/user-tokens/:userId` | Critical | Done |
 | Reject unsigned webhooks | Require signature verification for Stripe and Clerk; never process unsigned events | Critical | Done (Stripe requires secret; Clerk verified via Svix) |
 | Remove `'unsafe-inline'` from CSP scripts | Tighten `helmet` CSP: drop inline scripts | High | Done |
-| Rebuild frontend to remove hardcoded HTTP API | Rebuild and deploy assets; use same-origin or `VITE_API_BASE_URL` over HTTPS | High | Pending |
+| Rebuild frontend to remove hardcoded HTTP API | Rebuild and deploy assets; use same-origin or `VITE_API_BASE_URL` over HTTPS | High | Done (clean build, old bundles removed, index updated) |
 | Replace admin API key-in-browser model | Use server-verified session/roles (Clerk) for admin endpoints | High | Pending |
 | Rotate secrets if exposed | Rotate `INTERNAL_API_KEY`, Stripe keys; audit usage | High | Pending |
 | TLS everywhere + HSTS | Ensure HTTPS for site and API; keep HSTS | High | Ongoing |

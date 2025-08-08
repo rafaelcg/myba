@@ -4,3 +4,9 @@ api.log
 error.log
 deploy-live.sh
 deploy.sh
+
+# Added by security hardening
+.env
+.env.local
+.env.*
+!.env.example

@@ -21,13 +21,16 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
     );
   }
 
+  const isDev = !!import.meta.env.DEV;
+  const basePath = isDev ? '/' : '/myba/';
+
   return (
     <BaseClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
-      afterSignInUrl="/myba/"
-      afterSignUpUrl="/myba/"
-      signInUrl="/myba/"
-      signUpUrl="/myba/"
+      afterSignInUrl={basePath}
+      afterSignUpUrl={basePath}
+      signInUrl={basePath}
+      signUpUrl={basePath}
       appearance={{
         baseTheme: undefined,
         elements: {

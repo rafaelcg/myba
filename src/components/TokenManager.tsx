@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/clerk-react';
+import { useUser, useAuth } from '@clerk/clerk-react';
 import { getTokenBalance, TokenBalance, getUsageStats, isNewUser, addTokens } from '../utils/tokenSystem';
+import { API_BASE_URL } from '../utils/backendService';
+import { trackCheckoutStarted, trackPurchaseInitiated } from '../utils/analytics';
 
 interface TokenPlan {
   id: string;
@@ -23,6 +25,7 @@ interface TokenManagerProps {
 
 export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
   const { user, isSignedIn } = useUser();
+  const { getToken } = useAuth();
   const [balance, setBalance] = useState<TokenBalance>(getTokenBalance());
   const [authenticatedTokens, setAuthenticatedTokens] = useState<{tokens: number; used: number; remaining: number} | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<TokenPlan | null>(null);
@@ -49,7 +52,10 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
     if (!user) return;
     
     try {
-      const response = await fetch(`http://152.42.141.162/myba/api/user-tokens/${user.id}`);
+      const token = await getToken({ template: undefined }).catch(() => null);
+      const response = await fetch(`${API_BASE_URL}/user-tokens/${user.id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined
+      });
       if (response.ok) {
         const tokens = await response.json();
         console.log('TokenManager: Received token data:', tokens);
@@ -77,7 +83,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://152.42.141.162/myba/api/plans?first_purchase=${isNewUser()}&user_id=${user?.id || 'anonymous'}`);
+      const response = await fetch(`${API_BASE_URL}/plans?first_purchase=${isNewUser()}&user_id=${user?.id || 'anonymous'}`);
       if (!response.ok) throw new Error('Failed to fetch plans');
       
       const data = await response.json();
@@ -102,7 +108,11 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('http://152.42.141.162/myba/api/create-checkout-session', {
+      // Track checkout initiated
+      trackCheckoutStarted(plan.id, plan.name, plan.price, plan.tokens);
+      trackPurchaseInitiated('token_manager', authenticatedTokens?.remaining || 0);
+
+      const response = await fetch(`${API_BASE_URL}/create-checkout-session`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

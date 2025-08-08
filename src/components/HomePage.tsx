@@ -1,34 +1,32 @@
 import { useState, useEffect } from 'react';
-import { useUser, SignUpButton } from '@clerk/clerk-react';
+import { useUser, SignUpButton, useAuth } from '@clerk/clerk-react';
 import { InputField } from './InputField';
 import { GenerateButton } from './GenerateButton';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ResultsCard } from './ResultsCard';
-import { SettingsModal } from './SettingsModal';
 import { TokenManager } from './TokenManager';
 import { AuthButton } from './AuthButton';
 import { AdminDashboard } from './AdminDashboard';
-import { generateTicketWithBackend } from '../utils/backendService';
-import { generateTicketWithAI } from '../utils/aiService';
-import { getCurrentConfig, AppConfig, isRealAIEnabled } from '../utils/config';
+import { generateTicketWithBackend, API_BASE_URL } from '../utils/backendService';
 import { TokenPlan } from '../utils/tokenSystem';
 import { getAnonymousBalance, hasAnonymousTokens, consumeAnonymousToken, shouldPromptSignup, transferToAuthenticatedAccount } from '../utils/anonymousTokens';
 import { GeneratedTicket } from '../utils/mockAI';
+import { trackPageView, trackSessionStarted, trackTokenUsed, trackError, trackSignupPromptShown, identifyUser, trackPurchase, trackSignupCompleted } from '../utils/analytics';
 
 type AppState = 'idle' | 'generating' | 'results';
-type AIProvider = 'myba' | 'user' | 'mock';
+type AIProvider = 'myba' | 'mock';
 
 export function HomePage() {
   const { isSignedIn, user } = useUser();
+  const { getToken } = useAuth();
   const [inputValue, setInputValue] = useState('');
   const [appState, setAppState] = useState<AppState>('idle');
   const [generatedTicket, setGeneratedTicket] = useState<GeneratedTicket | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [showSettings, setShowSettings] = useState(false);
   const [showTokenManager, setShowTokenManager] = useState(false);
-  const [config, setConfig] = useState(getCurrentConfig());
   const [currentProvider, setCurrentProvider] = useState<AIProvider>('myba');
   const [authenticatedTokens, setAuthenticatedTokens] = useState<{tokens: number; used: number; remaining: number} | null>(null);
+  const [tokensLoading, setTokensLoading] = useState(true);
   const [anonymousBalance, setAnonymousBalance] = useState<{remaining: number; total: number; used: number} | null>(null);
   const [showSignupPrompt, setShowSignupPrompt] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<{type: 'success' | 'canceled', tokens?: number} | null>(null);
@@ -52,17 +50,24 @@ export function HomePage() {
   }, [showMobileMenu]);
 
   useEffect(() => {
-    const currentConfig = getCurrentConfig();
-    setConfig(currentConfig);
     
     // Check for Stripe payment redirect parameters
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('success') === 'true') {
       const tokens = urlParams.get('tokens');
+      const planId = urlParams.get('plan_id');
+      const amount = urlParams.get('amount');
+      
       setPaymentStatus({
         type: 'success',
         tokens: tokens ? parseInt(tokens) : undefined
       });
+      
+      // Track purchase completion
+      if (tokens && planId && amount) {
+        trackPurchase(planId, parseFloat(amount), parseInt(tokens), parseInt(tokens));
+      }
+      
       // Auto-dismiss success message after 5 seconds
       setTimeout(() => {
         setPaymentStatus(null);
@@ -99,7 +104,10 @@ export function HomePage() {
                 await new Promise(resolve => setTimeout(resolve, 2000));
               }
               
-              const response = await fetch(`http://152.42.141.162/myba/api/user-tokens/${user.id}`);
+              const token = await getToken({ template: undefined }).catch(() => null);
+              const response = await fetch(`${API_BASE_URL}/user-tokens/${user.id}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
+              });
               if (response.ok) {
                 const fetchedTokens = await response.json();
                 // On payment success, verify tokens were actually added
@@ -113,57 +121,77 @@ export function HomePage() {
             
             if (tokens) {
               setAuthenticatedTokens(tokens);
-              setCurrentProvider(isRealAIEnabled() ? 'user' : (tokens.remaining > 0 ? 'myba' : 'mock'));
+              setCurrentProvider(tokens.remaining > 0 ? 'myba' : 'mock');
             } else {
               setAuthenticatedTokens({tokens: 0, used: 0, remaining: 0});
-              setCurrentProvider(isRealAIEnabled() ? 'user' : 'mock');
+              setCurrentProvider('mock');
             }
+            setTokensLoading(false);
           } catch (error) {
             console.error('Failed to fetch user tokens:', error);
             setAuthenticatedTokens({tokens: 0, used: 0, remaining: 0});
-            setCurrentProvider(isRealAIEnabled() ? 'user' : 'mock');
-          }
-        }
-        // Handle token transfer from anonymous to authenticated account
-        if (user && anonymousBalance && anonymousBalance.remaining > 0) {
-          try {
-            const tokensToTransfer = anonymousBalance.remaining;
-            console.log(`🔄 Attempting to transfer ${tokensToTransfer} anonymous tokens to user ${user.id}`);
-            const transferred = await transferToAuthenticatedAccount(user.id);
-            if (transferred) {
-              console.log(`✅ Successfully transferred anonymous tokens to user ${user.id}`);
-              setTokenTransferStatus({ transferred: true, tokens: tokensToTransfer });
-              // Auto-dismiss transfer message after 4 seconds
-              setTimeout(() => {
-                setTokenTransferStatus(null);
-              }, 4000);
-              
-              // Refresh token balance to reflect the transfer
-              setTimeout(async () => {
-                try {
-                  const response = await fetch(`http://152.42.141.162/myba/api/user-tokens/${user.id}`);
-                  if (response.ok) {
-                    const updatedTokens = await response.json();
-                    setAuthenticatedTokens(updatedTokens);
-                  }
-                } catch (error) {
-                  console.error('Failed to refresh tokens after transfer:', error);
-                }
-              }, 1000);
-            }
-          } catch (error) {
-            console.warn('Failed to transfer anonymous tokens:', error);
+            setCurrentProvider('mock');
+            setTokensLoading(false);
           }
         }
         
-        // Clear anonymous balance when signed in
+        // ONLY attempt token transfer if we have existing anonymous balance from before login
+        // This prevents creating new anonymous sessions for already authenticated users
+        if (user && anonymousBalance && anonymousBalance.remaining > 0) {
+          // Check if we've already transferred tokens for this user session
+          const transferKey = `token_transferred_${user.id}`;
+          const alreadyTransferred = sessionStorage.getItem(transferKey);
+          
+          if (!alreadyTransferred) {
+            try {
+              const tokensToTransfer = anonymousBalance.remaining;
+              console.log(`🔄 Attempting to transfer ${tokensToTransfer} anonymous tokens to user ${user.id}`);
+              const transferred = await transferToAuthenticatedAccount(user.id);
+              if (transferred) {
+                console.log(`✅ Successfully transferred anonymous tokens to user ${user.id}`);
+                setTokenTransferStatus({ transferred: true, tokens: tokensToTransfer });
+                
+                // Track signup completion with token transfer
+                trackSignupCompleted('unknown', tokensToTransfer, 6);
+                
+                // Mark as transferred in session storage to prevent repeat transfers
+                sessionStorage.setItem(transferKey, 'true');
+                
+                // Auto-dismiss transfer message after 4 seconds
+                setTimeout(() => {
+                  setTokenTransferStatus(null);
+                }, 4000);
+                
+                // Refresh token balance to reflect the transfer
+                setTimeout(async () => {
+                  try {
+                    const token = await getToken({ template: undefined }).catch(() => null);
+                    const response = await fetch(`${API_BASE_URL}/user-tokens/${user.id}`, {
+                      headers: token ? { Authorization: `Bearer ${token}` } : undefined
+                    });
+                    if (response.ok) {
+                      const updatedTokens = await response.json();
+                      setAuthenticatedTokens(updatedTokens);
+                    }
+                  } catch (error) {
+                    console.error('Failed to refresh tokens after transfer:', error);
+                  }
+                }, 1000);
+              }
+            } catch (error) {
+              console.warn('Failed to transfer anonymous tokens:', error);
+            }
+          }
+        }
+        
+        // Clear anonymous balance when signed in - authenticated users shouldn't have anonymous sessions
         setAnonymousBalance(null);
       } else {
         // Anonymous user - use temporary tokens
         try {
           const anonBalance = await getAnonymousBalance();
           setAnonymousBalance(anonBalance);
-          setCurrentProvider(isRealAIEnabled() ? 'user' : (anonBalance && anonBalance.remaining > 0 ? 'myba' : 'mock'));
+          setCurrentProvider(anonBalance && anonBalance.remaining > 0 ? 'myba' : 'mock');
           
           // Check if we should prompt for signup
           const shouldPrompt = await shouldPromptSignup();
@@ -171,14 +199,39 @@ export function HomePage() {
         } catch (error) {
           console.error('Failed to get anonymous balance:', error);
           setAnonymousBalance({remaining: 0, total: 0, used: 0});
-          setCurrentProvider(isRealAIEnabled() ? 'user' : 'mock');
+          setCurrentProvider('mock');
         }
         // Clear authenticated tokens when not signed in
         setAuthenticatedTokens(null);
+        setTokensLoading(false);
       }
     };
     
     loadBalances();
+  }, [isSignedIn, user]);
+
+  // Analytics tracking
+  useEffect(() => {
+    // Track page view on component mount
+    trackPageView('homepage');
+    
+    // Track session start
+    trackSessionStarted(
+      window.innerWidth < 768 ? 'mobile' : 'desktop',
+      isSignedIn ? 'authenticated' : 'anonymous'
+    );
+  }, []);
+
+  // Track user identification when they sign in
+  useEffect(() => {
+    if (isSignedIn && user) {
+      identifyUser(user.id, {
+        email: user.emailAddresses[0]?.emailAddress,
+        name: user.fullName,
+        signup_date: user.createdAt,
+        plan: 'free'
+      });
+    }
   }, [isSignedIn, user]);
 
   const handleGenerate = async () => {
@@ -192,8 +245,8 @@ export function HomePage() {
     
     if (isSignedIn) {
       // Authenticated user
-      canGenerate = isRealAIEnabled() || (authenticatedTokens?.remaining ?? 0) > 0;
-      if (!canGenerate && !isRealAIEnabled()) {
+      canGenerate = (authenticatedTokens?.remaining ?? 0) > 0;
+      if (!canGenerate) {
         setError('No tokens remaining. Purchase more tokens to continue!');
         setAppState('idle');
         return;
@@ -214,22 +267,14 @@ export function HomePage() {
       let usedProvider: AIProvider = 'mock';
 
       // Determine which AI service to use
-      if (isRealAIEnabled()) {
-        // User has configured their own AI service
-        const aiConfig = {
-          provider: config.ai.provider,
-          apiKey: config.ai.apiKey,
-          model: config.ai.model
-        };
-        ticket = await generateTicketWithAI(inputValue.trim(), aiConfig);
-        usedProvider = 'user';
-      } else if (isSignedIn && authenticatedTokens && authenticatedTokens.remaining > 0) {
+      if (isSignedIn && authenticatedTokens && authenticatedTokens.remaining > 0) {
         // Authenticated user with tokens
         if (user) {
           // Consume token from backend
-          const response = await fetch(`http://152.42.141.162/myba/api/user-tokens/${user.id}/consume`, {
+          const token = await getToken({ template: undefined }).catch(() => null);
+          const response = await fetch(`${API_BASE_URL}/user-tokens/${user.id}/consume`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }
           });
           
           if (response.ok) {
@@ -242,6 +287,8 @@ export function HomePage() {
               used: result.used,
               remaining: result.remaining
             } : null);
+            // Track token consumption for authenticated users
+            trackTokenUsed(result.remaining, true, false, inputValue.trim().length);
           } else {
             throw new Error('Failed to consume token. Please try again.');
           }
@@ -257,9 +304,16 @@ export function HomePage() {
           // Update anonymous balance
           const newBalance = await getAnonymousBalance();
           setAnonymousBalance(newBalance);
+          // Track free token usage for anonymous users
+          if (newBalance) {
+            trackTokenUsed(newBalance.remaining, true, true, inputValue.trim().length);
+          }
           // Check if we should now prompt for signup
           const shouldPrompt = await shouldPromptSignup();
           setShowSignupPrompt(shouldPrompt);
+          if (shouldPrompt && newBalance) {
+            trackSignupPromptShown('low_tokens', newBalance.remaining);
+          }
         } else {
           throw new Error('Failed to consume token. Please try again.');
         }
@@ -277,6 +331,8 @@ export function HomePage() {
       const errorMessage = err instanceof Error ? err.message : 'Failed to generate ticket';
       setError(errorMessage);
       setAppState('idle');
+      // Track generation errors
+      trackError('generation_failed', 'unknown', errorMessage, false);
     }
   };
 
@@ -287,16 +343,6 @@ export function HomePage() {
     setError(null);
   };
 
-  const handleConfigChange = (newConfig: AppConfig) => {
-    setConfig(newConfig);
-    
-    // Update provider when config changes
-    if (isRealAIEnabled()) {
-      setCurrentProvider('user');
-    } else {
-      setCurrentProvider(authenticatedTokens && authenticatedTokens.remaining > 0 ? 'myba' : 'mock');
-    }
-  };
 
   const handleTokenPurchase = (plan: TokenPlan) => {
     // This will be implemented when payment processing is added
@@ -304,7 +350,7 @@ export function HomePage() {
   };
 
   const canGenerate = inputValue.trim().length > 10 && appState === 'idle';
-  const needsTokens = !isRealAIEnabled() && isSignedIn && (!authenticatedTokens || authenticatedTokens.remaining === 0) && appState === 'idle';
+  const needsTokens = isSignedIn && (!authenticatedTokens || authenticatedTokens.remaining === 0) && appState === 'idle';
 
   const getProviderInfo = () => {
     switch (currentProvider) {
@@ -313,12 +359,6 @@ export function HomePage() {
           status: 'MyBA AI',
           color: '#667eea',
           description: 'Powered by our AI service'
-        };
-      case 'user':
-        return {
-          status: `User AI (${config.ai.provider.toUpperCase()})`,
-          color: '#27ae60',
-          description: 'Using your API key'
         };
       case 'mock':
       default:
@@ -388,42 +428,12 @@ export function HomePage() {
             </button>
           )}
           
-          {/* Settings Button (only for authenticated users) */}
-          {isSignedIn && (
-            <button
-              onClick={() => setShowSettings(true)}
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '50%',
-                width: '40px',
-                height: '40px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '16px',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                backdropFilter: 'blur(10px)'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                e.currentTarget.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              title="AI Settings"
-            >
-              ⚙️
-            </button>
-          )}
           
           {/* Token Manager Button (only for authenticated users) */}
           {isSignedIn && (
             <button
               onClick={() => setShowTokenManager(true)}
+              className="token-button"
               style={{
                 background: 'rgba(255, 255, 255, 0.2)',
                 border: '2px solid rgba(255, 255, 255, 0.3)',
@@ -448,37 +458,40 @@ export function HomePage() {
               }}
               title="Token Manager"
             >
-              🎫 {authenticatedTokens ? `${authenticatedTokens.remaining}` : '...'}
+              🎫 {tokensLoading ? '...' : (authenticatedTokens ? `${authenticatedTokens.remaining}` : '0')}
             </button>
           )}
         </div>
         
         {/* Mobile Menu Toggle */}
         <div className="mobile-nav">
-          <AuthButton />
+          {!isSignedIn && <AuthButton />}
           {isSignedIn && (
-            <button
-              onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="mobile-menu-toggle"
-              style={{
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderRadius: '50%',
-                color: 'white',
-                width: '44px',
-                height: '44px',
-                fontSize: '18px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                backdropFilter: 'blur(10px)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}
-              title="Menu"
-            >
-              {showMobileMenu ? '✕' : '☰'}
-            </button>
+            <>
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="mobile-menu-toggle"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  borderRadius: '50%',
+                  color: 'white',
+                  width: '44px',
+                  height: '44px',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  backdropFilter: 'blur(10px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                title="Menu"
+              >
+                {showMobileMenu ? '✕' : '☰'}
+              </button>
+              <AuthButton />
+            </>
           )}
         </div>
       </div>
@@ -521,7 +534,7 @@ export function HomePage() {
                 gap: '10px'
               }}
             >
-              🎫 <span>Tokens ({authenticatedTokens ? authenticatedTokens.remaining : '...'})</span>
+              🎫 <span>Tokens ({tokensLoading ? '...' : (authenticatedTokens ? authenticatedTokens.remaining : '0')})</span>
             </button>
             
             <button
@@ -546,27 +559,6 @@ export function HomePage() {
               👤 <span>Admin Dashboard</span>
             </button>
             
-            <button
-              onClick={() => {
-                setShowSettings(true);
-                setShowMobileMenu(false);
-              }}
-              style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-                borderRadius: '8px',
-                color: 'white',
-                padding: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}
-            >
-              ⚙️ <span>Settings</span>
-            </button>
           </div>
         </div>
       )}
@@ -584,7 +576,7 @@ export function HomePage() {
       }}>
         {/* AI Provider Status */}
         <div style={{
-          background: `rgba(${currentProvider === 'myba' ? '102, 126, 234' : currentProvider === 'user' ? '39, 174, 96' : '243, 156, 18'}, 0.9)`,
+          background: `rgba(${currentProvider === 'myba' ? '102, 126, 234' : '243, 156, 18'}, 0.9)`,
           color: 'white',
           padding: '6px 12px',
           borderRadius: '16px',
@@ -600,9 +592,9 @@ export function HomePage() {
           <div style={{
             width: '6px',
             height: '6px',
-            background: currentProvider === 'myba' ? '#667eea' : currentProvider === 'user' ? '#27ae60' : '#f39c12',
+            background: currentProvider === 'myba' ? '#667eea' : '#f39c12',
             borderRadius: '50%',
-            animation: currentProvider !== 'mock' ? 'pulse 2s infinite' : 'none'
+            animation: currentProvider === 'myba' ? 'pulse 2s infinite' : 'none'
           }} />
           {providerInfo.status}
         </div>
@@ -627,8 +619,8 @@ export function HomePage() {
           onClick={isSignedIn ? () => setShowTokenManager(true) : undefined}
           >
             🎫 {isSignedIn 
-              ? (authenticatedTokens ? `${authenticatedTokens.remaining}` : '...') 
-              : (anonymousBalance ? `${anonymousBalance.remaining}` : '...')
+              ? (tokensLoading ? '...' : (authenticatedTokens ? `${authenticatedTokens.remaining}` : '0')) 
+              : (anonymousBalance ? `${anonymousBalance.remaining}` : '0')
             }
           </div>
         )}
@@ -958,7 +950,7 @@ export function HomePage() {
                   🎫 No tokens remaining
                 </div>
                 <div style={{ fontSize: '14px', marginBottom: '16px' }}>
-                  Purchase tokens to use our AI service, or configure your own API key in settings.
+                  Purchase tokens to use our AI service.
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
@@ -976,21 +968,6 @@ export function HomePage() {
                   >
                     Buy Tokens
                   </button>
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      border: 'none',
-                      color: 'white',
-                      padding: '8px 16px',
-                      borderRadius: '6px',
-                      fontSize: '14px',
-                      fontWeight: '600',
-                      cursor: 'pointer'
-                    }}
-                  >
-                    Use Own API
-                  </button>
                 </div>
               </div>
             )}
@@ -1006,8 +983,7 @@ export function HomePage() {
               }}>
                 {currentProvider === 'myba' && isSignedIn && authenticatedTokens && `🤖 ${authenticatedTokens.remaining} tokens remaining`}
                 {currentProvider === 'myba' && !isSignedIn && anonymousBalance && `🤖 ${anonymousBalance.remaining} free tokens remaining`}
-                {currentProvider === 'user' && `🤖 Powered by ${config.ai.provider.toUpperCase()}`}
-                {currentProvider === 'mock' && '🎭 Demo mode - upgrade for AI generation'}
+                {currentProvider === 'mock' && '🎭 Demo mode - sign up for AI generation'}
               </p>
             )}
           </div>
@@ -1025,7 +1001,6 @@ export function HomePage() {
               animation: 'fadeIn 0.5s ease-out 0.5s both'
             }}>
               {currentProvider === 'myba' && '🤖 MyBA AI is crafting your ticket...'}
-              {currentProvider === 'user' && '🤖 Your AI is working on it...'}
               {currentProvider === 'mock' && '🎭 Preparing sample ticket...'}
             </p>
           </div>
@@ -1052,7 +1027,6 @@ export function HomePage() {
                 margin: 0
               }}>
                 {currentProvider === 'myba' && '✨ Generated by MyBA AI'}
-                {currentProvider === 'user' && `✨ Generated by ${config.ai.provider.toUpperCase()}`}
                 {currentProvider === 'mock' && '🎭 Sample template'}
               </p>
             </div>
@@ -1061,47 +1035,78 @@ export function HomePage() {
 
         {/* Error State */}
         {error && (
-          <div style={{
-            background: 'rgba(231, 76, 60, 0.9)',
+          <div className="error-dialog" style={{
+            background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9))',
             color: 'white',
-            padding: '16px 24px',
-            borderRadius: '12px',
+            padding: '20px 24px',
+            borderRadius: '16px',
             textAlign: 'center',
             animation: 'slideUp 0.3s ease-out',
-            backdropFilter: 'blur(10px)'
+            backdropFilter: 'blur(10px)',
+            boxShadow: '0 8px 32px rgba(231, 76, 60, 0.3)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            maxWidth: '400px',
+            margin: '0 auto'
           }}>
-            <div style={{ marginBottom: '8px' }}>❌ {error}</div>
+            <div style={{ fontSize: '32px', marginBottom: '8px' }}>⚠️</div>
+            <div style={{ 
+              marginBottom: '16px', 
+              fontSize: '16px', 
+              fontWeight: '600',
+              lineHeight: '1.4'
+            }}>
+              {error}
+            </div>
             <div style={{
               display: 'flex',
               gap: '12px',
               justifyContent: 'center',
-              marginTop: '12px'
+              flexWrap: 'wrap'
             }}>
               <button
                 onClick={() => setError(null)}
                 style={{
                   background: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
+                  border: '1px solid rgba(255, 255, 255, 0.3)',
                   color: 'white',
-                  padding: '6px 12px',
-                  borderRadius: '6px',
-                  fontSize: '12px',
-                  cursor: 'pointer'
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
                 }}
               >
-                Dismiss
+                Got it
               </button>
               {error.includes('token') && (
                 <button
-                  onClick={() => setShowTokenManager(true)}
+                  onClick={() => {
+                    setError(null);
+                    setShowTokenManager(true);
+                  }}
                   style={{
-                    background: 'rgba(255, 255, 255, 0.2)',
+                    background: 'rgba(255, 255, 255, 0.9)',
                     border: 'none',
-                    color: 'white',
-                    padding: '6px 12px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    cursor: 'pointer'
+                    color: '#e74c3c',
+                    padding: '10px 16px',
+                    borderRadius: '8px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-1px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
                   Buy Tokens
@@ -1111,25 +1116,46 @@ export function HomePage() {
           </div>
         )}
 
-        {/* Hint text for input validation */}
+        {/* Input validation hints */}
         {appState === 'idle' && inputValue.length > 0 && inputValue.length < 10 && (
-          <p style={{
-            fontSize: '14px',
-            color: 'rgba(255, 255, 255, 0.6)',
+          <div className="input-hints" style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '12px',
+            padding: '12px 16px',
+            textAlign: 'center',
             animation: 'fadeIn 0.3s ease-out',
-            textAlign: 'center'
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
-            A few more details would help create a better ticket... ✨
-          </p>
+            <p style={{
+              fontSize: '13px',
+              color: 'rgba(255, 255, 255, 0.8)',
+              margin: '0',
+              fontWeight: '500'
+            }}>
+              💡 Add a few more details to create a better ticket ({inputValue.length}/10 characters)
+            </p>
+          </div>
+        )}
+        
+        {/* Character count for longer inputs */}
+        {appState === 'idle' && inputValue.length >= 10 && inputValue.length < 50 && (
+          <div style={{
+            textAlign: 'center',
+            animation: 'fadeIn 0.3s ease-out'
+          }}>
+            <p style={{
+              fontSize: '11px',
+              color: 'rgba(255, 255, 255, 0.6)',
+              margin: '0',
+              marginTop: '-8px'
+            }}>
+              {inputValue.length} characters - looking good! ✨
+            </p>
+          </div>
         )}
       </div>
 
-      {/* Settings Modal */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
-        onConfigChange={handleConfigChange}
-      />
 
       {/* Token Manager Modal */}
       <TokenManager
@@ -1192,7 +1218,35 @@ export function HomePage() {
             .mobile-nav {
               display: flex;
               align-items: center;
-              gap: 10px;
+              gap: 8px;
+              flex-wrap: nowrap;
+            }
+            
+            /* Ensure mobile nav doesn't wrap or overflow */
+            .mobile-nav > * {
+              flex-shrink: 0;
+            }
+            
+            /* Mobile improvements */
+            .error-dialog {
+              margin: 0 10px !important;
+              max-width: calc(100vw - 20px) !important;
+            }
+            
+            .input-hints {
+              margin: 0 10px !important;
+            }
+          }
+          
+          @media (max-width: 480px) {
+            /* Very small mobile screens */
+            .mobile-nav {
+              gap: 6px;
+            }
+            
+            .token-button {
+              font-size: 10px !important;
+              padding: 6px 8px !important;
             }
           }
           

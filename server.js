@@ -5,11 +5,17 @@ const rateLimit = require('express-rate-limit');
 const helmet = require('helmet');
 const winston = require('winston');
 const { body, param, validationResult } = require('express-validator');
+const { Webhook } = require('svix');
+const { verifyToken } = require('@clerk/backend');
 const { v4: uuidv4 } = require('uuid');
 require('dotenv').config();
 
 const app = express();
 const port = process.env.PORT || 3002;
+const PUBLIC_BASE_URL = (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, '') || 'http://localhost:3000/myba';
+
+// Hide framework fingerprint
+app.disable('x-powered-by');
 
 // Configure Winston logger
 const logger = winston.createLogger({
@@ -30,9 +36,12 @@ const logger = winston.createLogger({
 });
 
 // Store for tracking API keys (in production, use a database)
-const validApiKeys = new Set([
-  process.env.INTERNAL_API_KEY || 'myba-internal-key-' + Date.now()
-]);
+const internalKey = process.env.INTERNAL_API_KEY;
+if (!internalKey) {
+  console.error('INTERNAL_API_KEY is required for admin endpoints. Set it in the environment.');
+  process.exit(1);
+}
+const validApiKeys = new Set([internalKey]);
 
 // Track suspicious activity
 const suspiciousActivity = new Map();
@@ -43,7 +52,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
       connectSrc: ["'self'", "https://api.stripe.com", "https://openrouter.ai"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"]
@@ -59,16 +68,18 @@ app.use(helmet({
 // CORS Configuration
 const corsOptions = {
   origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, etc.)
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      'http://152.42.141.162',
-      'https://152.42.141.162',
+    const envOrigins = (process.env.CORS_ORIGINS || '')
+      .split(',')
+      .map(o => o.trim())
+      .filter(Boolean);
+    const defaultOrigins = [
       'http://localhost:3000',
-      'http://localhost:5173' // Vite dev server
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:5173'
     ];
-    
+    const allowedOrigins = envOrigins.length ? envOrigins : defaultOrigins;
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -180,6 +191,43 @@ const handleValidationErrors = (req, res, next) => {
 app.use('/api/webhook/stripe', express.raw({type: 'application/json'}));
 app.use('/api/webhook/clerk', express.raw({type: 'application/json'}));
 app.use(express.json({ limit: '10mb' }));
+// Authentication middleware for user-scoped routes (Clerk JWT)
+const authenticateUser = async (req, res, next) => {
+  try {
+    const authHeader = req.get('Authorization') || '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+    if (!token) {
+      return res.status(401).json({ error: 'Authorization token required' });
+    }
+
+    if (!process.env.CLERK_SECRET_KEY) {
+      logger.error('CLERK_SECRET_KEY is not configured');
+      return res.status(500).json({ error: 'Server auth not configured' });
+    }
+
+    const verified = await verifyToken(token, {
+      secretKey: process.env.CLERK_SECRET_KEY
+    });
+
+    const subjectUserId = verified?.sub;
+    if (!subjectUserId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    // Enforce subject match with URL param when present
+    if (req.params && req.params.userId && req.params.userId !== subjectUserId) {
+      return res.status(403).json({ error: 'Forbidden: subject mismatch' });
+    }
+
+    // Attach user info for downstream handlers
+    req.auth = { userId: subjectUserId };
+    next();
+  } catch (err) {
+    logger.warn('Token verification failed:', err?.message);
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+};
 
 // Trust proxy for accurate IP addresses
 app.set('trust proxy', 1);
@@ -260,16 +308,11 @@ app.post('/api/webhook/stripe', webhookLimit, async (req, res) => {
         });
       }
     } else {
-      try {
-        event = JSON.parse(req.body.toString());
-        console.log(`⚠️ [${webhookId}] No webhook secret - processing unsigned event`);
-      } catch (parseError) {
-        console.error(`❌ [${webhookId}] Failed to parse webhook body:`, parseError.message);
-        return res.status(400).json({ 
-          error: 'Invalid JSON payload', 
-          webhookId 
-        });
-      }
+      console.error(`❌ [${webhookId}] STRIPE_WEBHOOK_SECRET not configured - rejecting unsigned webhook`);
+      return res.status(400).json({ 
+        error: 'Webhook secret not configured', 
+        webhookId 
+      });
     }
 
     console.log(`🔄 [${webhookId}] Processing event: ${event.type}`);
@@ -415,17 +458,36 @@ app.post('/api/webhook/clerk', webhookLimit, async (req, res) => {
   console.log(`📥 [${webhookId}] Clerk webhook received`);
   
   try {
-    // Parse webhook event
-    let event;
-    try {
-      event = JSON.parse(req.body.toString());
-      console.log(`🔄 [${webhookId}] Processing event: ${event.type}`);
-    } catch (parseError) {
-      console.error(`❌ [${webhookId}] Failed to parse webhook body:`, parseError.message);
+    // Require configured secret and verify signature using Svix
+    if (!process.env.CLERK_WEBHOOK_SECRET) {
+      console.error(`❌ [${webhookId}] CLERK_WEBHOOK_SECRET not configured - rejecting webhook`);
       return res.status(400).json({ 
-        error: 'Invalid JSON payload', 
+        error: 'Webhook secret not configured', 
         webhookId 
       });
+    }
+    
+    // Verify signature headers
+    const svixId = req.get('svix-id');
+    const svixTimestamp = req.get('svix-timestamp');
+    const svixSignature = req.get('svix-signature');
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      console.error(`❌ [${webhookId}] Missing Svix signature headers`);
+      return res.status(400).json({ error: 'Missing signature headers', webhookId });
+    }
+
+    let event;
+    try {
+      const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+      event = wh.verify(req.body.toString('utf8'), {
+        'svix-id': svixId,
+        'svix-timestamp': svixTimestamp,
+        'svix-signature': svixSignature
+      });
+      console.log(`🔄 [${webhookId}] Processing event: ${event.type}`);
+    } catch (err) {
+      console.error(`❌ [${webhookId}] Webhook verification failed:`, err?.message);
+      return res.status(400).json({ error: 'Invalid signature', webhookId });
     }
     
     if (event.type === 'user.created') {
@@ -537,6 +599,7 @@ app.post('/api/webhook/clerk', webhookLimit, async (req, res) => {
 
 // Get user tokens
 app.get('/api/user-tokens/:userId', 
+  authenticateUser,
   param('userId').isLength({ min: 1 }).withMessage('User ID is required'),
   handleValidationErrors,
   async (req, res) => {
@@ -593,6 +656,7 @@ app.get('/api/user-tokens/:userId',
 
 // Use user token
 app.post('/api/user-tokens/:userId/consume', aiLimit,
+  authenticateUser,
   param('userId').isLength({ min: 1 }).withMessage('User ID is required'),
   handleValidationErrors,
   async (req, res) => {
@@ -810,7 +874,7 @@ app.post('/api/generate-ticket', aiLimit,
         headers = {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'http://152.42.141.162/myba',
+          'HTTP-Referer': PUBLIC_BASE_URL,
           'X-Title': 'MyBA AI Ticket Generator'
         };
         model = 'openai/gpt-oss-20b'; // OpenRouter format - using OSS 20B model
@@ -1409,12 +1473,12 @@ app.get('/api/admin/webhooks', validateApiKey, async (req, res) => {
     const webhookStats = {
       stripe: {
         configured: !!process.env.STRIPE_WEBHOOK_SECRET,
-        endpoint: 'http://152.42.141.162/myba/api/webhook/stripe',
+        endpoint: `${PUBLIC_BASE_URL}/api/webhook/stripe`,
         recentActivity: 'Active' // Would need to track this
       },
       clerk: {
         configured: !!process.env.CLERK_WEBHOOK_SECRET,
-        endpoint: 'http://152.42.141.162/myba/api/webhook/clerk', 
+        endpoint: `${PUBLIC_BASE_URL}/api/webhook/clerk`, 
         recentActivity: 'Active'
       }
     };
@@ -1566,8 +1630,8 @@ app.post('/api/create-checkout-session', paymentLimit,
           quantity: 1,
         }],
         mode: 'payment',
-        success_url: `http://152.42.141.162/myba/?success=true&tokens=${plan.tokens}`,
-        cancel_url: `http://152.42.141.162/myba/?canceled=true`,
+        success_url: `${PUBLIC_BASE_URL}/?success=true&tokens=${plan.tokens}`,
+        cancel_url: `${PUBLIC_BASE_URL}/?canceled=true`,
         metadata: {
           planId,
           userId: userContext.userId,

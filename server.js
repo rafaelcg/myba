@@ -1050,6 +1050,32 @@ app.post('/api/transfer-anonymous-tokens',
           const currentTokens = parseInt(stripeCustomer.metadata.tokens || '6'); // Default welcome tokens
           const currentUsed = parseInt(stripeCustomer.metadata.tokens_used || '0');
           const currentPurchased = parseInt(stripeCustomer.metadata.tokens_purchased || '0');
+          // Prevent duplicate transfers for the same anonymous session
+          const alreadyTransferred = !!stripeCustomer.metadata[`transfer_${sessionId}`];
+          if (alreadyTransferred) {
+            console.log(`ℹ️ [${transferId}] Duplicate transfer attempt ignored for session ${sessionId} and user ${userId}`);
+            // Clean up anonymous session and IP tracking even if duplicate
+            anonymousSessions.delete(sessionId);
+            const sessionIP = fingerprintToIP.get(sessionId);
+            if (sessionIP) {
+              const ipSessions = ipToFingerprints.get(sessionIP);
+              if (ipSessions) {
+                ipSessions.delete(sessionId);
+                if (ipSessions.size === 0) {
+                  ipToFingerprints.delete(sessionIP);
+                } else {
+                  ipToFingerprints.set(sessionIP, ipSessions);
+                }
+              }
+              fingerprintToIP.delete(sessionId);
+            }
+            return res.json({
+              success: true,
+              tokensTransferred: 0,
+              transferId,
+              message: 'Tokens from this anonymous session were already transferred previously'
+            });
+          }
           
           // Add transferred tokens to existing total
           const newTotalTokens = currentTokens + tokensToTransfer;
@@ -1062,7 +1088,8 @@ app.post('/api/transfer-anonymous-tokens',
               tokens_used: currentUsed.toString(),
               tokens_purchased: currentPurchased.toString(),
               tokens_transferred: tokensToTransfer.toString(),
-              transfer_date: new Date().toISOString()
+              transfer_date: new Date().toISOString(),
+              [`transfer_${sessionId}`]: 'true'
             }
           });
           

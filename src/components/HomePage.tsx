@@ -137,13 +137,14 @@ export function HomePage() {
         }
         
         // ONLY attempt token transfer if we have existing anonymous balance from before login
-        // This prevents creating new anonymous sessions for already authenticated users
+        // Additionally, guard with a per-user, per-session flag persisted across reloads to prevent repeats
         if (user && anonymousBalance && anonymousBalance.remaining > 0) {
           // Check if we've already transferred tokens for this user session
           const transferKey = `token_transferred_${user.id}`;
-          const alreadyTransferred = sessionStorage.getItem(transferKey);
+          const alreadyTransferredSession = sessionStorage.getItem(transferKey);
+          const alreadyTransferredPersist = localStorage.getItem(transferKey);
           
-          if (!alreadyTransferred) {
+          if (!alreadyTransferredSession && !alreadyTransferredPersist) {
             try {
               const tokensToTransfer = anonymousBalance.remaining;
               console.log(`🔄 Attempting to transfer ${tokensToTransfer} anonymous tokens to user ${user.id}`);
@@ -155,8 +156,9 @@ export function HomePage() {
                 // Track signup completion with token transfer
                 trackSignupCompleted('unknown', tokensToTransfer, 6);
                 
-                // Mark as transferred in session storage to prevent repeat transfers
+                // Mark as transferred in both session and persistent storage to prevent repeats across reloads/crashes
                 sessionStorage.setItem(transferKey, 'true');
+                localStorage.setItem(transferKey, 'true');
                 
                 // Auto-dismiss transfer message after 4 seconds
                 setTimeout(() => {

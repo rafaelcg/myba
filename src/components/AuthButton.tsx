@@ -2,6 +2,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-re
 
 export function AuthButton() {
   const { isSignedIn, user, isLoaded } = useUser();
+  const basePath = import.meta.env.DEV ? '/' : '/myba/';
 
   if (!isLoaded) {
     // Loading state
@@ -74,8 +75,8 @@ export function AuthButton() {
             }}
             showName={false}
             userProfileMode="navigation"
-            userProfileUrl="/user-profile"
-            afterSignOutUrl="/myba/"
+            userProfileUrl={`${basePath}user-profile`}
+            afterSignOutUrl={basePath}
           />
         </div>
       </div>

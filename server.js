@@ -107,10 +107,10 @@ const createRateLimit = (windowMs, max, message) => rateLimit({
     const current = suspiciousActivity.get(clientId) || 0;
     suspiciousActivity.set(clientId, current + 1);
     
-    res.status(429).json({ 
-      error: message,
-      retryAfter: Math.ceil(windowMs / 1000)
-    });
+    // res.status(429).json({ 
+    //   error: message,
+    //   retryAfter: Math.ceil(windowMs / 1000)
+    // });
   }
 });
 

@@ -4,6 +4,11 @@ import { InputField } from './InputField';
 import { GenerateButton } from './GenerateButton';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ResultsCard } from './ResultsCard';
+import { NavBar } from './landing/nav-bar';
+import { Hero } from './landing/hero';
+import { PromptForm } from './landing/prompt-form';
+import { FeatureCards } from './landing/feature-cards';
+import { Footer } from './landing/footer';
 import { TokenManager } from './TokenManager';
 import { AuthButton } from './AuthButton';
 import { AdminDashboard } from './AdminDashboard';
@@ -34,6 +39,7 @@ export function HomePage() {
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  // Legacy rotating messages were moved back into LoadingSpinner via constants
 
   // Handle clicking outside mobile menu
   useEffect(() => {
@@ -49,6 +55,9 @@ export function HomePage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showMobileMenu]);
+
+  // Rotate loading messages while generating
+  // Note: rotating messages disabled in new UI for now
 
   useEffect(() => {
     
@@ -390,6 +399,93 @@ export function HomePage() {
   };
 
   const providerInfo = getProviderInfo();
+
+  const isLegacy = new URLSearchParams(window.location.search).get('legacy') === '1';
+
+  if (!isLegacy) {
+    return (
+      <div style={{ fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+        <style>
+          {`
+            *, *::before, *::after { box-sizing: border-box; }
+            html, body, #root { margin: 0; padding: 0; width: 100%; }
+            body { overflow-x: hidden; }
+          `}
+        </style>
+        <NavBar
+          isSignedIn={!!isSignedIn}
+          onOpenTokens={() => setShowTokenManager(true)}
+          tokensLabel={tokensLoading ? '…' : (authenticatedTokens ? `${authenticatedTokens.remaining} tokens` : '0 tokens')}
+        />
+        <Hero />
+        <PromptForm
+          value={inputValue}
+          isGenerating={appState === 'generating'}
+          onChange={setInputValue}
+          onClear={() => { setInputValue(''); setError(null); }}
+          onGenerate={handleGenerate}
+          minChars={10}
+        />
+        {/* Preserve all existing conditional UI below: results, errors, prompts, and modals */}
+        <div style={{ maxWidth: 900, margin: '0 auto', padding: '0 20px' }}>
+          {appState === 'generating' && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              marginTop: 16,
+              marginBottom: 40,
+              position: 'relative',
+              zIndex: 1
+            }}>
+              <LoadingSpinner variant="onLight" />
+              <div style={{ textAlign: 'center', marginTop: 8, color: '#334155' }} aria-live="polite" role="status">
+                <p style={{ fontSize: 14, margin: 0 }}>
+                  {currentProvider === 'myba' ? '🤖 MyBA AI is crafting your ticket…' : '🎭 Preparing sample ticket…'}
+                </p>
+              </div>
+            </div>
+          )}
+          {appState === 'results' && generatedTicket && (
+            <div style={{ width: '100%', marginTop: 12 }}>
+              <ResultsCard
+                title={generatedTicket.title}
+                content={generatedTicket.content}
+                onStartOver={handleStartOver}
+              />
+            </div>
+          )}
+          {error && (
+            <div className="error-dialog" style={{
+              background: 'linear-gradient(135deg, rgba(231, 76, 60, 0.9), rgba(192, 57, 43, 0.9))',
+              color: 'white',
+              padding: '20px 24px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              backdropFilter: 'blur(10px)',
+              maxWidth: '600px',
+              margin: '12px auto'
+            }}>
+              {error}
+            </div>
+          )}
+        </div>
+        <FeatureCards />
+        <Footer />
+        {/* Token Manager and Admin modals still available */}
+        <TokenManager
+          isOpen={showTokenManager}
+          onClose={() => setShowTokenManager(false)}
+          onPurchase={handleTokenPurchase}
+        />
+        <AdminDashboard
+          isOpen={showAdminDashboard}
+          onClose={() => setShowAdminDashboard(false)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div style={{

@@ -3,9 +3,10 @@ import { LOADING_MESSAGES } from '../utils/constants';
 
 interface LoadingSpinnerProps {
   message?: string;
+  variant?: 'onDark' | 'onLight';
 }
 
-export function LoadingSpinner({ message }: LoadingSpinnerProps) {
+export function LoadingSpinner({ message, variant = 'onDark' }: LoadingSpinnerProps) {
   const [messageIndex, setMessageIndex] = useState(0);
   
   useEffect(() => {
@@ -17,6 +18,9 @@ export function LoadingSpinner({ message }: LoadingSpinnerProps) {
   }, []);
 
   const currentMessage = message || LOADING_MESSAGES[messageIndex];
+  const isOnLight = variant === 'onLight';
+  const messageColor = isOnLight ? '#334155' : 'rgba(255, 255, 255, 0.9)';
+  const dotColor = isOnLight ? 'rgba(15,23,42,0.45)' : 'rgba(255, 255, 255, 0.6)';
 
   return (
     <div style={{
@@ -73,7 +77,7 @@ export function LoadingSpinner({ message }: LoadingSpinnerProps) {
       {/* Loading message */}
       <div style={{
         textAlign: 'center',
-        color: 'rgba(255, 255, 255, 0.9)',
+        color: messageColor,
         fontSize: '16px',
         fontWeight: '500',
         minHeight: '20px',
@@ -94,7 +98,7 @@ export function LoadingSpinner({ message }: LoadingSpinnerProps) {
             style={{
               width: '8px',
               height: '8px',
-              background: 'rgba(255, 255, 255, 0.6)',
+              background: dotColor,
               borderRadius: '50%',
               animation: `bounce 1.4s ease-in-out ${i * 0.16}s infinite`
             }}

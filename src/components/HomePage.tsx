@@ -814,7 +814,7 @@ export function HomePage() {
             }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎉</div>
               <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
-                Payment Successful!
+                Payment successful
               </div>
               <div style={{ fontSize: '14px', marginBottom: '16px', opacity: 0.9 }}>
                 {paymentStatus.tokens 
@@ -859,7 +859,7 @@ export function HomePage() {
             }}>
               <div style={{ fontSize: '32px', marginBottom: '8px' }}>😔</div>
               <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
-                Payment Cancelled
+                Payment canceled
               </div>
               <div style={{ fontSize: '14px', marginBottom: '16px', opacity: 0.9 }}>
                 No charges were made to your account. You can try again anytime.
@@ -896,7 +896,7 @@ export function HomePage() {
                     cursor: 'pointer'
                   }}
                 >
-                  Try Again
+                  Try checkout again
                 </button>
               </div>
             </div>
@@ -926,8 +926,8 @@ export function HomePage() {
             border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
             <div style={{ fontSize: '32px', marginBottom: '8px' }}>🎁</div>
-            <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
-              Welcome Bonus!
+                <div style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px' }}>
+                  Welcome bonus
             </div>
             <div style={{ fontSize: '14px', marginBottom: '16px', opacity: 0.9 }}>
               Your {tokenTransferStatus.tokens} unused anonymous tokens have been transferred to your account
@@ -1014,7 +1014,7 @@ export function HomePage() {
                   }
                 </div>
                 <div style={{ fontSize: '14px', marginBottom: '16px', opacity: 0.9 }}>
-                  Sign up now to get <strong>3 bonus tokens</strong> + access to purchase more!
+              Create a free account to get <strong>3 bonus tokens</strong> and purchase more when needed.
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
@@ -1030,7 +1030,7 @@ export function HomePage() {
                       cursor: 'pointer'
                     }}
                   >
-                    Maybe Later
+                  Maybe later
                   </button>
                   <SignUpButton mode="modal">
                     <button
@@ -1046,7 +1046,7 @@ export function HomePage() {
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)'
                       }}
                     >
-                      Sign Up Free 🚀
+                      Sign up free
                     </button>
                   </SignUpButton>
                 </div>
@@ -1069,7 +1069,7 @@ export function HomePage() {
                   🎫 No tokens remaining
                 </div>
                 <div style={{ fontSize: '14px', marginBottom: '16px' }}>
-                  Purchase tokens to use our AI service.
+                  Buy tokens to keep generating with MyBA AI.
                 </div>
                 <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
                   <button
@@ -1085,7 +1085,7 @@ export function HomePage() {
                       cursor: 'pointer'
                     }}
                   >
-                    Buy Tokens
+                    Get tokens
                   </button>
                 </div>
               </div>
@@ -1102,7 +1102,7 @@ export function HomePage() {
               }}>
                 {currentProvider === 'myba' && isSignedIn && authenticatedTokens && `🤖 ${authenticatedTokens.remaining} tokens remaining`}
                 {currentProvider === 'myba' && !isSignedIn && anonymousBalance && `🤖 ${anonymousBalance.remaining} free tokens remaining`}
-                {currentProvider === 'mock' && '🎭 Demo mode - sign up for AI generation'}
+                {currentProvider === 'mock' && '🎭 Demo mode — sign up to generate with AI'}
               </p>
             )}
           </div>

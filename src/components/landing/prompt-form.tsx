@@ -20,13 +20,13 @@ export function PromptForm({ value, isGenerating, onChange, onClear, onGenerate,
         boxShadow: '0 6px 20px rgba(2,6,23,0.04)'
       }}>
         <div style={{ padding: '20px 20px 16px 20px', borderBottom: '1px solid #eef2f7', color: '#0f172a', fontWeight: 600 }}>
-          Describe the task or user story
+          Describe the work to be done
         </div>
         <div style={{ padding: 20 }}>
           <textarea
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            placeholder={'e.g., As a user, I want to reset my password via email link so I can access my account if I forget it.'}
+            placeholder={'What should be built, for whom, and why? Include constraints and success criteria.'}
             disabled={isGenerating}
             style={{
               width: '100%',
@@ -42,10 +42,10 @@ export function PromptForm({ value, isGenerating, onChange, onClear, onGenerate,
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14 }}>
-            <span style={{ color: '#64748b', fontSize: 12 }}>
+             <span style={{ color: '#64748b', fontSize: 12 }}>
               {value.length > 0 && value.length < minChars
                 ? `Add a few more details (${value.length}/${minChars})`
-                : 'Tip: Include purpose, constraints, and success criteria for best results.'}
+                : 'Tip: Include the user, goal, constraints, and definition of done for best results.'}
             </span>
             <div style={{ display: 'flex', gap: 10 }}>
               <button
@@ -76,7 +76,7 @@ export function PromptForm({ value, isGenerating, onChange, onClear, onGenerate,
                   cursor: !canGenerate ? 'not-allowed' : 'pointer'
                 }}
               >
-                {isGenerating ? 'Generating…' : 'Generate'}
+                {isGenerating ? 'Generating…' : 'Generate ticket'}
               </button>
             </div>
           </div>

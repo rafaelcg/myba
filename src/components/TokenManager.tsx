@@ -228,7 +228,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
               margin: 0,
               fontSize: '14px'
             }}>
-              Manage your AI generation credits
+              Manage your AI generation tokens
             </p>
           </div>
           <button
@@ -359,8 +359,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
                   fontSize: '14px',
                   margin: 0
                 }}>
-                  You have <strong>3 free tokens</strong> to try our AI ticket generator. 
-                  Each token generates one professional ticket!
+                  You’ve got <strong>3 free tokens</strong> to try MyBA. Each token generates one ticket.
                 </p>
               </div>
             )}
@@ -441,7 +440,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
                 fontWeight: '600',
                 margin: '0 0 20px 0'
               }}>
-                💳 Purchase More Tokens
+              💳 Buy tokens
               </h4>
               
               {loading && (
@@ -619,7 +618,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
                         opacity: loading ? 0.6 : 1
                       }}
                     >
-                      {loading ? 'Processing...' : (stripeEnabled ? 'Purchase Now' : 'Simulate Purchase')}
+                      {loading ? 'Processing...' : (stripeEnabled ? 'Continue to checkout' : 'Simulate purchase')}
                     </button>
                   </div>
                 ))}
@@ -641,7 +640,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
               fontWeight: '600',
               marginBottom: '16px'
             }}>
-              {stripeEnabled ? 'Secure Payment' : 'Simulated Purchase'}
+              {stripeEnabled ? 'Secure payment' : 'Simulated purchase'}
             </h3>
             <p style={{
               color: '#7f8c8d',
@@ -650,13 +649,13 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
             }}>
               {stripeEnabled ? (
                 <>
-                  You'll be redirected to Stripe for secure payment processing.
+                  You’ll be redirected to Stripe for secure payment processing.
                   <br />
                   Your tokens will be added automatically after payment.
                 </>
               ) : (
                 <>
-                  Stripe is not configured - this will simulate a successful purchase.
+                  Stripe is not configured—this will simulate a successful purchase.
                   <br />
                   Tokens will be added to your account immediately.
                 </>
@@ -743,7 +742,7 @@ export function TokenManager({ isOpen, onClose }: TokenManagerProps) {
                     opacity: loading ? 0.6 : 1
                   }}
                 >
-                  {loading ? 'Creating Session...' : (stripeEnabled ? 'Proceed to Stripe' : 'Simulate Purchase')}
+                  {loading ? 'Creating session…' : (stripeEnabled ? 'Continue to checkout' : 'Simulate purchase')}
                 </button>
               )}
             </div>

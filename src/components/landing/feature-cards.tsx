@@ -6,9 +6,9 @@ export function FeatureCards() {
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 20
       }}>
-        <Card title="Story-first" description="Start from a plain description & convert it into a well‑formed user story." />
-        <Card title="Acceptance criteria" description="Generate concrete, testable criteria ready for dev & QA." />
-        <Card title="Estimates & priority" description="Get suggested story points and priority tags to triage faster." />
+        <Card title="Backlog-ready in seconds" description="Start with a brief and get a well‑formed user story." />
+        <Card title="Testable acceptance criteria" description="Clear, verifiable conditions for dev and QA." />
+        <Card title="Points and priority suggestions" description="AI-recommended story points and priority to triage faster." />
       </div>
       <style>
         {`

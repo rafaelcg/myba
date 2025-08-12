@@ -12,14 +12,14 @@ export function Hero() {
           margin: 0,
           color: '#0f172a'
         }}>
-          Generate clear Agile tickets with AI
+          Turn rough ideas into backlog-ready tickets
         </h1>
         <p style={{
           color: '#475569',
           marginTop: 12,
           fontSize: 'clamp(14px, 1.6vw, 16px)'
         }}>
-          Describe the work. Get a crisp user story, acceptance criteria, and estimates.
+          Paste context. Get a user story, testable acceptance criteria, and story points—fast.
         </p>
       </div>
     </section>

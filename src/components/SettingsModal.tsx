@@ -107,7 +107,7 @@ export function SettingsModal({ isOpen, onClose, onConfigChange }: SettingsModal
             fontWeight: '600',
             margin: 0
           }}>
-            ⚙️ AI Settings
+            ⚙️ AI settings
           </h2>
           <button
             onClick={onClose}
@@ -137,21 +137,21 @@ export function SettingsModal({ isOpen, onClose, onConfigChange }: SettingsModal
             fontWeight: '600',
             margin: '0 0 8px 0'
           }}>
-            🎫 Token-Based Service (Recommended)
+            🎫 Token-based service (recommended)
           </h4>
           <p style={{
             fontSize: '12px',
             color: '#7f8c8d',
             margin: '0 0 12px 0'
           }}>
-            Use our AI service with tokens. No API key needed, simple pay-per-use pricing.
+            Use MyBA tokens—no API key required. Simple, pay‑per‑use pricing.
           </p>
           <div style={{
             fontSize: '12px',
             color: '#27ae60',
             fontWeight: '500'
           }}>
-            ✓ No setup required ✓ Secure ✓ Fair pricing ✓ 3 free tokens
+            ✓ No setup ✓ Secure ✓ Fair pricing ✓ 3 free tokens
           </div>
         </div>
 
@@ -213,7 +213,7 @@ export function SettingsModal({ isOpen, onClose, onConfigChange }: SettingsModal
               fontWeight: '600',
               color: '#2c3e50'
             }}>
-              Use Your Own API Key
+              Use your own API key
             </span>
           </label>
           <p style={{
@@ -221,7 +221,7 @@ export function SettingsModal({ isOpen, onClose, onConfigChange }: SettingsModal
             color: '#7f8c8d',
             margin: '4px 0 0 30px'
           }}>
-            Use your own AI API key instead of our token-based service. Perfect if you have unlimited API access.
+            Use your own AI API key instead of tokens. Ideal if you already have an enterprise plan.
           </p>
         </div>
 

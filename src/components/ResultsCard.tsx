@@ -44,7 +44,7 @@ export function ResultsCard({ title, content, onStartOver }: ResultsCardProps) {
           fontSize: '14px',
           margin: '0'
         }}>
-          Ready to copy & paste! 📋
+          Ready to paste into Jira, Linear, or Asana.
         </p>
       </div>
 
@@ -113,7 +113,7 @@ export function ResultsCard({ title, content, onStartOver }: ResultsCardProps) {
               transform="rotate(180 12 12)"
             />
           </svg>
-          Create Another
+          Create another ticket
         </button>
       </div>
 

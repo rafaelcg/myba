@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<!-- saved from url=(0078)file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBA — AI-Powered Ticket Generation</title>
+    <meta name="description" content="Turn ideas into backlog-ready tickets with AI. Generate comprehensive user stories, acceptance criteria, and smart estimates in seconds.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./MyBA — AI-Powered Ticket Generation_files/css2" rel="stylesheet">
+    
+    <style>
+        /* ========================================
+           CSS VARIABLES & THEME
+        ======================================== */
+        :root {
+            /* Sunset Aurora Gradient Colors */
+            --coral: #ff6b6b;
+            --orange: #ffa94d;
+            --pink: #ff8fab;
+            --purple: #a855f7;
+            --gold: #ffd166;
+            --cream: #fff8f0;
+            
+            /* Glassmorphism Colors */
+            --glass-bg: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --glass-hover: rgba(255, 255, 255, 0.12);
+            --glass-strong: rgba(255, 255, 255, 0.15);
+            
+            /* Text Colors */
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.75);
+            --text-muted: rgba(255, 255, 255, 0.55);
+            
+            /* Spacing */
+            --section-padding: 120px;
+            --container-max: 1280px;
+            --container-padding: 24px;
+            
+            /* Transitions */
+            --transition-fast: 0.2s ease;
+            --transition-base: 0.3s ease;
+            --transition-slow: 0.5s ease;
+            
+            /* Border Radius */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --radius-full: 9999px;
+        }
+
+        /* ========================================
+           RESET & BASE
+        ======================================== */
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-weight: 400;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--coral) 0%, var(--orange) 25%, var(--pink) 60%, var(--purple) 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        a {
+            text-decoration: none;
+            color: inherit;
+            transition: var(--transition-base);
+        }
+
+        button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        img {
+            max-width: 100%;
+            display: block;
+        }
+
+        /* ========================================
+           ANIMATED AURORA BACKGROUND
+        ======================================== */
+        .aurora-container {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .aurora-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.7;
+            animation: aurora-float 20s ease-in-out infinite;
+        }
+
+        .aurora-blob:nth-child(1) {
+            width: 800px;
+            height: 800px;
+            background: var(--coral);
+            top: -20%;
+            left: -10%;
+            animation-delay: 0s;
+        }
+
+        .aurora-blob:nth-child(2) {
+            width: 600px;
+            height: 600px;
+            background: var(--orange);
+            top: 40%;
+            right: -15%;
+            animation-delay: -5s;
+            animation-duration: 25s;
+        }
+
+        .aurora-blob:nth-child(3) {
+            width: 700px;
+            height: 700px;
+            background: var(--pink);
+            bottom: -10%;
+            left: 30%;
+            animation-delay: -10s;
+            animation-duration: 22s;
+        }
+
+        .aurora-blob:nth-child(4) {
+            width: 500px;
+            height: 500px;
+            background: var(--purple);
+            top: 10%;
+            right: 30%;
+            animation-delay: -15s;
+            animation-duration: 28s;
+        }
+
+        .aurora-blob:nth-child(5) {
+            width: 400px;
+            height: 400px;
+            background: var(--gold);
+            bottom: 30%;
+            left: 10%;
+            animation-delay: -7s;
+            animation-duration: 24s;
+            opacity: 0.4;
+        }
+
+        @keyframes aurora-float {
+            0%, 100% {
+                transform: translate(0, 0) scale(1);
+            }
+            25% {
+                transform: translate(50px, -30px) scale(1.1);
+            }
+            50% {
+                transform: translate(-30px, 50px) scale(0.95);
+            }
+            75% {
+                transform: translate(40px, 20px) scale(1.05);
+            }
+        }
+
+        .noise-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            opacity: 0.03;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+        }
+
+        /* ========================================
+           UTILITY CLASSES
+        ======================================== */
+        .container {
+            max-width: var(--container-max);
+            margin: 0 auto;
+            padding: 0 var(--container-padding);
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .glass-strong {
+            background: var(--glass-strong);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            border-radius: var(--radius-full);
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--gold) 0%, #ffb347 100%);
+            color: #1a1a2e;
+            box-shadow: 0 4px 20px rgba(255, 209, 102, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(255, 209, 102, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--glass-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .btn-ghost:hover {
+            background: var(--glass-bg);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 13px;
+            color: var(--gold);
+        }
+
+        .badge::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--gold);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+        }
+
+        .section-reveal {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease, transform 0.8s ease;
+        }
+
+        .section-reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ========================================
+           HEADER
+        ======================================== */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 16px 0;
+            transition: all var(--transition-base);
+        }
+
+        .header.scrolled {
+            padding: 12px 0;
+        }
+
+        .header.scrolled .header-inner {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-radius: var(--radius-full);
+            transition: all var(--transition-base);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 24px;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--orange) 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .nav {
+            display: none;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+            font-size: 15px;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gold);
+            transition: width var(--transition-base);
+            border-radius: 2px;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-menu-btn {
+            display: flex;
+            width: 40px;
+            height: 40px;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           HERO SECTION
+        ======================================== */
+        .hero {
+            padding-top: 140px;
+            padding-bottom: 60px;
+            position: relative;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .hero-badge {
+            margin-bottom: 32px;
+            display: inline-flex;
+        }
+
+        .hero-title {
+            font-size: clamp(40px, 8vw, 64px);
+            font-weight: 800;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #fff 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: var(--text-secondary);
+            margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            margin-top: 48px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-family: 'Outfit', sans-serif;
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--gold);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* ========================================
+           BOARD VISUAL (Kanban Mockup)
+        ======================================== */
+        .board-section {
+            padding: 40px 0 80px;
+            position: relative;
+        }
+
+        .board-container {
+            position: relative;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .board-frame {
+            background: rgba(26, 26, 46, 0.6);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+            transform: perspective(1000px) rotateX(2deg);
+            transition: transform var(--transition-slow);
+        }
+
+        .board-frame:hover {
+            transform: perspective(1000px) rotateX(0deg) translateY(-10px);
+        }
+
+        .board-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .board-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .board-title-icon {
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, var(--coral), var(--orange));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .board-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .board-btn {
+            padding: 6px 14px;
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            transition: all var(--transition-fast);
+        }
+
+        .board-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .kanban-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            padding: 24px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, transparent 100%);
+        }
+
+        .kanban-column {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            min-height: 400px;
+        }
+
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .column-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+        }
+
+        .column-count {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+        }
+
+        .ticket-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            margin-bottom: 12px;
+            transition: all var(--transition-base);
+            cursor: pointer;
+        }
+
+        .ticket-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .ticket-id {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .ticket-title {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .ticket-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .ticket-tags {
+            display: flex;
+            gap: 6px;
+        }
+
+        .ticket-tag {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: var(--radius-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .tag-feature {
+            background: rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+        }
+
+        .tag-bug {
+            background: rgba(255, 107, 107, 0.3);
+            color: #ffc9c9;
+        }
+
+        .tag-improvement {
+            background: rgba(255, 209, 102, 0.3);
+            color: #fff3cd;
+        }
+
+        .ticket-points {
+            font-family: 'Outfit', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--gold);
+            background: rgba(255, 209, 102, 0.15);
+            padding: 3px 10px;
+            border-radius: var(--radius-full);
+        }
+
+        .add-ticket-btn {
+            width: 100%;
+            padding: 10px;
+            background: transparent;
+            border: 1px dashed var(--glass-border);
+            border-radius: var(--radius-sm);
+            color: var(--text-muted);
+            font-size: 13px;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .add-ticket-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+            background: rgba(255, 209, 102, 0.05);
+        }
+
+        /* ========================================
+           FEATURES SECTION
+        ======================================== */
+        .features {
+            padding: var(--section-padding) 0;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            max-width: 600px;
+            margin: 0 auto 64px;
+        }
+
+        .section-title {
+            font-size: clamp(32px, 5vw, 48px);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            transition: all var(--transition-base);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--coral), var(--orange), var(--gold));
+            opacity: 0;
+            transition: opacity var(--transition-base);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            background: var(--glass-hover);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .feature-icon-1 {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.05));
+            box-shadow: 0 8px 30px rgba(255, 107, 107, 0.2);
+        }
+
+        .feature-icon-2 {
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.2), rgba(255, 209, 102, 0.05));
+            box-shadow: 0 8px 30px rgba(255, 209, 102, 0.2);
+        }
+
+        .feature-icon-3 {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(168, 85, 247, 0.05));
+            box-shadow: 0 8px 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .feature-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.7;
+        }
+
+        /* ========================================
+           TESTIMONIALS SECTION
+        ======================================== */
+        .testimonials {
+            padding: var(--section-padding) 0;
+            position: relative;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 24px;
+        }
+
+        .testimonial-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-lg);
+            padding: 32px;
+            transition: all var(--transition-base);
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-4px);
+            background: var(--glass-hover);
+        }
+
+        .testimonial-quote {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            position: relative;
+            padding-left: 24px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 18px;
+            color: #1a1a2e;
+        }
+
+        .avatar-1 {
+            background: linear-gradient(135deg, var(--coral), var(--orange));
+        }
+
+        .avatar-2 {
+            background: linear-gradient(135deg, var(--pink), var(--purple));
+        }
+
+        .avatar-3 {
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+        }
+
+        .author-info {
+            flex: 1;
+        }
+
+        .author-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text-primary);
+        }
+
+        .author-role {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .author-rating {
+            display: flex;
+            gap: 4px;
+            color: var(--gold);
+            font-size: 16px;
+        }
+
+        /* ========================================
+           CTA SECTION
+        ======================================== */
+        .cta {
+            padding: var(--section-padding) 0;
+            position: relative;
+        }
+
+        .cta-container {
+            background: var(--glass-strong);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-xl);
+            padding: 64px 48px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 209, 102, 0.1) 0%, transparent 70%);
+            animation: cta-glow 8s ease-in-out infinite;
+        }
+
+        @keyframes cta-glow {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cta-title {
+            font-size: clamp(28px, 4vw, 40px);
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .cta-subtitle {
+            font-size: 18px;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-form {
+            display: flex;
+            gap: 12px;
+            max-width: 480px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .cta-input {
+            flex: 1;
+            min-width: 260px;
+            padding: 16px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-full);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: all var(--transition-base);
+        }
+
+        .cta-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .cta-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-btn {
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        .cta-note {
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           FOOTER
+        ======================================== */
+        .footer {
+            padding: 48px 0;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .footer-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            text-align: center;
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 22px;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 32px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .footer-link {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .footer-link:hover {
+            color: var(--gold);
+        }
+
+        .footer-copy {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           RESPONSIVE STYLES
+        ======================================== */
+        @media (min-width: 768px) {
+            .nav {
+                display: flex;
+            }
+
+            .mobile-menu-btn {
+                display: none;
+            }
+
+            .header-actions .btn-primary {
+                display: inline-flex;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .kanban-board {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 767px) {
+            :root {
+                --section-padding: 80px;
+            }
+
+            .header-actions .btn-primary {
+                display: none;
+            }
+
+            .hero-title {
+                font-size: 36px;
+            }
+
+            .hero-stats {
+                gap: 32px;
+            }
+
+            .stat-value {
+                font-size: 28px;
+            }
+
+            .kanban-board {
+                grid-template-columns: 1fr;
+                overflow-x: auto;
+                display: flex;
+                gap: 16px;
+                padding: 16px;
+            }
+
+            .kanban-column {
+                min-width: 280px;
+                flex-shrink: 0;
+            }
+
+            .board-frame {
+                transform: none;
+            }
+
+            .board-frame:hover {
+                transform: translateY(-5px);
+            }
+
+            .cta-container {
+                padding: 48px 24px;
+            }
+
+            .cta-form {
+                flex-direction: column;
+            }
+
+            .cta-input {
+                min-width: 100%;
+            }
+
+            .features-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ========================================
+           ACCESSIBILITY
+        ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+
+            html {
+                scroll-behavior: auto;
+            }
+        }
+
+        /* Focus styles */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible {
+            outline: 2px solid var(--gold);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Aurora Background -->
+    <div class="aurora-container">
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+        <div class="aurora-blob"></div>
+    </div>
+    <div class="noise-overlay"></div>
+
+    <!-- Header -->
+    <header class="header" id="header">
+        <div class="container">
+            <div class="header-inner">
+                <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="logo">
+                    <div class="logo-icon">✦</div>
+                    MyBA
+                </a>
+
+                <nav class="nav">
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#features" class="nav-link">Features</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#how-it-works" class="nav-link">How it Works</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#pricing" class="nav-link">Pricing</a>
+                </nav>
+
+                <div class="header-actions">
+                    <button class="btn btn-ghost">Sign In</button>
+                    <button class="btn btn-primary">Get Started Free</button>
+                    <button class="mobile-menu-btn" aria-label="Open menu">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content section-reveal visible">
+                <div class="hero-badge">
+                    <span class="badge">AI-Powered Ticket Generation</span>
+                </div>
+
+                <h1 class="hero-title">Turn ideas into backlog-ready tickets</h1>
+                <p class="hero-subtitle">
+                    Stop wrestling with ticket writing. Our AI transforms rough ideas into comprehensive, structured user stories with acceptance criteria and smart estimates.
+                </p>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-value">10k+</span>
+                        <div class="stat-label">Tickets Generated</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">500+</span>
+                        <div class="stat-label">Active Teams</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">4.9</span>
+                        <div class="stat-label">User Rating</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Board Visual Section -->
+    <section class="board-section">
+        <div class="container">
+            <div class="board-container section-reveal visible">
+                <div class="board-frame">
+                    <div class="board-header">
+                        <div class="board-title">
+                            <div class="board-title-icon">📋</div>
+                            Your Board View
+                        </div>
+                        <div class="board-actions">
+                            <button class="board-btn">Filter</button>
+                            <button class="board-btn">Sort</button>
+                            <button class="board-btn" style="background: rgba(255,209,102,0.15); color: var(--gold);">+ New Ticket</button>
+                        </div>
+                    </div>
+
+                    <div class="kanban-board">
+                        <!-- Backlog Column -->
+                        <div class="kanban-column">
+                            <div class="column-header">
+                                <span class="column-title">Backlog</span>
+                                <span class="column-count">3</span>
+                            </div>
+                            
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-142</div>
+                                <div class="ticket-title">Add dark mode toggle for dashboard analytics</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-feature">Feature</span>
+                                    </div>
+                                    <span class="ticket-points">5 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-143</div>
+                                <div class="ticket-title">Implement real-time collaboration cursors</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-feature">Feature</span>
+                                    </div>
+                                    <span class="ticket-points">8 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-144</div>
+                                <div class="ticket-title">Export tickets to PDF with custom templates</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-improvement">Improvement</span>
+                                    </div>
+                                    <span class="ticket-points">3 pts</span>
+                                </div>
+                            </div>
+
+                            <button class="add-ticket-btn">+ Add Ticket</button>
+                        </div>
+
+                        <!-- In Progress Column -->
+                        <div class="kanban-column">
+                            <div class="column-header">
+                                <span class="column-title">In Progress</span>
+                                <span class="column-count">2</span>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-138</div>
+                                <div class="ticket-title">Build AI estimation model with confidence scoring</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-feature">Feature</span>
+                                    </div>
+                                    <span class="ticket-points">13 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-139</div>
+                                <div class="ticket-title">Fix ticket search returning stale results</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-bug">Bug</span>
+                                    </div>
+                                    <span class="ticket-points">2 pts</span>
+                                </div>
+                            </div>
+
+                            <button class="add-ticket-btn">+ Add Ticket</button>
+                        </div>
+
+                        <!-- Review Column -->
+                        <div class="kanban-column">
+                            <div class="column-header">
+                                <span class="column-title">Review</span>
+                                <span class="column-count">2</span>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-135</div>
+                                <div class="ticket-title">Redesign onboarding flow with progressive disclosure</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-improvement">Improvement</span>
+                                    </div>
+                                    <span class="ticket-points">8 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-136</div>
+                                <div class="ticket-title">Add keyboard shortcuts for power users</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-feature">Feature</span>
+                                    </div>
+                                    <span class="ticket-points">5 pts</span>
+                                </div>
+                            </div>
+
+                            <button class="add-ticket-btn">+ Add Ticket</button>
+                        </div>
+
+                        <!-- Done Column -->
+                        <div class="kanban-column">
+                            <div class="column-header">
+                                <span class="column-title">Done</span>
+                                <span class="column-count">3</span>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-131</div>
+                                <div class="ticket-title">Integrate with Jira Cloud API for two-way sync</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-feature">Feature</span>
+                                    </div>
+                                    <span class="ticket-points">13 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-132</div>
+                                <div class="ticket-title">Update documentation with new API endpoints</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-improvement">Improvement</span>
+                                    </div>
+                                    <span class="ticket-points">2 pts</span>
+                                </div>
+                            </div>
+
+                            <div class="ticket-card">
+                                <div class="ticket-id">MYBA-133</div>
+                                <div class="ticket-title">Fix mobile layout issues on iOS Safari</div>
+                                <div class="ticket-meta">
+                                    <div class="ticket-tags">
+                                        <span class="ticket-tag tag-bug">Bug</span>
+                                    </div>
+                                    <span class="ticket-points">3 pts</span>
+                                </div>
+                            </div>
+
+                            <button class="add-ticket-btn">+ Add Ticket</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header section-reveal visible">
+                <h2 class="section-title">Everything you need to ship faster</h2>
+                <p class="section-subtitle">AI-powered tools that transform how your team writes and manages tickets.</p>
+            </div>
+
+            <div class="features-grid">
+                <div class="feature-card section-reveal visible" style="transition-delay: 0ms;">
+                    <div class="feature-icon feature-icon-1">📝</div>
+                    <h3 class="feature-title">Story-First Approach</h3>
+                    <p class="feature-description">
+                        Start with user value, not implementation details. Our AI crafts tickets that focus on outcomes and benefits, ensuring every ticket answers "why" before "how."
+                    </p>
+                </div>
+
+                <div class="feature-card section-reveal visible" style="transition-delay: 100ms;">
+                    <div class="feature-icon feature-icon-2">✓</div>
+                    <h3 class="feature-title">Testable Criteria</h3>
+                    <p class="feature-description">
+                        Generate clear, measurable acceptance criteria that developers love. No more ambiguity—each criterion is specific, testable, and ready for QA validation.
+                    </p>
+                </div>
+
+                <div class="feature-card section-reveal visible" style="transition-delay: 200ms;">
+                    <div class="feature-icon feature-icon-3">⚡</div>
+                    <h3 class="feature-title">Smart Estimation</h3>
+                    <p class="feature-description">
+                        AI-powered story point suggestions based on complexity, dependencies, and your team's historical velocity. Plan sprints with confidence.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials" id="testimonials">
+        <div class="container">
+            <div class="section-header section-reveal visible">
+                <h2 class="section-title">Loved by product teams</h2>
+                <p class="section-subtitle">See what engineering leaders are saying about MyBA.</p>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card section-reveal visible" style="transition-delay: 0ms;">
+                    <div class="testimonial-quote">
+                        "MyBA has completely transformed our backlog refinement process. What used to take 2 hours now takes 20 minutes. The AI-generated acceptance criteria are remarkably precise."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar avatar-1">SK</div>
+                        <div class="author-info">
+                            <div class="author-name">Sarah Kim</div>
+                            <div class="author-role">VP of Product, TechFlow</div>
+                        </div>
+                        <div class="author-rating">★★★★★</div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card section-reveal visible" style="transition-delay: 100ms;">
+                    <div class="testimonial-quote">
+                        "Finally, tickets that developers actually want to pick up. The story-first approach has improved our sprint velocity by 40% and reduced rework significantly."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar avatar-2">MR</div>
+                        <div class="author-info">
+                            <div class="author-name">Marcus Rodriguez</div>
+                            <div class="author-role">Engineering Lead, BuildStack</div>
+                        </div>
+                        <div class="author-rating">★★★★★</div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card section-reveal visible" style="transition-delay: 200ms;">
+                    <div class="testimonial-quote">
+                        "We were skeptical about AI-generated tickets, but MyBA exceeded every expectation. It's like having a senior PM on the team who never sleeps."
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar avatar-3">EJ</div>
+                        <div class="author-info">
+                            <div class="author-name">Emily Johnson</div>
+                            <div class="author-role">Product Manager, LaunchPad</div>
+                        </div>
+                        <div class="author-rating">★★★★★</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-container section-reveal visible">
+                <div class="cta-content">
+                    <h2 class="cta-title">Ready to speed up your workflow?</h2>
+                    <p class="cta-subtitle">Join 500+ teams already shipping better tickets faster. No credit card required.</p>
+                    
+                    <form class="cta-form" onsubmit="event.preventDefault(); alert(&#39;Thanks for signing up! We\&#39;ll be in touch soon.&#39;);">
+                        <input type="email" class="cta-input" placeholder="Enter your work email" required="">
+                        <button type="submit" class="btn btn-primary cta-btn">Get Started Free</button>
+                    </form>
+                    
+                    <p class="cta-note">✦ Free forever plan available • Setup takes less than 2 minutes</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-logo">
+                    <div class="logo-icon" style="width: 32px; height: 32px; font-size: 16px;">✦</div>
+                    MyBA
+                </a>
+
+                <div class="footer-links">
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">Privacy</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">Terms</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">Security</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">Contact</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">Twitter</a>
+                    <a href="file:///Users/rafael/Projects/myba/temp-landing/variation-2-sunset-aurora.html#" class="footer-link">GitHub</a>
+                </div>
+
+                <p class="footer-copy">© 2025 MyBA. All rights reserved. Crafted with passion.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Header scroll effect
+        const header = document.getElementById('header');
+        let lastScroll = 0;
+
+        window.addEventListener('scroll', () => {
+            const currentScroll = window.pageYOffset;
+            
+            if (currentScroll > 50) {
+                header.classList.add('scrolled');
+            } else {
+                header.classList.remove('scrolled');
+            }
+            
+            lastScroll = currentScroll;
+        }, { passive: true });
+
+        // Intersection Observer for reveal animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.section-reveal').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Stagger animation for cards
+        document.querySelectorAll('.features-grid, .testimonials-grid').forEach(grid => {
+            const cards = grid.querySelectorAll('.feature-card, .testimonial-card');
+            cards.forEach((card, index) => {
+                card.style.transitionDelay = `${index * 100}ms`;
+            });
+        });
+    </script>
+
+
+</body></html>

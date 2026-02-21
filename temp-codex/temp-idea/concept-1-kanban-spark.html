@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept 1 - Kanban Spark</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fef9f3;
+      --surface: #ffffff;
+      --text: #1a1a2e;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --orange-soft: #ffe3d9;
+      --blue: #004e89;
+      --blue-soft: #dcebff;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --green-soft: #d8f8ef;
+      --shadow: 0 16px 40px -20px rgba(19, 28, 46, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 10%, rgba(255, 209, 102, 0.45), transparent 30%),
+        radial-gradient(circle at 86% 18%, rgba(255, 107, 53, 0.22), transparent 28%),
+        radial-gradient(circle at 88% 88%, rgba(0, 78, 137, 0.20), transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1420px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .topbar {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 14px;
+      box-shadow: var(--shadow);
+      margin-bottom: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      font-size: 1.08rem;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--orange), #f7931e);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 1.1rem;
+      box-shadow: 0 10px 20px -10px rgba(255, 107, 53, 0.8);
+    }
+
+    .repo-panel {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      font-size: 0.86rem;
+      color: #334155;
+    }
+
+    .repo-pill {
+      border: 1px solid var(--line);
+      background: #f8fafc;
+      border-radius: 999px;
+      padding: 7px 11px;
+      font-weight: 600;
+    }
+
+    .repo-pill.active {
+      background: linear-gradient(120deg, var(--blue), #1264a3);
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .quick-actions {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn:hover { transform: translateY(-2px); }
+
+    .btn.ghost {
+      background: #fff;
+      border: 1px solid var(--line);
+      color: #334155;
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg, var(--orange), #f7931e);
+      color: #fff;
+      box-shadow: 0 12px 22px -14px rgba(255, 107, 53, 0.8);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 340px 1fr 300px;
+      gap: 14px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+    }
+
+    .panel-head span {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .capture {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .capture label {
+      font-size: 0.8rem;
+      color: #475569;
+      font-weight: 600;
+      margin-bottom: -4px;
+    }
+
+    input,
+    textarea,
+    select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 11px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea { min-height: 120px; resize: vertical; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .ai-preview {
+      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      border: 1px dashed #fdba74;
+      border-radius: 12px;
+      padding: 10px;
+      font-size: 0.86rem;
+      color: #7c2d12;
+      line-height: 1.45;
+    }
+
+    .ai-preview strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #9a3412;
+    }
+
+    .board-wrap {
+      padding: 14px;
+      overflow: auto;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+      min-width: 900px;
+    }
+
+    .column {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px;
+      display: grid;
+      gap: 8px;
+      align-content: start;
+      min-height: 420px;
+    }
+
+    .column h3 {
+      margin: 0;
+      font-size: 0.88rem;
+      font-family: "Space Grotesk", sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #1e293b;
+    }
+
+    .count {
+      font-size: 0.72rem;
+      color: #64748b;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      padding: 3px 7px;
+    }
+
+    .ticket {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .ticket:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -14px rgba(15, 23, 42, 0.35);
+      border-color: #cbd5e1;
+    }
+
+    .ticket h4 {
+      margin: 0 0 8px;
+      font-size: 0.9rem;
+      line-height: 1.3;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .tag {
+      font-size: 0.72rem;
+      font-weight: 700;
+      border-radius: 999px;
+      padding: 4px 7px;
+    }
+
+    .tag.assignee { background: var(--blue-soft); color: #1d4ed8; }
+    .tag.release { background: #fff7d6; color: #92400e; }
+    .tag.status { background: var(--green-soft); color: #047857; }
+
+    .sync-body {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .sync-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .sync-card h4 {
+      margin: 0 0 6px;
+      font-size: 0.86rem;
+      color: #334155;
+    }
+
+    .sync-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.8rem;
+      margin-bottom: 6px;
+      color: #475569;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 800;
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: #ecfeff;
+      color: #0e7490;
+    }
+
+    .timeline {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -440px;
+      width: min(440px, 100vw);
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid var(--line);
+      box-shadow: -20px 0 40px -30px rgba(15, 23, 42, 0.55);
+      transition: right 0.3s ease;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open { right: 0; }
+
+    .drawer-head {
+      padding: 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .drawer-head h3 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+    }
+
+    .drawer-content {
+      padding: 16px;
+      overflow: auto;
+      display: grid;
+      gap: 12px;
+    }
+
+    .context {
+      border: 1px dashed #cbd5e1;
+      border-radius: 12px;
+      padding: 10px;
+      line-height: 1.55;
+      color: #334155;
+      font-size: 0.9rem;
+      background: #f8fafc;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.35);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 19;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    @media (max-width: 1240px) {
+      .workspace { grid-template-columns: 1fr; }
+      .board { min-width: 0; grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .topbar { grid-template-columns: 1fr; }
+      .quick-actions { justify-content: flex-start; }
+      .field-row { grid-template-columns: 1fr; }
+      .board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer" aria-label="Ticket full context panel">
+    <div class="drawer-head">
+      <h3 id="drawerTitle">Ticket details</h3>
+      <button class="btn ghost" onclick="closeDrawer()">Close</button>
+    </div>
+    <div class="drawer-content">
+      <div class="meta">
+        <span class="tag assignee" id="drawerAssignee">Assigned</span>
+        <span class="tag release" id="drawerRelease">Release</span>
+        <span class="tag status" id="drawerStatus">Status</span>
+      </div>
+      <div class="context" id="drawerContext">Full ticket context appears here.</div>
+      <button class="btn primary">Open in GitLab issue</button>
+    </div>
+  </aside>
+
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="logo">✦</span> MyBA Flowboard</div>
+      <div class="repo-panel">
+        <span class="repo-pill active">Repo: mobile-app</span>
+        <span class="repo-pill">Repo: backend-core</span>
+        <span class="repo-pill">GitLab group: product-team</span>
+      </div>
+      <div class="quick-actions">
+        <button class="btn ghost">Import Excel snapshot</button>
+        <button class="btn primary">Sync all to GitLab</button>
+      </div>
+    </header>
+
+    <section class="workspace">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Quick ticket capture</h2>
+          <span>AI assist on create</span>
+        </header>
+        <div class="capture">
+          <label for="shortInput">Short input</label>
+          <input id="shortInput" type="text" placeholder="e.g. new login" />
+
+          <label for="briefInput">Or brief overview</label>
+          <textarea id="briefInput" placeholder="Describe what we want, constraints, and release target. AI will summarize title + clean description."></textarea>
+
+          <div class="field-row">
+            <div>
+              <label for="owner">Assigned to</label>
+              <select id="owner">
+                <option>Marina</option>
+                <option>Rafael</option>
+                <option>Sam</option>
+              </select>
+            </div>
+            <div>
+              <label for="release">Planned release</label>
+              <select id="release">
+                <option>v2.18.0</option>
+                <option>v2.19.0</option>
+                <option>v2.20.0</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="ai-preview">
+            <strong>AI draft preview</strong>
+            Title: Streamlined Login Entry Flow<br>
+            Summary: Consolidates login and fallback auth paths with clearer error feedback and faster recoverability.
+          </div>
+
+          <div class="field-row">
+            <button class="btn ghost">Generate with AI</button>
+            <button class="btn primary">Create + push to GitLab</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Team board</h2>
+          <span>Trello-like visual status</span>
+        </header>
+        <div class="board-wrap">
+          <div class="board">
+            <section class="column">
+              <h3>Backlog <span class="count">4</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Revamp login screen" data-assignee="Marina" data-release="v2.18.0" data-status="Backlog" data-context="User asks for cleaner login experience. Include social login order, forgot password discoverability, and clearer validation messages. Needs web + mobile parity.">
+                <h4>Revamp login screen</h4>
+                <div class="meta"><span class="tag assignee">Marina</span><span class="tag release">v2.18.0</span><span class="tag status">Backlog</span></div>
+              </article>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Role matrix for support tools" data-assignee="Sam" data-release="v2.19.0" data-status="Backlog" data-context="Define permission combinations for support, QA, admin and super-admin roles. Include edge-case handling when role policies conflict.">
+                <h4>Role matrix for support tools</h4>
+                <div class="meta"><span class="tag assignee">Sam</span><span class="tag release">v2.19.0</span><span class="tag status">Backlog</span></div>
+              </article>
+            </section>
+
+            <section class="column">
+              <h3>In Progress <span class="count">3</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Passwordless fallback" data-assignee="Rafael" data-release="v2.18.0" data-status="In Progress" data-context="Add OTP fallback when OAuth fails. Ticket includes telemetry events, timeout behavior, and customer support script updates.">
+                <h4>Passwordless fallback</h4>
+                <div class="meta"><span class="tag assignee">Rafael</span><span class="tag release">v2.18.0</span><span class="tag status">In Progress</span></div>
+              </article>
+            </section>
+
+            <section class="column">
+              <h3>Review <span class="count">2</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Auth API error mapping" data-assignee="Marina" data-release="v2.18.0" data-status="Review" data-context="Normalize backend auth error codes and map to UI states. Include acceptance criteria for localization and analytics event naming.">
+                <h4>Auth API error mapping</h4>
+                <div class="meta"><span class="tag assignee">Marina</span><span class="tag release">v2.18.0</span><span class="tag status">Review</span></div>
+              </article>
+            </section>
+
+            <section class="column">
+              <h3>Done <span class="count">5</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Session timeout toast" data-assignee="Sam" data-release="v2.17.4" data-status="Done" data-context="Introduced non-blocking timeout toast with re-auth action and analytics tracking. Validated in web and Android QA passes.">
+                <h4>Session timeout toast</h4>
+                <div class="meta"><span class="tag assignee">Sam</span><span class="tag release">v2.17.4</span><span class="tag status">Done</span></div>
+              </article>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <header class="panel-head">
+          <h2>GitLab integration</h2>
+          <span>Mirrored issue lifecycle</span>
+        </header>
+        <div class="sync-body">
+          <section class="sync-card">
+            <h4>Sync status</h4>
+            <div class="sync-item"><span>Connection</span><span class="badge">Connected</span></div>
+            <div class="sync-item"><span>Project</span><span>#mobile-app</span></div>
+            <div class="sync-item"><span>Last sync</span><span>18s ago</span></div>
+          </section>
+
+          <section class="sync-card">
+            <h4>Automation rules</h4>
+            <div class="timeline">
+              - New ticket -> create GitLab issue with labels<br>
+              - Status change -> move issue label/workflow
+              <br>- Assigned user -> map to GitLab assignee
+              <br>- Release version -> set milestone automatically
+            </div>
+          </section>
+
+          <section class="sync-card">
+            <h4>Recent events</h4>
+            <div class="timeline">
+              #1842 created from "Passwordless fallback"<br>
+              #1839 moved to Review by Marina<br>
+              #1833 closed in merge request !291
+            </div>
+          </section>
+
+          <button class="btn primary">Configure repo mapping</button>
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    function openDrawer(card) {
+      document.getElementById('drawerTitle').textContent = card.dataset.title;
+      document.getElementById('drawerAssignee').textContent = card.dataset.assignee;
+      document.getElementById('drawerRelease').textContent = card.dataset.release;
+      document.getElementById('drawerStatus').textContent = card.dataset.status;
+      document.getElementById('drawerContext').textContent = card.dataset.context;
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

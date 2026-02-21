@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SprintFlow — List + Board View</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      color: #1e293b;
+    }
+    .app-container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Sidebar - Projects/List */
+    .sidebar {
+      width: 300px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255,255,255,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.05);
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 20px;
+      color: #764ba2;
+      margin-bottom: 16px;
+    }
+    .logo-icon {
+      width: 32px; height: 32px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 8px;
+      display: grid; place-items: center;
+      color: #fff; font-size: 16px;
+    }
+    .quick-create-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .ticket-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+    }
+    .list-section {
+      margin-bottom: 16px;
+    }
+    .list-section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 8px 12px;
+    }
+    .list-item {
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 3px solid transparent;
+    }
+    .list-item:hover, .list-item.active {
+      background: rgba(102,126,234,0.1);
+      border-left-color: #667eea;
+    }
+    .list-item-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+      margin-bottom: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .list-item-meta {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .list-badge {
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .badge-todo { background: #dbeafe; color: #1e40af; }
+    .badge-progress { background: #fef3c7; color: #92400e; }
+    .badge-done { background: #d1fae5; color: #065f46; }
+    .list-assignee {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: grid; place-items: center;
+      color: #fff; font-size: 9px; font-weight: 600;
+    }
+    .sidebar-footer {
+      padding: 16px;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
+    .gitlab-status {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: linear-gradient(135deg, #fc6d2610, #e2432910);
+      border: 1px solid #fc6d2630;
+      border-radius: 10px;
+    }
+    .gitlab-icon {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, #fc6d26, #e24329);
+      border-radius: 6px;
+      display: grid; place-items: center;
+      color: #fff; font-size: 14px;
+    }
+    .gitlab-info { flex: 1; }
+    .gitlab-info h4 { font-size: 12px; margin-bottom: 2px; }
+    .gitlab-info p { font-size: 10px; color: #64748b; }
+    /* Main Board Area */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .header {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(20px);
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .header-title h1 { 
+      font-size: 18px; 
+      font-weight: 700; 
+      color: #1e293b;
+      margin-bottom: 4px;
+    }
+    .header-title p {
+      font-size: 13px;
+      color: #64748b;
+    }
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .view-toggle {
+      display: flex;
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 4px;
+    }
+    .view-btn {
+      padding: 8px 16px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .view-btn.active {
+      background: #fff;
+      color: #764ba2;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .filter-btn {
+      padding: 10px 16px;
+      background: #f1f5f9;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      color: #64748b;
+      cursor: pointer;
+    }
+    .user-avatar {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #f093fb, #f5576c);
+      display: grid; place-items: center;
+      color: #fff; font-weight: 600; font-size: 14px;
+    }
+    /* Board Content */
+    .board-container {
+      flex: 1;
+      overflow: auto;
+      padding: 24px;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      min-width: 800px;
+    }
+    .column {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .column-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    .column-title {
+      font-weight: 600;
+      font-size: 14px;
+      color: #1e293b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+    .status-todo { background: #3b82f6; }
+    .status-progress { background: #f59e0b; }
+    .status-review { background: #8b5cf6; }
+    .status-done { background: #10b981; }
+    .column-count {
+      padding: 2px 10px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 20px;
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 600;
+    }
+    .cards {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    }
+    .card-ai-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .ai-dot {
+      width: 6px; height: 6px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .ai-label {
+      font-size: 10px;
+      color: #764ba2;
+      font-weight: 600;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .card-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card-tags {
+      display: flex;
+      gap: 6px;
+    }
+    .tag {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+    .tag-version { background: #e0e7ff; color: #4338ca; }
+    .tag-priority { background: #fee2e2; color: #991b1b; }
+    .card-assignee {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: grid; place-items: center;
+      color: #fff; font-size: 11px; font-weight: 600;
+    }
+    .add-card-btn {
+      padding: 12px;
+      border: 2px dashed rgba(255,255,255,0.5);
+      border-radius: 10px;
+      text-align: center;
+      color: #64748b;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .add-card-btn:hover {
+      border-color: #667eea;
+      color: #764ba2;
+    }
+    /* Floating Quick Create */
+    .floating-create {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 500px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 20px;
+      z-index: 100;
+    }
+    .floating-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .floating-header h3 {
+      font-size: 14px;
+      color: #1e293b;
+    }
+    .ai-badge {
+      padding: 3px 10px;
+      background: linear-gradient(135deg, #667eea20, #764ba220);
+      color: #764ba2;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .floating-input {
+      width: 100%;
+      padding: 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 15px;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    .floating-input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    .ai-preview {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: linear-gradient(135deg, #667eea10, #764ba210);
+      border: 1px dashed #667eea40;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
+    .ai-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      color: #fff; font-size: 16px;
+    }
+    .ai-text {
+      flex: 1;
+    }
+    .ai-text-label {
+      font-size: 11px;
+      color: #764ba2;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }
+    .ai-text-value {
+      font-size: 14px;
+      color: #1e293b;
+      font-weight: 500;
+    }
+    .floating-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .floating-actions button {
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-secondary {
+      background: #f1f5f9;
+      border: none;
+      color: #64748b;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar with Ticket List -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">⚡</div>
+          SprintFlow
+        </div>
+        <button class="quick-create-btn">
+          <span>+</span>
+          Quick Create
+        </button>
+      </div>
+      <div class="ticket-list">
+        <div class="list-section">
+          <div class="list-section-title">Recent Tickets</div>
+          <div class="list-item active">
+            <div class="list-item-title">Implement passwordless login with magic links</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-progress">In Progress</span>
+              <div class="list-assignee">JD</div>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-item-title">Dark mode support for dashboard widgets</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-todo">To Do</span>
+              <div class="list-assignee">MK</div>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-item-title">Real-time notifications via WebSocket</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-progress">In Progress</span>
+              <div class="list-assignee">TK</div>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-item-title">Export reports to PDF</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-todo">To Do</span>
+              <div class="list-assignee">AL</div>
+            </div>
+          </div>
+        </div>
+        <div class="list-section">
+          <div class="list-section-title">Completed</div>
+          <div class="list-item">
+            <div class="list-item-title">Setup CI/CD pipeline</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-done">Done</span>
+              <div class="list-assignee">JD</div>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="list-item-title">Database migration scripts</div>
+            <div class="list-item-meta">
+              <span class="list-badge badge-done">Done</span>
+              <div class="list-assignee">SR</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="gitlab-status">
+          <div class="gitlab-icon">🦊</div>
+          <div class="gitlab-info">
+            <h4>GitLab Connected</h4>
+            <p>mycompany/web-app</p>
+          </div>
+          <span style="color: #10b981; font-size: 16px;">●</span>
+        </div>
+      </div>
+    </aside>
+    <!-- Main Board Area -->
+    <main class="main">
+      <header class="header">
+        <div class="header-title">
+          <h1>Passwordless Login Implementation</h1>
+          <p>Created from: "we need to let users log in without passwords, maybe send them an email link?"</p>
+        </div>
+        <div class="header-actions">
+          <div class="view-toggle">
+            <button class="view-btn">List</button>
+            <button class="view-btn active">Board</button>
+          </div>
+          <button class="filter-btn">Filter</button>
+          <div class="user-avatar">JD</div>
+        </div>
+      </header>
+      <div class="board-container">
+        <div class="board">
+          <div class="column">
+            <div class="column-header">
+              <div class="column-title">
+                <span class="status-dot status-todo"></span>
+                To Do
+              </div>
+              <span class="column-count">2</span>
+            </div>
+            <div class="cards">
+              <div class="card">
+                <div class="card-ai-indicator">
+                  <span class="ai-dot"></span>
+                  <span class="ai-label">AI Generated</span>
+                </div>
+                <div class="card-title">Design email template for magic links</div>
+                <div class="card-footer">
+                  <div class="card-tags">
+                    <span class="tag tag-version">v2.3</span>
+                  </div>
+                  <div class="card-assignee">MK</div>
+                </div>
+              </div>
+              <div class="add-card-btn">+ Add card</div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-header">
+              <div class="column-title">
+                <span class="status-dot status-progress"></span>
+                In Progress
+              </div>
+              <span class="column-count">1</span>
+            </div>
+            <div class="cards">
+              <div class="card">
+                <div class="card-title">Implement token generation API</div>
+                <div class="card-footer">
+                  <div class="card-tags">
+                    <span class="tag tag-version">v2.3</span>
+                    <span class="tag tag-priority">High</span>
+                  </div>
+                  <div class="card-assignee">JD</div>
+                </div>
+              </div>
+              <div class="add-card-btn">+ Add card</div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-header">
+              <div class="column-title">
+                <span class="status-dot status-review"></span>
+                Review
+              </div>
+              <span class="column-count">0</span>
+            </div>
+            <div class="cards">
+              <div class="add-card-btn">+ Add card</div>
+            </div>
+          </div>
+          <div class="column">
+            <div class="column-header">
+              <div class="column-title">
+                <span class="status-dot status-done"></span>
+                Done
+              </div>
+              <span class="column-count">1</span>
+            </div>
+            <div class="cards">
+              <div class="card">
+                <div class="card-title">Research authentication providers</div>
+                <div class="card-footer">
+                  <div class="card-tags">
+                    <span class="tag tag-version">v2.3</span>
+                  </div>
+                  <div class="card-assignee">TK</div>
+                </div>
+              </div>
+              <div class="add-card-btn">+ Add card</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+  <!-- Floating Quick Create -->
+  <div class="floating-create">
+    <div class="floating-header">
+      <h3>✨ Quick Create</h3>
+      <span class="ai-badge">AI Powered</span>
+    </div>
+    <input type="text" class="floating-input" placeholder="Describe what you want to build...">
+    <div class="ai-preview">
+      <div class="ai-icon">🤖</div>
+      <div class="ai-text">
+        <div class="ai-text-label">AI Generated Title</div>
+        <div class="ai-text-value">Implement passwordless login with magic links</div>
+      </div>
+    </div>
+    <div class="floating-actions">
+      <button class="btn-secondary">Cancel</button>
+      <button class="btn-primary">Create & Sync to GitLab</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Concept 03 - Luxury Minimal Frame</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Manrope:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#f7f3ee;--ink:#17130f;--soft:#6a5a4f;--gold:#b98a3c;--card:#fffdfa}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif}
+    .wrap{max-width:1140px;margin:0 auto;padding:26px}
+    .frame{border:1px solid #00000018;background:var(--card)}
+    nav{display:flex;justify-content:space-between;padding:14px 18px;align-items:center}
+    .logo{font-family:'Cormorant Garamond',serif;font-size:34px;letter-spacing:.04em}
+    .btn{padding:9px 14px;border:1px solid var(--ink);text-decoration:none;color:var(--ink)}
+    .hero{padding:40px 22px 30px;border-top:1px solid #00000010}
+    h1{font-family:'Cormorant Garamond',serif;font-size:clamp(50px,8vw,88px);line-height:.94;margin:0;max-width:900px}
+    .sub{max-width:690px;color:var(--soft);font-size:18px;line-height:1.75}
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0 22px 22px}
+    .card{border:1px solid #00000014;padding:14px;background:#fff}
+    .card h2{font-family:'Cormorant Garamond',serif;font-size:34px;margin:0 0 8px}
+    .board{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+    .col{border:1px solid #00000014;padding:8px}
+    .col h3{margin:0 0 8px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--soft)}
+    .ticket{font-size:13px;padding:7px;border:1px solid #00000014;margin-bottom:7px;background:#fefcf9}
+    video{width:100%;display:block;border:1px solid #00000018}
+    .quote{padding:0 22px 24px;color:var(--soft)}
+    .quote b{color:var(--ink)}
+    @media(max-width:920px){.layout{grid-template-columns:1fr}.board{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="frame">
+      <nav>
+        <div class="logo">MyBA</div>
+        <a class="btn" href="#">Start Free</a>
+      </nav>
+      <section class="hero">
+        <h1>Quietly elegant. Brutally clear tickets.</h1>
+        <p class="sub">A refined landing concept for high-trust SaaS positioning. MyBA turns messy product requests into structured backlog assets that teams can execute immediately.</p>
+      </section>
+
+      <section class="layout">
+        <article class="card">
+          <h2>Board Concept</h2>
+          <div class="board">
+            <div class="col"><h3>Backlog</h3><div class="ticket">Feature: Dashboard filter presets</div><div class="ticket">Bug: Upload retry handling</div></div>
+            <div class="col"><h3>In Progress</h3><div class="ticket">Story point confidence model</div><div class="ticket">Template quality scoring</div></div>
+            <div class="col"><h3>Review</h3><div class="ticket">Onboarding acceptance criteria refresh</div></div>
+            <div class="col"><h3>Done</h3><div class="ticket">Jira cloud endpoint mapping</div></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2>Video Walkthrough</h2>
+          <p style="margin-top:0;color:var(--soft)">Real remotion sequence showing ticket generation from prompt to final structured output.</p>
+          <video src="../public/videos/ai-ticket-generation-showcase.mp4" autoplay muted loop playsinline controls></video>
+        </article>
+      </section>
+
+      <p class="quote"><b>Positioning:</b> Premium, composed, trust-first style for B2B buyers who value credibility over hype.</p>
+    </div>
+  </div>
+</body>
+</html>

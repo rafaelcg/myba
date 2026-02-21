@@ -1,7 +1,7 @@
 import { UserProfile } from '@clerk/clerk-react'
 
 export function UserProfilePage() {
-  const basePath = import.meta.env.DEV ? '/' : '/myba/';
+  const basePath = '/';
   return (
     <div style={{
       minHeight: '100vh',

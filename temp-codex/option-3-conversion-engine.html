@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Option 3 - Conversion Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;800&family=Karla:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fcf7ef;
+      --ink: #162030;
+      --muted: #576275;
+      --brand: #f0652f;
+      --brand-2: #ffca5f;
+      --surface: #ffffff;
+      --line: #e8d9c7;
+      --good: #1e9f74;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Karla", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255, 202, 95, 0.5), transparent 33%),
+        radial-gradient(circle at 92% 88%, rgba(240, 101, 47, 0.25), transparent 30%),
+        var(--bg);
+    }
+
+    .shell {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 26px 20px 70px;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 38px;
+    }
+
+    .logo {
+      font-family: "Outfit", sans-serif;
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: 0.03em;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      padding: 10px 15px;
+      font-weight: 700;
+      font-family: "Outfit", sans-serif;
+      border: 1px solid var(--ink);
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .btn.primary {
+      border-color: transparent;
+      background: linear-gradient(130deg, var(--brand), #f58c33);
+      color: #fff;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      margin-bottom: 16px;
+    }
+
+    .copy {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 30px;
+    }
+
+    .eyebrow {
+      font-family: "Outfit", sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 11px;
+      color: #cc5427;
+      margin-bottom: 10px;
+      font-weight: 700;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Outfit", sans-serif;
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 0.94;
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      margin: 14px 0 20px;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 56ch;
+    }
+
+    .proof {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .proof span {
+      font-size: 12px;
+      border: 1px solid var(--line);
+      background: #fffaf2;
+      padding: 8px 10px;
+      border-radius: 999px;
+      color: #445265;
+      font-weight: 700;
+    }
+
+    .prompt {
+      background: #121c28;
+      color: #eaf2ff;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid #203349;
+      box-shadow: 0 20px 34px rgba(13, 25, 38, 0.2);
+    }
+
+    .prompt-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 15px;
+      border-bottom: 1px solid #24405a;
+      font-size: 12px;
+      color: #a8bfd8;
+      font-family: "Outfit", sans-serif;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 210px;
+      border: 0;
+      background: transparent;
+      color: #eaf2ff;
+      padding: 16px;
+      resize: vertical;
+      font: inherit;
+      line-height: 1.55;
+    }
+
+    .prompt-foot {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 15px;
+      border-top: 1px solid #24405a;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #98b2cd;
+    }
+
+    .go {
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(130deg, var(--brand-2), #f08a34);
+      color: #2f1b00;
+      font-weight: 800;
+      padding: 11px 14px;
+      font-family: "Outfit", sans-serif;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .panel h2 {
+      margin: 0 0 10px;
+      font-size: 16px;
+      font-family: "Outfit", sans-serif;
+    }
+
+    .preview {
+      background: #fffaf2;
+      border: 1px dashed #d8b88f;
+      border-radius: 10px;
+      padding: 12px;
+      color: #4d5a6c;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .list {
+      margin: 0;
+      padding-left: 18px;
+      color: #4f5d6f;
+      line-height: 1.6;
+      font-size: 14px;
+    }
+
+    .status {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--good);
+      font-weight: 700;
+    }
+
+    @media (max-width: 960px) {
+      .hero,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="nav">
+      <div class="logo">MYBA</div>
+      <div class="actions">
+        <button class="btn">Sign in</button>
+        <button class="btn primary">Get tokens</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <article class="copy">
+        <p class="eyebrow">Conversion-forward direction</p>
+        <h1>Your best PM writes every ticket in 3 seconds.</h1>
+        <p class="sub">
+          This option is built to convert first-time visitors quickly: bold value proposition, immediate input start,
+          and clear progression from free tokens to paid plans.
+        </p>
+        <div class="proof">
+          <span>Free start: 3 tokens</span>
+          <span>Tool-ready formatting</span>
+          <span>Consistent acceptance criteria</span>
+        </div>
+      </article>
+
+      <aside class="prompt">
+        <div class="prompt-head">
+          <span>Ticket brief</span>
+          <span>Ready</span>
+        </div>
+        <textarea placeholder="Example: Add filtering by customer segment in analytics dashboard, include performance limits and edge-case handling for empty datasets."></textarea>
+        <div class="prompt-foot">
+          <span class="hint">Tip: include objective, user role, constraints, and quality bar.</span>
+          <button class="go">Generate draft</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="grid">
+      <article class="panel">
+        <h2>Output style preview</h2>
+        <div class="preview">
+          Title, summary, criteria checklist, risk notes, rollout plan, and clear definition of done.
+          Designed for immediate copy into Jira, Linear, or Asana.
+        </div>
+        <p class="status">Output quality check: Passed</p>
+      </article>
+
+      <article class="panel">
+        <h2>Why this fits MyBA</h2>
+        <ul class="list">
+          <li>Directly supports anonymous to paid conversion</li>
+          <li>Keeps ticket generation as dominant action</li>
+          <li>Communicates token value clearly</li>
+          <li>Balances credibility and energy</li>
+        </ul>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

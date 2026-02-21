@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept 3 - Sync Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff9f2;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --blue: #004e89;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --shadow: 0 24px 44px -26px rgba(15, 23, 42, 0.4);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 9%, rgba(255, 209, 102, 0.45), transparent 34%),
+        radial-gradient(circle at 89% 12%, rgba(255, 107, 53, 0.24), transparent 31%),
+        radial-gradient(circle at 86% 88%, rgba(0, 78, 137, 0.15), transparent 31%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell { max-width: 1400px; margin: 0 auto; padding: 22px; }
+
+    .hero {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: 1.2fr 1fr auto auto;
+      gap: 8px;
+      align-items: start;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 1.08rem;
+      font-family: "Space Grotesk", sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--orange), #f7931e);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 12px 20px -12px rgba(255, 107, 53, 0.9);
+    }
+
+    .brand p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      padding: 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea { min-height: 110px; resize: vertical; }
+
+    .btn {
+      border: 0;
+      border-radius: 11px;
+      font: inherit;
+      font-weight: 700;
+      padding: 10px 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn.ai { background: linear-gradient(135deg, var(--orange), #f7931e); color: #fff; }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1d8ed8); color: #fff; }
+
+    .ai-result {
+      grid-column: 1 / -1;
+      border: 1px dashed #fdba74;
+      background: #fff7ed;
+      border-radius: 12px;
+      padding: 10px;
+      color: #7c2d12;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+    }
+
+    .panel-head span { font-size: 0.78rem; color: var(--muted); }
+
+    .board {
+      padding: 12px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      overflow: auto;
+      min-height: 520px;
+    }
+
+    .column {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px;
+      display: grid;
+      gap: 7px;
+      align-content: start;
+      min-width: 220px;
+    }
+
+    .column h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #475569;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .count {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: #64748b;
+      padding: 3px 6px;
+    }
+
+    .ticket {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 9px;
+      cursor: pointer;
+      transition: transform 0.18s ease;
+    }
+
+    .ticket:hover { transform: translateY(-2px); border-color: #cbd5e1; }
+
+    .ticket-title {
+      margin: 0 0 7px;
+      font-size: 0.86rem;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .tag {
+      border-radius: 999px;
+      padding: 3px 6px;
+      font-size: 0.66rem;
+      font-weight: 700;
+    }
+
+    .tag.owner { background: #dbeafe; color: #1d4ed8; }
+    .tag.version { background: #fef3c7; color: #92400e; }
+    .tag.status { background: #dcfce7; color: #166534; }
+
+    .sync {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .sync-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .sync-card h4 { margin: 0 0 7px; font-size: 0.84rem; color: #334155; }
+
+    .sync-card p {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #475569;
+      line-height: 1.55;
+    }
+
+    .bar {
+      height: 8px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      overflow: hidden;
+      margin-top: 6px;
+    }
+
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 78%;
+      background: linear-gradient(90deg, var(--green), #34d399);
+    }
+
+    .detail {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.94);
+      width: min(760px, 95vw);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 30;
+      overflow: hidden;
+    }
+
+    .detail.show {
+      opacity: 1;
+      pointer-events: all;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .detail-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .detail-head h3 { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 1rem; }
+
+    .detail-body {
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    .context {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 29;
+    }
+
+    .backdrop.show { opacity: 1; pointer-events: all; }
+
+    @media (max-width: 1200px) {
+      .hero { grid-template-columns: 1fr; }
+      .layout { grid-template-columns: 1fr; }
+      .board { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .board { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="backdrop" id="backdrop" onclick="closeDetail()"></div>
+  <aside class="detail" id="detailModal">
+    <header class="detail-head">
+      <h3 id="detailTitle">Ticket detail</h3>
+      <button class="btn primary" onclick="closeDetail()">Close</button>
+    </header>
+    <div class="detail-body">
+      <div class="tags">
+        <span class="tag owner" id="detailOwner"></span>
+        <span class="tag version" id="detailVersion"></span>
+        <span class="tag status" id="detailStatus"></span>
+      </div>
+      <div class="context" id="detailContext"></div>
+      <button class="btn primary">Open GitLab issue mirror</button>
+    </div>
+  </aside>
+
+  <main class="shell">
+    <section class="hero">
+      <header class="brand">
+        <h1><span class="mark">✺</span> MyBA Sync Studio</h1>
+        <p>Create tickets fast, review by board, sync to GitLab in real time.</p>
+      </header>
+      <input type="text" id="quick" placeholder="Quick create: new login" />
+      <textarea id="brief" placeholder="Brief overview: AI summarizes into title + clean issue context."></textarea>
+      <button class="btn ai" onclick="generateAI()">AI summarize</button>
+      <button class="btn primary">Create and sync</button>
+      <div class="ai-result" id="aiDraft">
+        <strong>AI draft preview:</strong> "Improve login recoverability" - Adds clearer errors, fallback path, and measurable acceptance criteria for auth failures.
+      </div>
+    </section>
+
+    <section class="layout">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Kanban workspace</h2>
+          <span>Click ticket for full context</span>
+        </header>
+        <div class="board">
+          <section class="column">
+            <h3>Backlog <span class="count">4</span></h3>
+            <article class="ticket" onclick="openDetail(this)" data-title="Refine login first step" data-owner="Marina" data-version="v2.18.0" data-status="Backlog" data-context="Improve first-time login clarity with stronger primary CTA, supporting copy, and explicit password reset path. Add analytics events for drop-off points.">
+              <p class="ticket-title">Refine login first step</p>
+              <div class="tags"><span class="tag owner">Marina</span><span class="tag version">v2.18.0</span><span class="tag status">Backlog</span></div>
+            </article>
+          </section>
+
+          <section class="column">
+            <h3>In Progress <span class="count">3</span></h3>
+            <article class="ticket" onclick="openDetail(this)" data-title="OTP timeout redesign" data-owner="Rafael" data-version="v2.18.0" data-status="In Progress" data-context="Rework OTP timeout screen to provide retry states, clearer help copy, and support handoff actions. Include error state snapshots in QA checklist.">
+              <p class="ticket-title">OTP timeout redesign</p>
+              <div class="tags"><span class="tag owner">Rafael</span><span class="tag version">v2.18.0</span><span class="tag status">In Progress</span></div>
+            </article>
+          </section>
+
+          <section class="column">
+            <h3>Review <span class="count">2</span></h3>
+            <article class="ticket" onclick="openDetail(this)" data-title="Auth error taxonomy" data-owner="Sam" data-version="v2.18.0" data-status="Review" data-context="Standardize API auth errors into predictable client categories and map each to user-facing message templates."
+            >
+              <p class="ticket-title">Auth error taxonomy</p>
+              <div class="tags"><span class="tag owner">Sam</span><span class="tag version">v2.18.0</span><span class="tag status">Review</span></div>
+            </article>
+          </section>
+
+          <section class="column">
+            <h3>Done <span class="count">6</span></h3>
+            <article class="ticket" onclick="openDetail(this)" data-title="Session expiration cue" data-owner="Marina" data-version="v2.17.4" data-status="Done" data-context="Added non-blocking timeout cue and one-click re-auth route. Closed with merge request !291 and QA pass in web+android.">
+              <p class="ticket-title">Session expiration cue</p>
+              <div class="tags"><span class="tag owner">Marina</span><span class="tag version">v2.17.4</span><span class="tag status">Done</span></div>
+            </article>
+          </section>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <header class="panel-head">
+          <h2>GitLab bridge</h2>
+          <span>Live mirror</span>
+        </header>
+        <div class="sync">
+          <section class="sync-card">
+            <h4>Connected project</h4>
+            <p><strong>Group/Repo:</strong> product-team/mobile-app<br><strong>Default milestone:</strong> v2.18.0<br><strong>Assignee map:</strong> synced</p>
+          </section>
+
+          <section class="sync-card">
+            <h4>Sync health</h4>
+            <p>Issue create/update latency</p>
+            <div class="bar"><span></span></div>
+          </section>
+
+          <section class="sync-card">
+            <h4>Automation behavior</h4>
+            <p>Status tag changes apply GitLab workflow labels automatically. Clicking a card opens complete ticket context and linked issue actions.</p>
+          </section>
+
+          <section class="sync-card">
+            <h4>Recent activity</h4>
+            <p>#1848 created by AI summary<br>#1843 moved to review<br>#1836 closed after merge !294</p>
+          </section>
+
+          <button class="btn primary">Manage integration</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    const aiTitles = [
+      "Streamline Login Journey",
+      "Unify Authentication Entry States",
+      "Reduce Login Friction on First Attempt",
+      "Harden Fallback Auth Flow"
+    ];
+
+    function generateAI() {
+      const shortText = document.getElementById('quick').value.trim();
+      const briefText = document.getElementById('brief').value.trim();
+      const chosen = aiTitles[Math.floor(Math.random() * aiTitles.length)];
+      document.getElementById('aiDraft').innerHTML = "<strong>AI draft preview:</strong> \"" + (shortText || chosen) + "\" - " + (briefText || "Summarized ticket context with clear acceptance criteria and release-ready scope.");
+    }
+
+    function openDetail(card) {
+      document.getElementById('detailTitle').textContent = card.dataset.title;
+      document.getElementById('detailOwner').textContent = card.dataset.owner;
+      document.getElementById('detailVersion').textContent = card.dataset.version;
+      document.getElementById('detailStatus').textContent = card.dataset.status;
+      document.getElementById('detailContext').textContent = card.dataset.context;
+      document.getElementById('detailModal').classList.add('show');
+      document.getElementById('backdrop').classList.add('show');
+    }
+
+    function closeDetail() {
+      document.getElementById('detailModal').classList.remove('show');
+      document.getElementById('backdrop').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

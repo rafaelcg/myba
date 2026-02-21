@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyBA — AI Ticket Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --surface-elevated: #f1f5f9;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --accent: #0ea5e9;
+      --accent-secondary: #6366f1;
+      --border: #e2e8f0;
+      --glass-bg: rgba(255,255,255,0.7);
+      --glass-border: rgba(255,255,255,0.8);
+    }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 50%, #f8fafc 100%);
+      min-height: 100vh;
+      color: var(--text);
+      overflow-x: hidden;
+    }
+    
+    /* Subtle Grid Pattern */
+    .grid-pattern {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-image: 
+        linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    
+    /* Floating Orbs */
+    .orbs {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+    }
+    
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: linear-gradient(135deg, #bae6fd, #7dd3fc);
+      top: 10%; left: -5%;
+    }
+    
+    .orb-2 {
+      width: 300px; height: 300px;
+      background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+      top: 50%; right: -5%;
+    }
+    
+    /* Header */
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 40px;
+    }
+    
+    .header-glass {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.8);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 20px;
+      font-weight: 700;
+    }
+    
+    nav { display: flex; gap: 8px; }
+    
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 18px;
+      border-radius: 10px;
+      transition: all 0.2s;
+    }
+    
+    nav a:hover {
+      background: var(--surface-elevated);
+      color: var(--text);
+    }
+    
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    
+    .btn-secondary {
+      padding: 10px 22px;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-secondary:hover {
+      background: var(--surface-elevated);
+      border-color: #cbd5e1;
+    }
+    
+    .btn-primary {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      border: none;
+      color: #fff;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
+    }
+    
+    .btn-large {
+      padding: 14px 28px;
+      font-size: 15px;
+    }
+    
+    /* Main */
+    main {
+      padding-top: 140px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-left: 40px;
+      padding-right: 40px;
+    }
+    
+    /* Hero */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 80px;
+      align-items: center;
+      padding: 60px 0 100px;
+    }
+    
+    .hero-content {
+      max-width: 520px;
+    }
+    
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.2);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 28px;
+      color: var(--accent);
+    }
+    
+    .badge-dot {
+      width: 6px; height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+    
+    .hero h1 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 52px;
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      letter-spacing: -1px;
+      color: var(--text);
+    }
+    
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero p {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      line-height: 1.7;
+    }
+    
+    .hero-cta {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+    
+    .hero-features {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .hero-feature {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    
+    .hero-feature-icon {
+      width: 20px; height: 20px;
+      background: rgba(34, 197, 94, 0.1);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      color: #22c55e;
+    }
+    
+    /* Board Screenshot */
+    .hero-visual {
+      position: relative;
+    }
+    
+    .board-wrapper {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 
+        0 20px 50px rgba(0,0,0,0.08),
+        0 0 0 1px rgba(255,255,255,0.5) inset;
+    }
+    
+    .board-wrapper::before {
+      content: '';
+      position: absolute;
+      top: -1px; left: -1px; right: -1px; bottom: -1px;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.2), rgba(99, 102, 241, 0.2));
+      border-radius: 21px;
+      z-index: -1;
+    }
+    
+    .board-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface-elevated);
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .board-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    
+    .board-dot.red { background: #ef4444; }
+    .board-dot.yellow { background: #f59e0b; }
+    .board-dot.green { background: #22c55e; }
+    
+    .board-screenshot {
+      width: 100%;
+      aspect-ratio: 16/10;
+      background: linear-gradient(145deg, #f0f9ff, #f5f3ff);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .board-placeholder {
+      text-align: center;
+      color: var(--text-muted);
+    }
+    
+    .board-placeholder-icon {
+      width: 72px;
+      height: 72px;
+      background: var(--surface);
+      border: 2px dashed var(--border);
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      font-size: 32px;
+      margin: 0 auto 16px;
+    }
+    
+    /* Features Section */
+    .features {
+      padding: 80px 0;
+    }
+    
+    .section-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    
+    .section-header h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+    
+    .section-header p {
+      font-size: 17px;
+      color: var(--text-muted);
+      max-width: 480px;
+      margin: 0 auto;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+      border-color: rgba(14, 165, 233, 0.3);
+    }
+    
+    .feature-icon {
+      width: 48px; height: 48px;
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(99, 102, 241, 0.1));
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .feature-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text);
+    }
+    
+    .feature-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    
+    /* How It Works */
+    .how-it-works {
+      padding: 80px 0;
+    }
+    
+    .steps-horizontal {
+      display: flex;
+      gap: 24px;
+      margin-top: 48px;
+    }
+    
+    .step-card {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      transition: all 0.3s;
+    }
+    
+    .step-card:hover {
+      border-color: rgba(14, 165, 233, 0.3);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.06);
+    }
+    
+    .step-number {
+      position: absolute;
+      top: -16px;
+      left: 32px;
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    
+    .step-card h3 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      margin-top: 8px;
+      color: var(--text);
+    }
+    
+    .step-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+    
+    /* CTA Section */
+    .cta-section {
+      padding: 80px 0;
+    }
+    
+    .cta-card {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border-radius: 24px;
+      padding: 64px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .cta-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 50%, rgba(14, 165, 233, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 50%, rgba(99, 102, 241, 0.15) 0%, transparent 50%);
+    }
+    
+    .cta-content {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    
+    .cta-card h2 {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      margin-bottom: 16px;
+      color: white;
+    }
+    
+    .cta-card p {
+      font-size: 17px;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 32px;
+    }
+    
+    .btn-light {
+      padding: 14px 32px;
+      background: white;
+      border: none;
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-light:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+    
+    /* Footer */
+    footer {
+      padding: 40px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+    }
+    
+    /* Responsive */
+    @media (max-width: 968px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 48px;
+        text-align: center;
+      }
+      
+      .hero h1 { font-size: 40px; }
+      .hero-cta { justify-content: center; }
+      .hero-features { align-items: center; }
+      
+      .features-grid,
+      .steps-horizontal {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+      }
+      
+      nav { display: none; }
+      
+      .cta-card {
+        padding: 40px 24px;
+      }
+      
+      .cta-card h2 {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="grid-pattern"></div>
+  <div class="orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  
+  <header>
+    <div class="header-glass">
+      <a href="#" class="logo">
+        <div class="logo-icon">M</div>
+        MyBA
+      </a>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+      <div class="header-actions">
+        <a href="#" class="btn-secondary">Sign In</a>
+        <a href="#signup" class="btn-primary">Get Started</a>
+      </div>
+    </div>
+  </header>
+  
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          AI-Powered Ticket Generation
+        </div>
+        <h1>From idea to <span>backlog-ready</span> ticket</h1>
+        <p>Describe your work in plain English. Get professional user stories, acceptance criteria, and estimates in seconds.</p>
+        <div class="hero-cta">
+          <a href="#signup" class="btn-primary btn-large">
+            <span>⚡</span>
+            Start Free — 3 Tokens
+          </a>
+          <a href="#demo" class="btn-secondary btn-large">Watch Demo</a>
+        </div>
+        <div class="hero-features">
+          <div class="hero-feature">
+            <span class="hero-feature-icon">✓</span>
+            <span>No credit card required</span>
+          </div>
+          <div class="hero-feature">
+            <span class="hero-feature-icon">✓</span>
+            <span>Export to Jira, Linear, Asana</span>
+          </div>
+          <div class="hero-feature">
+            <span class="hero-feature-icon">✓</span>
+            <span>Used by 500+ product teams</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual">
+        <div class="board-wrapper">
+          <div class="board-header">
+            <div class="board-dot red"></div>
+            <div class="board-dot yellow"></div>
+            <div class="board-dot green"></div>
+          </div>
+          <div class="board-screenshot">
+            <div class="board-placeholder">
+              <div class="board-placeholder-icon">🖼️</div>
+              <p style="font-weight: 500;">Board Screenshot</p>
+              <p style="font-size: 13px; margin-top: 8px;">Replace with your app screenshot</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <section class="features" id="features">
+      <div class="section-header">
+        <h2>Everything you need to ship faster</h2>
+        <p>Stop wrestling with ticket formatting. Focus on what matters.</p>
+      </div>
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">📝</div>
+          <h3>Story-First Approach</h3>
+          <p>Every ticket starts with a clear user story following best practices.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">✅</div>
+          <h3>Testable Criteria</h3>
+          <p>Get concrete, verifiable acceptance criteria your team can use.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎯</div>
+          <h3>Smart Estimation</h3>
+          <p>AI-suggested story points based on complexity and scope.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🚀</div>
+          <h3>One-Click Export</h3>
+          <p>Copy formatted tickets directly to your favorite tools.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Easy Iteration</h3>
+          <p>Refine and regenerate until your ticket is perfect.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🔒</div>
+          <h3>Enterprise Ready</h3>
+          <p>SSO, audit logs, and workspace management included.</p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="how-it-works" id="how-it-works">
+      <div class="section-header">
+        <h2>How it works</h2>
+        <p>From messy notes to structured tickets in three simple steps</p>
+      </div>
+      <div class="steps-horizontal">
+        <div class="step-card">
+          <div class="step-number">1</div>
+          <h3>Describe</h3>
+          <p>Paste meeting notes or type what you need. No special formatting required.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">2</div>
+          <h3>Generate</h3>
+          <p>AI transforms your input into a professional ticket with all the details.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">3</div>
+          <h3>Ship</h3>
+          <p>Export to your tool and move on. Your team gets clear tickets every time.</p>
+        </div>
+      </div>
+    </section>
+    
+    <section class="cta-section" id="signup">
+      <div class="cta-card">
+        <div class="cta-content">
+          <h2>Ready to speed up your workflow?</h2>
+          <p>Join 500+ teams already shipping faster. Start with 3 free tokens.</p>
+          <a href="#" class="btn-light">
+            <span>🚀</span>
+            Get Started Free
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <p>© 2025 MyBA. Crafted for product teams everywhere.</p>
+  </footer>
+</body>
+</html>

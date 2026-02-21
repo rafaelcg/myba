@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Option 5 - Premium Glass</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-1: #06152a;
+      --bg-2: #0b2e5a;
+      --bg-3: #12233d;
+      --text: #e7f0ff;
+      --muted: #aac0de;
+      --line: rgba(255, 255, 255, 0.2);
+      --glass: rgba(255, 255, 255, 0.12);
+      --glass-strong: rgba(255, 255, 255, 0.18);
+      --brand: #3ee2b8;
+      --brand-2: #4ea8ff;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Source Sans 3", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 14% 16%, rgba(78, 168, 255, 0.42), transparent 30%),
+        radial-gradient(circle at 88% 84%, rgba(62, 226, 184, 0.32), transparent 28%),
+        linear-gradient(150deg, var(--bg-1), var(--bg-2) 40%, var(--bg-3));
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 72px;
+    }
+
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+      gap: 12px;
+    }
+
+    .logo {
+      font-family: "Syne", sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      font-size: 16px;
+    }
+
+    .pills {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 8px 11px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 12px;
+      color: #d4e6ff;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: linear-gradient(165deg, var(--glass-strong), var(--glass));
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      box-shadow: 0 18px 34px rgba(0, 0, 0, 0.22);
+    }
+
+    .copy {
+      padding: 30px;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: #89ffe2;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Syne", sans-serif;
+      font-size: clamp(34px, 5vw, 62px);
+      line-height: 0.95;
+      letter-spacing: -0.02em;
+      text-wrap: balance;
+    }
+
+    .sub {
+      margin: 16px 0 20px;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.55;
+      max-width: 56ch;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 12px;
+      padding: 10px;
+      background: rgba(5, 18, 34, 0.35);
+    }
+
+    .stat b {
+      display: block;
+      font-size: 24px;
+      color: #f4fbff;
+      margin-bottom: 2px;
+      font-family: "Syne", sans-serif;
+    }
+
+    .stat span {
+      font-size: 12px;
+      color: #b9cce7;
+    }
+
+    .composer {
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .composer-head,
+    .composer-foot {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .composer-foot {
+      border-bottom: 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 230px;
+      border: 0;
+      resize: vertical;
+      background: transparent;
+      color: #f0f7ff;
+      padding: 14px;
+      font: inherit;
+      line-height: 1.55;
+    }
+
+    .hint {
+      color: #b1c6e3;
+      font-size: 12px;
+    }
+
+    .go {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-family: "Syne", sans-serif;
+      font-weight: 700;
+      color: #03201a;
+      background: linear-gradient(120deg, var(--brand), #7effdc);
+    }
+
+    .lower {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .mini {
+      padding: 16px;
+      min-height: 130px;
+    }
+
+    .mini h2 {
+      margin: 0 0 8px;
+      font-family: "Syne", sans-serif;
+      font-size: 20px;
+      letter-spacing: -0.01em;
+    }
+
+    .mini p {
+      margin: 0;
+      color: #c0d2ea;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .lower { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 640px) {
+      .stats { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="nav">
+      <div class="logo">MYBA PREMIUM</div>
+      <div class="pills">
+        <span class="pill">Token-aware UX</span>
+        <span class="pill">Enterprise-ready</span>
+        <span class="pill">High-clarity output</span>
+      </div>
+    </header>
+
+    <section class="hero">
+      <article class="card copy">
+        <p class="eyebrow">Premium glass direction</p>
+        <h1>Backlog quality that looks as sharp as it ships.</h1>
+        <p class="sub">
+          A polished, high-end visual language for positioning MyBA as a premium AI workflow product.
+          Strong fit if you want enterprise buyers to read the product as advanced and dependable.
+        </p>
+
+        <div class="stats">
+          <div class="stat"><b>98%</b><span>clarity score in QA reviews</span></div>
+          <div class="stat"><b>1 click</b><span>copy into PM tools</span></div>
+          <div class="stat"><b>3 free</b><span>tokens to start</span></div>
+        </div>
+      </article>
+
+      <article class="card composer" aria-label="Prompt interface mockup">
+        <div class="composer-head">
+          <span>Project brief</span>
+          <span>AI ready</span>
+        </div>
+        <textarea placeholder="Example: Build a permissions matrix for admin actions across teams, with clear rule precedence and audit support."></textarea>
+        <div class="composer-foot">
+          <span class="hint">Prompt quality improves when you include measurable outcomes.</span>
+          <button class="go">Generate ticket</button>
+        </div>
+      </article>
+    </section>
+
+    <section class="lower">
+      <article class="card mini">
+        <h2>Structured output</h2>
+        <p>Title, summary, criteria, implementation notes, and done-conditions in one consistent format.</p>
+      </article>
+      <article class="card mini">
+        <h2>Frictionless flow</h2>
+        <p>From idea to ticket in seconds with clear token visibility and payment entry points.</p>
+      </article>
+      <article class="card mini">
+        <h2>Admin confidence</h2>
+        <p>Metrics and system controls share the same visual language for a cohesive product experience.</p>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

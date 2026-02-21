@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Concept 02 - Control Room Neon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@400;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#061311; --panel:#0b1d1a; --line:#2cf6c833; --text:#d8fff5; --accent:#2cf6c8; --warn:#ffcc66; }
+    *{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at 80% 0%,#12392f,#061311 44%);color:var(--text);font-family:'IBM Plex Mono',monospace}
+    .shell{max-width:1200px;margin:0 auto;padding:18px}
+    .top{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border:1px solid var(--line);background:#081816aa;backdrop-filter:blur(8px)}
+    .logo{font-family:'Oxanium';font-size:28px;font-weight:700;color:var(--accent)}
+    .pill{padding:8px 14px;border:1px solid var(--accent);color:var(--accent);text-decoration:none}
+    .hero{padding:42px 0 16px}
+    h1{font-family:'Oxanium';font-size:clamp(40px,7vw,76px);line-height:1;margin:0;max-width:900px;text-shadow:0 0 24px #2cf6c83d}
+    .sub{max-width:760px;color:#9eeada;line-height:1.7}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}
+    .card{border:1px solid var(--line);background:var(--panel);padding:14px}
+    .board-head{display:flex;justify-content:space-between;margin-bottom:10px;color:#8de5d2}
+    .cols{display:grid;grid-template-columns:repeat(4,minmax(160px,1fr));gap:8px}
+    .col{border:1px solid var(--line);padding:8px;background:#071614}
+    .col h3{margin:0 0 8px;font-family:'Oxanium';font-size:17px}
+    .ticket{padding:8px;border:1px solid #2cf6c822;background:#0b201d;margin-bottom:6px;font-size:12px}
+    .status{font-size:11px;color:var(--warn)}
+    video{width:100%;border:1px solid var(--line);background:black}
+    .metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .metric{border:1px solid var(--line);padding:8px;background:#071614}
+    .metric strong{display:block;font-size:28px;color:var(--accent);font-family:'Oxanium'}
+    @media(max-width:940px){.grid{grid-template-columns:1fr}.cols{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.cols,.metrics{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="shell">
+  <header class="top"><div class="logo">MYBA // CONTROL ROOM</div><a class="pill" href="#">Launch Workspace</a></header>
+  <section class="hero">
+    <h1>Ticket Intelligence for Teams Shipping Every Week.</h1>
+    <p class="sub">A modern command center for agile planning: generate stories from rough prompts, validate acceptance criteria, and align sprint scope before development starts.</p>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <div class="board-head"><span>BOARD CONCEPT</span><span>Live Queue</span></div>
+      <div class="cols">
+        <div class="col"><h3>Backlog</h3><div class="ticket">OAuth edge-case handling <div class="status">5 pts</div></div><div class="ticket">Billing portal upgrade <div class="status">8 pts</div></div></div>
+        <div class="col"><h3>In Progress</h3><div class="ticket">Prompt confidence scoring<div class="status">13 pts</div></div></div>
+        <div class="col"><h3>Review</h3><div class="ticket">Onboarding rewrite<div class="status">8 pts</div></div></div>
+        <div class="col"><h3>Done</h3><div class="ticket">Jira two-way sync<div class="status">13 pts</div></div></div>
+      </div>
+    </section>
+
+    <aside class="card">
+      <h2 style="margin-top:0;font-family:'Oxanium';">Workflow Signal</h2>
+      <div class="metrics">
+        <div class="metric"><strong>10k+</strong>Tickets generated</div>
+        <div class="metric"><strong>500+</strong>Active teams</div>
+        <div class="metric"><strong>4.9</strong>User rating</div>
+        <div class="metric"><strong><2m</strong>Draft time</div>
+      </div>
+    </aside>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2 style="margin-top:0;font-family:'Oxanium'">Remotion Demo: AI Ticket Generation</h2>
+    <video src="../public/videos/ai-ticket-generation-showcase.mp4" autoplay muted loop playsinline controls></video>
+  </section>
+</div>
+</body>
+</html>

@@ -1,0 +1,453 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Default (Dark) Theme Variables */
+:root {
+  /* Background */
+  --bg-gradient-start: #2d1f2d;
+  --bg-gradient-end: #1a1518;
+  --bg-gradient-mid: #2a2025;
+  
+  /* Surface colors */
+  --surface-dark: rgba(45, 35, 45, 0.85);
+  --surface-darker: rgba(35, 28, 35, 0.8);
+  --surface-card: rgba(65, 55, 65, 0.6);
+  --surface-card-hover: rgba(75, 65, 75, 0.7);
+  
+  /* Glass effects */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(168, 85, 247, 0.3);
+  --glass-highlight: rgba(128, 128, 128, 0.1);
+  
+  /* Text colors */
+  --text-primary: #f5f0eb;
+  --text-secondary: #a89b9b;
+  --text-muted: #6b5d5d;
+  --text-version: #d4cfc9;
+  
+  /* Card styles */
+  --card-bg: rgba(55, 45, 55, 0.5);
+  --card-border: rgba(255, 255, 255, 0.06);
+  --card-hover: rgba(65, 55, 65, 0.6);
+  
+  /* Input styles */
+  --input-bg: rgba(55, 45, 55, 0.5);
+  --input-border: rgba(255, 255, 255, 0.08);
+  
+  /* Priority colors */
+  --priority-high-bg: rgba(239, 68, 68, 0.2);
+  --priority-high-text: #fca5a5;
+  --priority-high-border: rgba(239, 68, 68, 0.4);
+  --priority-medium-bg: rgba(251, 191, 36, 0.2);
+  --priority-medium-text: #fcd34d;
+  --priority-medium-border: rgba(251, 191, 36, 0.4);
+  --priority-low-bg: rgba(34, 197, 94, 0.2);
+  --priority-low-text: #86efac;
+  --priority-low-border: rgba(34, 197, 94, 0.4);
+  
+  /* GitLab/Fox colors */
+  --gitlab-bg: rgba(251, 146, 60, 0.15);
+  --gitlab-text: #fdba74;
+  --gitlab-border: rgba(251, 146, 60, 0.3);
+  
+  /* Sync status colors */
+  --sync-success-bg: rgba(34, 197, 94, 0.2);
+  --sync-success-text: #86efac;
+  --sync-success-border: rgba(34, 197, 94, 0.4);
+  --sync-error-bg: rgba(239, 68, 68, 0.15);
+  --sync-error-text: #fca5a5;
+  --sync-error-border: rgba(239, 68, 68, 0.3);
+  --sync-pending-bg: rgba(251, 191, 36, 0.15);
+  --sync-pending-text: #fcd34d;
+  --sync-pending-border: rgba(251, 191, 36, 0.3);
+  
+  /* Version tag */
+  --version-bg: rgba(255, 255, 255, 0.1);
+  --version-text: #d4cfc9;
+  --version-border: rgba(255, 255, 255, 0.15);
+  
+  /* Sidebar */
+  --sidebar-bg: rgba(45, 35, 45, 0.6);
+  --sidebar-border: rgba(255, 255, 255, 0.06);
+  --sidebar-active-bg: rgba(168, 85, 247, 0.15);
+  --sidebar-active-text: #d8b4fe;
+  
+  /* Button colors */
+  --btn-primary-bg: linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(139, 92, 246, 0.8));
+  --btn-secondary-bg: rgba(65, 55, 65, 0.6);
+  --btn-secondary-text: #f5f0eb;
+  --btn-secondary-border: rgba(255, 255, 255, 0.1);
+  
+  /* Empty state */
+  --empty-bg: rgba(55, 45, 55, 0.5);
+  --empty-border: rgba(255, 255, 255, 0.06);
+  
+  /* Add button */
+  --add-btn-border: rgba(255, 255, 255, 0.15);
+  --add-btn-text: #a89b9b;
+  --add-btn-hover-border: rgba(168, 85, 247, 0.4);
+  --add-btn-hover-text: #d8b4fe;
+  --add-btn-hover-bg: rgba(168, 85, 247, 0.1);
+  
+  /* Column header */
+  --column-header-text: #a89b9b;
+  --column-header-border: rgba(255, 255, 255, 0.08);
+  --column-count-bg: rgba(255, 255, 255, 0.08);
+  --column-count-text: #f5f0eb;
+  
+  /* Scrollbar */
+  --scrollbar-track: rgba(0, 0, 0, 0.2);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.15);
+  --scrollbar-thumb-hover: rgba(255, 255, 255, 0.25);
+  
+  /* Checklist */
+  --checklist-bg: rgba(55, 45, 55, 0.5);
+  --checklist-border: rgba(255, 255, 255, 0.06);
+  --checklist-done-text: #86efac;
+  --checklist-pending-text: #a89b9b;
+  
+  /* Accents */
+  --accent-purple: #a855f7;
+  --accent-gold: #fbbf24;
+  
+  /* Modal */
+  --modal-overlay-bg: rgba(15, 23, 42, 0.7);
+  --modal-bg: var(--surface-dark);
+  --modal-border: var(--glass-border);
+  --modal-title-text: var(--text-primary);
+  --modal-label-text: var(--text-secondary);
+  --modal-input-bg: var(--input-bg);
+  --modal-input-border: var(--input-border);
+  --modal-input-text: var(--text-primary);
+  --modal-input-placeholder: var(--text-muted);
+  
+  /* Modal Close Button */
+  --modal-close-bg: var(--version-bg);
+  --modal-close-border: var(--version-border);
+  --modal-close-text: var(--text-secondary);
+  --modal-close-hover-bg: rgba(239, 68, 68, 0.2);
+  --modal-close-hover-text: #fca5a5;
+  
+  /* Modal Action Buttons */
+  --modal-btn-primary-bg: var(--btn-primary-bg);
+  --modal-btn-primary-text: #fff;
+  --modal-btn-secondary-bg: var(--version-bg);
+  --modal-btn-secondary-text: var(--text-secondary);
+  --modal-btn-secondary-border: var(--version-border);
+  --modal-btn-danger-bg: rgba(239, 68, 68, 0.15);
+  --modal-btn-danger-text: #fca5a5;
+  --modal-btn-danger-border: rgba(239, 68, 68, 0.3);
+  --modal-btn-danger-hover-bg: rgba(239, 68, 68, 0.25);
+  --modal-btn-disabled-bg: var(--version-bg);
+  --modal-btn-disabled-text: var(--text-muted);
+  
+  /* Modal AI Suggestion */
+  --modal-ai-bg: rgba(168, 85, 247, 0.1);
+  --modal-ai-border: rgba(168, 85, 247, 0.3);
+  --modal-ai-text: var(--sidebar-active-text);
+  --modal-ai-label-text: #d8b4fe;
+  
+  /* Modal Status Colors */
+  --modal-status-bg: var(--version-bg);
+  --modal-status-text: var(--text-secondary);
+  --modal-status-active-bg: rgba(59, 130, 246, 0.2);
+  --modal-status-active-text: #60a5fa;
+  --modal-status-active-border: rgba(59, 130, 246, 0.4);
+  
+  /* Custom Field Tags */
+  --modal-tag-yes-bg: rgba(34, 197, 94, 0.15);
+  --modal-tag-yes-text: #86efac;
+  --modal-tag-yes-border: rgba(34, 197, 94, 0.3);
+  --modal-tag-no-bg: rgba(239, 68, 68, 0.15);
+  --modal-tag-no-text: #fca5a5;
+  --modal-tag-no-border: rgba(239, 68, 68, 0.3);
+}
+
+/* Light Theme */
+[data-theme="light"] {
+  /* Background */
+  --bg-gradient-start: #f8f6f4;
+  --bg-gradient-end: #ebe7e3;
+  --bg-gradient-mid: #f5f3f0;
+  
+  /* Surface colors */
+  --surface-dark: rgba(255, 255, 255, 0.9);
+  --surface-darker: rgba(248, 246, 244, 0.95);
+  --surface-card: rgba(255, 255, 255, 0.8);
+  --surface-card-hover: rgba(255, 255, 255, 0.95);
+  
+  /* Glass effects */
+  --glass-border: rgba(0, 0, 0, 0.06);
+  --glass-border-hover: rgba(168, 85, 247, 0.3);
+  --glass-highlight: rgba(0, 0, 0, 0.05);
+  
+  /* Text colors */
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b6b6b;
+  --text-muted: #9b9b9b;
+  --text-version: #4b4b4b;
+  
+  /* Card styles */
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(0, 0, 0, 0.06);
+  --card-hover: rgba(255, 255, 255, 0.95);
+  
+  /* Input styles */
+  --input-bg: rgba(255, 255, 255, 0.9);
+  --input-border: rgba(0, 0, 0, 0.08);
+  
+  /* Priority colors */
+  --priority-high-bg: rgba(239, 68, 68, 0.1);
+  --priority-high-text: #dc2626;
+  --priority-high-border: rgba(239, 68, 68, 0.3);
+  --priority-medium-bg: rgba(251, 191, 36, 0.15);
+  --priority-medium-text: #d97706;
+  --priority-medium-border: rgba(251, 191, 36, 0.35);
+  --priority-low-bg: rgba(34, 197, 94, 0.1);
+  --priority-low-text: #16a34a;
+  --priority-low-border: rgba(34, 197, 94, 0.3);
+  
+  /* GitLab/Fox colors */
+  --gitlab-bg: rgba(251, 146, 60, 0.12);
+  --gitlab-text: #ea580c;
+  --gitlab-border: rgba(251, 146, 60, 0.25);
+  
+  /* Sync status colors */
+  --sync-success-bg: rgba(34, 197, 94, 0.1);
+  --sync-success-text: #16a34a;
+  --sync-success-border: rgba(34, 197, 94, 0.3);
+  --sync-error-bg: rgba(239, 68, 68, 0.1);
+  --sync-error-text: #dc2626;
+  --sync-error-border: rgba(239, 68, 68, 0.3);
+  --sync-pending-bg: rgba(251, 191, 36, 0.12);
+  --sync-pending-text: #d97706;
+  --sync-pending-border: rgba(251, 191, 36, 0.3);
+  
+  /* Version tag */
+  --version-bg: rgba(0, 0, 0, 0.05);
+  --version-text: #4b4b4b;
+  --version-border: rgba(0, 0, 0, 0.1);
+  
+  /* Sidebar */
+  --sidebar-bg: rgba(255, 255, 255, 0.9);
+  --sidebar-border: rgba(0, 0, 0, 0.06);
+  --sidebar-active-bg: rgba(168, 85, 247, 0.1);
+  --sidebar-active-text: #7c3aed;
+  
+  /* Button colors */
+  --btn-primary-bg: linear-gradient(135deg, #a855f7, #7c3aed);
+  --btn-secondary-bg: rgba(255, 255, 255, 0.9);
+  --btn-secondary-text: #1a1a1a;
+  --btn-secondary-border: rgba(0, 0, 0, 0.1);
+  
+  /* Empty state */
+  --empty-bg: rgba(255, 255, 255, 0.8);
+  --empty-border: rgba(0, 0, 0, 0.06);
+  
+  /* Add button */
+  --add-btn-border: rgba(0, 0, 0, 0.15);
+  --add-btn-text: #6b6b6b;
+  --add-btn-hover-border: rgba(168, 85, 247, 0.4);
+  --add-btn-hover-text: #7c3aed;
+  --add-btn-hover-bg: rgba(168, 85, 247, 0.05);
+  
+  /* Column header */
+  --column-header-text: #6b6b6b;
+  --column-header-border: rgba(0, 0, 0, 0.06);
+  --column-count-bg: rgba(0, 0, 0, 0.06);
+  --column-count-text: #1a1a1a;
+  
+  /* Scrollbar */
+  --scrollbar-track: rgba(0, 0, 0, 0.05);
+  --scrollbar-thumb: rgba(0, 0, 0, 0.15);
+  --scrollbar-thumb-hover: rgba(0, 0, 0, 0.25);
+  
+  /* Checklist */
+  --checklist-bg: rgba(255, 255, 255, 0.8);
+  --checklist-border: rgba(0, 0, 0, 0.06);
+  --checklist-done-text: #16a34a;
+  --checklist-pending-text: #6b6b6b;
+  
+  /* Accents */
+  --accent-purple: #7c3aed;
+  --accent-gold: #d97706;
+  
+  /* Modal */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.4);
+  --modal-bg: var(--surface-dark);
+  --modal-border: var(--glass-border);
+  --modal-title-text: var(--text-primary);
+  --modal-label-text: var(--text-secondary);
+  --modal-input-bg: var(--input-bg);
+  --modal-input-border: var(--input-border);
+  --modal-input-text: var(--text-primary);
+  --modal-input-placeholder: var(--text-muted);
+  
+  /* Modal Close Button */
+  --modal-close-bg: var(--version-bg);
+  --modal-close-border: var(--version-border);
+  --modal-close-text: var(--text-secondary);
+  --modal-close-hover-bg: rgba(239, 68, 68, 0.1);
+  --modal-close-hover-text: #dc2626;
+  
+  /* Modal Action Buttons */
+  --modal-btn-primary-bg: var(--btn-primary-bg);
+  --modal-btn-primary-text: #fff;
+  --modal-btn-secondary-bg: var(--version-bg);
+  --modal-btn-secondary-text: var(--text-secondary);
+  --modal-btn-secondary-border: var(--version-border);
+  --modal-btn-danger-bg: rgba(239, 68, 68, 0.1);
+  --modal-btn-danger-text: #dc2626;
+  --modal-btn-danger-border: rgba(239, 68, 68, 0.25);
+  --modal-btn-danger-hover-bg: rgba(239, 68, 68, 0.2);
+  --modal-btn-disabled-bg: var(--version-bg);
+  --modal-btn-disabled-text: var(--text-muted);
+  
+  /* Modal AI Suggestion */
+  --modal-ai-bg: rgba(168, 85, 247, 0.08);
+  --modal-ai-border: rgba(168, 85, 247, 0.25);
+  --modal-ai-text: #7c3aed;
+  --modal-ai-label-text: #7c3aed;
+  
+  /* Modal Status Colors */
+  --modal-status-bg: var(--version-bg);
+  --modal-status-text: var(--text-secondary);
+  --modal-status-active-bg: rgba(59, 130, 246, 0.1);
+  --modal-status-active-text: #2563eb;
+  --modal-status-active-border: rgba(59, 130, 246, 0.35);
+  
+  /* Custom Field Tags */
+  --modal-tag-yes-bg: rgba(34, 197, 94, 0.1);
+  --modal-tag-yes-text: #16a34a;
+  --modal-tag-yes-border: rgba(34, 197, 94, 0.25);
+  --modal-tag-no-bg: rgba(239, 68, 68, 0.1);
+  --modal-tag-no-text: #dc2626;
+  --modal-tag-no-border: rgba(239, 68, 68, 0.25);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', 'Inter', sans-serif;
+  font-weight: 600;
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -20% 0; }
+}
+
+@keyframes cardEnter {
+  from { 
+    opacity: 0; 
+    transform: translateY(8px) scale(0.98);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes glowPulse {
+  0%, 100% { 
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.15);
+  }
+  50% { 
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.25);
+  }
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  background: var(--version-bg);
+  border: 1px solid var(--version-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
+.theme-toggle:hover {
+  border-color: var(--accent-purple);
+}
+
+.theme-toggle-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  transition: transform 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+
+[data-theme="light"] .theme-toggle-thumb {
+  transform: translateX(20px);
+  background: #fbbf24;
+}
+
+.theme-toggle-icon {
+  color: var(--text-primary);
+}

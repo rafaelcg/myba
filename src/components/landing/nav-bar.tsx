@@ -1,5 +1,6 @@
 import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react'
 import { useEffect, useState } from 'react'
+import { getClerkFallbackAuthUrls } from '../../utils/clerk'
 
 interface NavBarProps {
   isSignedIn: boolean;
@@ -8,8 +9,10 @@ interface NavBarProps {
 }
 
 export function NavBar({ isSignedIn, onOpenTokens, tokensLabel }: NavBarProps) {
-  const { isSignedIn: clerkSignedIn } = useUser();
-  const basePath = import.meta.env.DEV ? '/' : '/myba/';
+  const { isSignedIn: clerkSignedIn, isLoaded } = useUser();
+  const basePath = '/';
+  const fallbackAuthUrls = getClerkFallbackAuthUrls(import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
+  const shouldUseFallbackAuth = import.meta.env.DEV && !isLoaded && Boolean(fallbackAuthUrls);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 640 : false);
 
   useEffect(() => {
@@ -81,28 +84,65 @@ export function NavBar({ isSignedIn, onOpenTokens, tokensLabel }: NavBarProps) {
             />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <SignInButton mode="modal">
-                <button style={{
-                  border: '1px solid #e2e8f0',
-                  background: '#ffffff',
-                  color: '#0f172a',
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  fontSize: 12,
-                  cursor: 'pointer'
-                }}>Sign in</button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button style={{
-                  border: '1px solid transparent',
-                  background: '#10b981',
-                  color: 'white',
-                  padding: '6px 10px',
-                  borderRadius: 8,
-                  fontSize: 12,
-                  cursor: 'pointer'
-                }}>Sign up</button>
-              </SignUpButton>
+              {shouldUseFallbackAuth ? (
+                <>
+                  <a
+                    href={fallbackAuthUrls!.signIn}
+                    style={{
+                      border: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Sign in
+                  </a>
+                  <a
+                    href={fallbackAuthUrls!.signUp}
+                    style={{
+                      border: '1px solid transparent',
+                      background: '#10b981',
+                      color: 'white',
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      cursor: 'pointer',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Sign up
+                  </a>
+                </>
+              ) : (
+                <>
+                  <SignInButton mode="modal">
+                    <button style={{
+                      border: '1px solid #e2e8f0',
+                      background: '#ffffff',
+                      color: '#0f172a',
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      cursor: 'pointer'
+                    }}>Sign in</button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button style={{
+                      border: '1px solid transparent',
+                      background: '#10b981',
+                      color: 'white',
+                      padding: '6px 10px',
+                      borderRadius: 8,
+                      fontSize: 12,
+                      cursor: 'pointer'
+                    }}>Sign up</button>
+                  </SignUpButton>
+                </>
+              )}
             </div>
           )}
         </div>
@@ -110,5 +150,3 @@ export function NavBar({ isSignedIn, onOpenTokens, tokensLabel }: NavBarProps) {
     </header>
   )
 }
-
-

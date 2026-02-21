@@ -1,0 +1,10 @@
+# Copy this to .dev.vars and fill in your secrets
+# These are only for local development
+
+OPENROUTER_API_KEY=your_openrouter_key_here
+GITLAB_CLIENT_ID=your_gitlab_app_id
+GITLAB_CLIENT_SECRET=your_gitlab_app_secret
+GITLAB_TOKEN_ENCRYPTION_KEY=your_base64_32_byte_key
+GITLAB_WEBHOOK_SECRET=your_gitlab_webhook_secret
+CLERK_SECRET_KEY=your_clerk_secret
+APP_BASE_URL=http://localhost:3000

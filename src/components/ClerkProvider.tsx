@@ -21,8 +21,7 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
     );
   }
 
-  const isDev = !!import.meta.env.DEV;
-  const basePath = isDev ? '/' : '/myba/';
+  const basePath = '/';
 
   return (
     <BaseClerkProvider 

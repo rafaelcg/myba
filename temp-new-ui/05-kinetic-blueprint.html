@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Concept 05 - Kinetic Blueprint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#090c20;--panel:#101633;--line:#5f7bff44;--ink:#eef1ff;--acc:#7be0ff;--acc2:#7bffb0}
+    *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:'DM Sans',sans-serif}
+    body:before{content:'';position:fixed;inset:0;background-image:linear-gradient(#5f7bff1a 1px,transparent 1px),linear-gradient(90deg,#5f7bff1a 1px,transparent 1px);background-size:42px 42px;pointer-events:none}
+    .wrap{max-width:1220px;margin:0 auto;padding:16px}
+    .top{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;border:1px solid var(--line);padding:12px;background:#0b1027}
+    .logo{font-family:'Chakra Petch';font-size:30px;font-weight:700;letter-spacing:.06em}
+    .btn{padding:9px 12px;border:1px solid var(--line);text-decoration:none;color:var(--ink)}
+    .btn.acc{background:linear-gradient(90deg,#6fa7ff,#7be0ff);color:#07122a;border:none;font-weight:700}
+    .hero{padding:34px 0 10px}
+    h1{font-family:'Chakra Petch';font-size:clamp(42px,7vw,82px);line-height:.92;margin:0;max-width:940px}
+    .sub{max-width:800px;color:#b9c5ff;line-height:1.7}
+    .layout{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}
+    .card{border:1px solid var(--line);background:var(--panel);padding:12px}
+    .row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .row small{color:#8ca0ff;letter-spacing:.08em}
+    .board{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .col{border:1px solid var(--line);padding:7px;background:#0b1128}
+    .col h3{margin:0 0 6px;font-family:'Chakra Petch';font-size:16px}
+    .t{font-size:12px;padding:7px;border:1px solid #7be0ff33;background:#0f1c44;margin-bottom:6px}
+    .tag{font-size:10px;color:#07122a;background:var(--acc2);padding:1px 6px;border-radius:99px}
+    video{width:100%;border:1px solid var(--line)}
+    .legend{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .legend span{font-size:12px;padding:4px 8px;border:1px solid var(--line)}
+    @media(max-width:980px){.layout{grid-template-columns:1fr}.board{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.top{grid-template-columns:1fr}.board{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="logo">MYBA / BLUEPRINT</div>
+    <a class="btn" href="#">Docs</a>
+    <a class="btn acc" href="#">Generate Ticket</a>
+  </header>
+
+  <section class="hero">
+    <h1>From product signal to execution-ready tickets.</h1>
+    <p class="sub">Kinetic blueprint concept: technical, fast, and operational. Designed for engineering-led buyers who want to see process, not fluffy marketing.</p>
+  </section>
+
+  <div class="layout">
+    <section class="card">
+      <div class="row"><strong style="font-family:'Chakra Petch'">BOARD CONCEPT</strong><small>SYSTEM STATUS: LIVE</small></div>
+      <div class="board">
+        <div class="col"><h3>Backlog</h3><div class="t">Billing retry UX <span class="tag">5 pts</span></div><div class="t">Analytics API fallback <span class="tag">3 pts</span></div></div>
+        <div class="col"><h3>In Progress</h3><div class="t">Prompt quality scoring <span class="tag">13 pts</span></div></div>
+        <div class="col"><h3>Review</h3><div class="t">Workflow acceptance matrix <span class="tag">8 pts</span></div></div>
+        <div class="col"><h3>Done</h3><div class="t">Jira cloud sync <span class="tag">13 pts</span></div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="row"><strong style="font-family:'Chakra Petch'">REMOtion DEMO</strong><small>ticket-generation-sequence.mp4</small></div>
+      <video src="../public/videos/ai-ticket-generation-showcase.mp4" autoplay muted loop playsinline controls></video>
+      <div class="legend"><span>10k+ tickets</span><span>500+ teams</span><span>4.9 rating</span><span>&lt;2 min first draft</span></div>
+    </section>
+  </div>
+</div>
+</body>
+</html>

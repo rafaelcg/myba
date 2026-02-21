@@ -1,0 +1,26 @@
+name = "sprintflow"
+main = "worker/index.ts"
+compatibility_date = "2024-01-01"
+
+# Cloudflare D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "sprintflow-db"
+database_id = "71848299-73a0-4d98-a265-8653eac26a0b"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "production"
+
+# Secrets (set via wrangler secret put)
+# - OPENROUTER_API_KEY
+# - GITLAB_CLIENT_ID
+# - GITLAB_CLIENT_SECRET
+# - GITLAB_TOKEN_ENCRYPTION_KEY
+# - GITLAB_WEBHOOK_SECRET
+# - CLERK_SECRET_KEY
+# Optional non-secret var:
+# - APP_BASE_URL (frontend origin, e.g. https://app.yourdomain.com)
+
+[build]
+command = ""

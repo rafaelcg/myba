@@ -1,157 +1,154 @@
-# MyBA - AI Ticket Generator Plan
+# SprintFlow - MVP Implementation Plan
 
-## 🎯 Project Overview
-A simple, Google-homepage-style single-page app that transforms casual requirements into professional tickets for Jira/GitLab/etc.
-
-## 🎨 Design Philosophy
-- **Minimal & Clean**: Google homepage aesthetic
-- **Casual Vibes**: Fun, friendly language
-- **Instant Results**: Type → Generate → Copy → Done
-
-## 📋 Feature Breakdown
-
-### Phase 1: Core UI & UX
-- [ ] **Landing State**: Clean homepage with centered search-like input
-- [ ] **Input Field**: Large, friendly text area (not tiny search box)
-- [ ] **Placeholder Text**: Rotate through catchy phrases
-- [ ] **Visual Design**: Clean gradients, modern typography
-- [ ] **Responsive**: Works on mobile/desktop
-
-### Phase 2: Copy & Interaction
-- [ ] **Generate Button**: Prominent, inviting CTA
-- [ ] **Loading State**: Smooth animation while AI processes
-- [ ] **Results Display**: Clean, formatted ticket output
-- [ ] **Copy Functionality**: One-click copy with feedback
-- [ ] **Reset/New**: Easy way to start over
-
-### Phase 3: AI Integration
-- [ ] **API Integration**: Connect to AI service (OpenAI/Anthropic/etc.)
-- [ ] **Prompt Engineering**: Craft prompts for good ticket generation
-- [ ] **Error Handling**: Graceful failures, retry options
-- [ ] **Rate Limiting**: Prevent abuse
-
-## 💬 Tone & Copy Ideas
-
-### Input Placeholders (Rotate These)
-- "Describe what you need built... we'll make it sound professional ✨"
-- "Toss your rough ideas here, we'll polish them up 🔧"
-- "What's the vibe? We'll turn it into a proper ticket 📋"
-- "Brain dump your feature request... we got you 🧠"
-- "Type your messy thoughts, get clean tickets 🎯"
-
-### Button Text Options
-- "Make it Official ✨"
-- "Transform This 🔄"
-- "Generate Ticket 🎫"
-- "Polish It Up ✨"
-- "Work Some Magic 🪄"
-
-### Loading Messages
-- "Crafting your masterpiece..."
-- "Adding some professional flair..."
-- "Translating human to corporate..."
-- "Making it sound important..."
-
-### Success Copy
-- "Ready to copy & paste! 📋"
-- "Your polished ticket is ready ✨"
-- "From chaos to clarity 🎯"
-
-## 🔧 Technical Architecture
-
-### Component Structure
-```
-src/
-├── components/
-│   ├── HomePage.tsx        # Main landing page
-│   ├── InputField.tsx      # Large text area
-│   ├── GenerateButton.tsx  # Action button
-│   ├── LoadingSpinner.tsx  # Loading animation
-│   ├── ResultsCard.tsx     # Generated ticket display
-│   └── CopyButton.tsx      # Copy functionality
-├── hooks/
-│   ├── useAIGeneration.tsx # AI API calls
-│   └── useCopyToClipboard.tsx
-├── utils/
-│   ├── aiService.ts        # API integration
-│   └── constants.ts        # Copy text arrays
-```
-
-### State Management
-- Simple React state (no need for complex state management)
-- States: `idle` → `generating` → `complete` → `copied`
-
-### UI Flow
-1. **Landing**: Large input field, rotating placeholder
-2. **Typing**: Button activates, character count?
-3. **Generate**: Loading state, disable input
-4. **Results**: Show formatted ticket, copy button
-5. **Success**: Copy feedback, option to start over
-
-## 🎨 Visual Design
-
-### Layout
-```
-        [Logo/Title]
-    
-    ┌─────────────────────┐
-    │                     │
-    │   Large Text Area   │
-    │                     │
-    └─────────────────────┘
-    
-       [Generate Button]
-```
-
-### Colors & Style
-- Background: Subtle gradient (like current)
-- Input: Clean white with subtle shadow
-- Button: Gradient, matches brand
-- Results: Card-style with easy copy button
-
-### Typography
-- Title: Large, friendly font
-- Input: Readable, not too small
-- Results: Monospace for ticket content
-
-## 🚀 Implementation Steps
-
-### Step 1: Static UI
-- Create clean homepage layout
-- Implement input field with rotating placeholders
-- Style generate button
-- Add loading states (static)
-
-### Step 2: Interactivity  
-- Handle input changes
-- Implement copy to clipboard
-- Add smooth transitions
-- Mobile responsiveness
-
-### Step 3: AI Integration
-- Set up API service layer
-- Implement prompt engineering
-- Add error handling
-- Test with various inputs
-
-### Step 4: Polish
-- Smooth animations
-- Error states
-- Rate limiting UI
-- Final copy tweaks
-
-## 🎯 Success Metrics
-- User can go from idea → ticket in <30 seconds
-- Copy functionality works reliably
-- Mobile experience is smooth
-- AI generates useful, professional tickets
-
-## 🤔 Open Questions
-1. Which AI service to use? (OpenAI, Anthropic, etc.)
-2. Should we support different ticket formats? (Jira vs GitLab)
-3. Do we need user accounts or keep it anonymous?
-4. Should we save/show history of generated tickets?
+## Goal
+Replace the Excel spreadsheet with a working kanban board that:
+- Tracks features, status, assigned-to, planned release version
+- Uses AI to generate ticket titles from brief descriptions
+- Syncs with GitLab issues
+- Is fast and easy for the team to use
 
 ---
 
-*Let's start with Phase 1 and build this step by step!* 🚀
+## Phase 1: Core Infrastructure (MUST HAVE)
+
+### 1. Database Setup
+**Why:** Current in-memory storage resets on server restart
+**What:** SQLite (simple, file-based) or PostgreSQL
+**Tables:**
+- `tickets` - id, title, description, status, assignee, version, gitlab_issue_id, created_at, updated_at
+- `gitlab_integrations` - user_id, access_token, repo_url, connected_at
+- `team_members` - id, name, email, avatar_url
+
+### 2. Backend API Endpoints
+**Tickets:**
+- `GET /api/tickets` - List all tickets
+- `POST /api/tickets` - Create ticket
+- `PUT /api/tickets/:id` - Update ticket (status, assignee, etc.)
+- `DELETE /api/tickets/:id` - Delete ticket
+
+**GitLab Integration:**
+- `POST /api/gitlab/connect` - OAuth connect
+- `GET /api/gitlab/repos` - List user's repos
+- `POST /api/gitlab/sync/:ticketId` - Sync ticket to GitLab issue
+
+**AI:**
+- `POST /api/ai/generate-title` - Generate ticket title from description
+
+### 3. AI Integration
+**Provider:** OpenRouter (already set up) or OpenAI
+**Function:** Take user input like "users want dark mode" → Generate "Implement dark mode support for dashboard"
+
+---
+
+## Phase 2: GitLab Integration (MUST HAVE)
+
+### OAuth Flow
+1. User clicks "Connect GitLab"
+2. OAuth to GitLab
+3. Store access token
+4. Let user select repo
+5. When ticket created, optionally create GitLab issue
+
+### Two-Way Sync (Optional for MVP)
+- **MVP:** One-way (SprintFlow → GitLab)
+- **Later:** Sync status changes back from GitLab
+
+---
+
+## Phase 3: Frontend Features
+
+### Working Kanban Board
+- Drag and drop between columns (or click to change status)
+- Create ticket with AI title generation
+- Assign team members
+- Set version/tags
+- Click to view full ticket details
+
+### Quick Create
+- Keyboard shortcut (Cmd/Ctrl + K)
+- Type description → AI suggests title → Create ticket
+
+### Real-time Updates (Optional)
+- WebSocket or polling for team collaboration
+
+---
+
+## Phase 4: Polish
+
+- Mobile responsiveness
+- Keyboard shortcuts
+- Search/filter tickets
+- Export to CSV (backup)
+- Dark mode
+
+---
+
+## Immediate Next Steps
+
+1. **Set up SQLite database** (5 min)
+2. **Create tickets table** (10 min)
+3. **Build ticket API endpoints** (30 min)
+4. **Connect kanban board to real data** (30 min)
+5. **Add AI title generation** (20 min)
+6. **GitLab OAuth** (1 hour)
+
+**Total MVP time:** ~2.5 hours to working product
+
+---
+
+## Database Schema
+
+```sql
+-- Tickets table
+CREATE TABLE tickets (
+    id TEXT PRIMARY KEY,
+    title TEXT NOT NULL,
+    description TEXT,
+    status TEXT DEFAULT 'todo', -- icebox, todo, progress, review, done
+    assignee TEXT,
+    version TEXT,
+    gitlab_issue_id TEXT,
+    gitlab_issue_number INTEGER,
+    created_by TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- GitLab integrations
+CREATE TABLE gitlab_integrations (
+    id TEXT PRIMARY KEY,
+    user_id TEXT UNIQUE,
+    access_token TEXT NOT NULL,
+    refresh_token TEXT,
+    repo_url TEXT,
+    repo_name TEXT,
+    connected_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Team members
+CREATE TABLE team_members (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    email TEXT UNIQUE,
+    avatar_url TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## File Structure
+
+```
+server.js                  # Existing Express server
+├── /api/tickets           # CRUD endpoints
+├── /api/gitlab            # GitLab integration
+├── /api/ai                # AI generation
+database.js                # SQLite connection
+ai-service.js              # OpenRouter integration
+gitlab-service.js          # GitLab API wrapper
+```
+
+---
+
+Ready to start with database setup?

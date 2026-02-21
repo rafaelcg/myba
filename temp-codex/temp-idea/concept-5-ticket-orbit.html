@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept 5 - Ticket Orbit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fef8ef;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --blue: #004e89;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --purple: #7c3aed;
+      --shadow: 0 20px 42px -26px rgba(2, 8, 23, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 8%, rgba(255,209,102,0.45), transparent 34%),
+        radial-gradient(circle at 88% 12%, rgba(255,107,53,0.22), transparent 33%),
+        radial-gradient(circle at 90% 84%, rgba(124,58,237,0.18), transparent 33%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell { max-width: 1420px; margin: 0 auto; padding: 22px; }
+
+    .bar {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--orange), #f7931e);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      box-shadow: 0 12px 20px -12px rgba(255, 107, 53, 0.9);
+    }
+
+    .actions { display: inline-flex; gap: 8px; flex-wrap: wrap; }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.ghost { background: #fff; border: 1px solid var(--line); color: #334155; }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1f8dd6); color: #fff; }
+    .btn.ai { background: linear-gradient(135deg, var(--orange), #f7931e); color: #fff; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-head h2 { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 0.98rem; }
+    .panel-head span { color: var(--muted); font-size: 0.78rem; }
+
+    .capture {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea { grid-column: 1 / -1; min-height: 95px; resize: vertical; }
+
+    .meta-row {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .ai-preview {
+      grid-column: 1 / -1;
+      border: 1px dashed #fdba74;
+      background: #fff7ed;
+      border-radius: 10px;
+      padding: 9px;
+      font-size: 0.82rem;
+      color: #7c2d12;
+      line-height: 1.45;
+    }
+
+    .orbit-wrap {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .ring {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: #fff;
+      padding: 9px;
+    }
+
+    .ring-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .ring-head h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #475569;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .ring-head .n {
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 3px 6px;
+      font-size: 0.66rem;
+      color: #64748b;
+      font-weight: 800;
+      background: #fff;
+    }
+
+    .tickets {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+      gap: 7px;
+    }
+
+    .ticket {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .ticket:hover { border-color: #cbd5e1; }
+
+    .ticket p { margin: 0 0 6px; font-size: 0.8rem; line-height: 1.32; font-weight: 700; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .tag {
+      font-size: 0.64rem;
+      border-radius: 999px;
+      padding: 3px 6px;
+      font-weight: 700;
+    }
+
+    .tag.assignee { background: #dbeafe; color: #1d4ed8; }
+    .tag.release { background: #fef3c7; color: #92400e; }
+    .tag.status { background: #dcfce7; color: #166534; }
+
+    .sync-area {
+      padding: 12px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .sync-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .sync-card h4 { margin: 0 0 7px; font-size: 0.84rem; color: #334155; }
+
+    .sync-card p { margin: 0; font-size: 0.8rem; color: #475569; line-height: 1.55; }
+
+    .sync-log {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 8px;
+      background: #f8fafc;
+      font-size: 0.76rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,8,23,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 30;
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-card {
+      width: min(720px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-head h3 { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 1rem; }
+
+    .modal-body {
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.55;
+    }
+
+    .context {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 760px) {
+      .capture { grid-template-columns: 1fr; }
+      .meta-row { grid-template-columns: 1fr; }
+      .tickets { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="modal" id="modal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h3 id="mTitle">Ticket title</h3>
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="tags">
+          <span class="tag assignee" id="mOwner"></span>
+          <span class="tag release" id="mRelease"></span>
+          <span class="tag status" id="mStatus"></span>
+        </div>
+        <div class="context" id="mContext"></div>
+        <button class="btn primary">Go to GitLab issue</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="shell">
+    <header class="bar">
+      <div class="title"><span class="mark">✶</span> MyBA Ticket Orbit</div>
+      <div class="actions">
+        <button class="btn ghost">Repo: mobile-app</button>
+        <button class="btn primary">GitLab sync live</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Capture + orbit board</h2>
+          <span>Designed for very fast teams</span>
+        </header>
+
+        <div class="capture">
+          <input type="text" placeholder="Type short input, e.g. new login" />
+          <button class="btn ai">AI summarize</button>
+          <button class="btn primary">Create ticket</button>
+          <textarea placeholder="Or provide a brief overview. AI creates a concise title and issue body for GitLab."></textarea>
+          <div class="meta-row">
+            <select><option>Assigned: Marina</option><option>Assigned: Rafael</option><option>Assigned: Sam</option></select>
+            <select><option>Release: v2.18.0</option><option>Release: v2.19.0</option><option>Release: v2.20.0</option></select>
+          </div>
+          <div class="ai-preview"><strong>AI output:</strong> "Unify login touchpoints" with acceptance checklist and release scope to push directly into GitLab issue fields.</div>
+        </div>
+
+        <div class="orbit-wrap">
+          <section class="ring">
+            <div class="ring-head"><h3>Orbit 1 · Backlog</h3><span class="n">4</span></div>
+            <div class="tickets">
+              <article class="ticket" onclick="openModal(this)" data-title="Unify login touchpoints" data-owner="Marina" data-release="v2.18.0" data-status="Backlog" data-context="Align login entry flows and make fallback states visible. Include copy updates, loading state logic, and acceptance criteria for auth failure handling.">
+                <p>Unify login touchpoints</p>
+                <div class="tags"><span class="tag assignee">Marina</span><span class="tag release">v2.18.0</span><span class="tag status">Backlog</span></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="ring">
+            <div class="ring-head"><h3>Orbit 2 · In Progress</h3><span class="n">3</span></div>
+            <div class="tickets">
+              <article class="ticket" onclick="openModal(this)" data-title="OTP fallback resilience" data-owner="Rafael" data-release="v2.18.0" data-status="In Progress" data-context="Improve OTP fallback reliability and support messaging. Track each retry branch and sync state updates to linked GitLab issue.">
+                <p>OTP fallback resilience</p>
+                <div class="tags"><span class="tag assignee">Rafael</span><span class="tag release">v2.18.0</span><span class="tag status">In Progress</span></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="ring">
+            <div class="ring-head"><h3>Orbit 3 · Review</h3><span class="n">2</span></div>
+            <div class="tickets">
+              <article class="ticket" onclick="openModal(this)" data-title="Error taxonomy standard" data-owner="Sam" data-release="v2.18.0" data-status="Review" data-context="Standardize error mapping from backend to frontend prompts. Add validation for localization and support macros.">
+                <p>Error taxonomy standard</p>
+                <div class="tags"><span class="tag assignee">Sam</span><span class="tag release">v2.18.0</span><span class="tag status">Review</span></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="ring">
+            <div class="ring-head"><h3>Orbit 4 · Done</h3><span class="n">5</span></div>
+            <div class="tickets">
+              <article class="ticket" onclick="openModal(this)" data-title="Session timeout action" data-owner="Marina" data-release="v2.17.4" data-status="Done" data-context="Implemented timeout notice with one-tap re-auth and test coverage. Closed with merge request !291 and QA verification.">
+                <p>Session timeout action</p>
+                <div class="tags"><span class="tag assignee">Marina</span><span class="tag release">v2.17.4</span><span class="tag status">Done</span></div>
+              </article>
+            </div>
+          </section>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <header class="panel-head">
+          <h2>GitLab sync console</h2>
+          <span>Single project source of truth</span>
+        </header>
+        <div class="sync-area">
+          <section class="sync-card">
+            <h4>Repository configuration</h4>
+            <p><strong>Group:</strong> product-team<br><strong>Repo:</strong> mobile-app<br><strong>Milestone mapping:</strong> active</p>
+          </section>
+
+          <section class="sync-card">
+            <h4>Automations</h4>
+            <p>Ticket create -> GitLab issue<br>Status update -> issue label
+            <br>Assignee tag -> assignee
+            <br>Release tag -> milestone</p>
+          </section>
+
+          <section class="sync-card">
+            <h4>Live sync log</h4>
+            <div class="sync-log">
+              21:18 #1852 created from AI draft<br>
+              21:16 #1849 moved to review<br>
+              21:10 #1841 closed in merge !297
+            </div>
+          </section>
+
+          <button class="btn primary">Open integration settings</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    function openModal(card) {
+      document.getElementById('mTitle').textContent = card.dataset.title;
+      document.getElementById('mOwner').textContent = card.dataset.owner;
+      document.getElementById('mRelease').textContent = card.dataset.release;
+      document.getElementById('mStatus').textContent = card.dataset.status;
+      document.getElementById('mContext').textContent = card.dataset.context;
+      document.getElementById('modal').classList.add('show');
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.id === 'modal') {
+        document.getElementById('modal').classList.remove('show');
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Concept 01 - Editorial Command</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Crimson+Text:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root { --bg:#f4efe7; --ink:#181818; --accent:#d72638; --line:#18181822; }
+    * { box-sizing:border-box; }
+    body { margin:0; background:var(--bg); color:var(--ink); font-family:"Crimson Text", serif; }
+    .noise:before { content:""; position:fixed; inset:0; opacity:.08; pointer-events:none; background-image:radial-gradient(#00000018 1px, transparent 1px); background-size:3px 3px; }
+    .wrap { max-width:1120px; margin:0 auto; padding:20px; position:relative; }
+    nav { display:flex; justify-content:space-between; align-items:center; border:2px solid var(--ink); padding:12px 16px; background:#fff9; }
+    .logo { font-family:"Bebas Neue", sans-serif; font-size:34px; letter-spacing:.04em; }
+    .cta { background:var(--accent); color:white; padding:10px 16px; text-decoration:none; font-weight:600; }
+    .hero { padding:52px 0 30px; display:grid; grid-template-columns:1.1fr .9fr; gap:24px; }
+    h1 { font-family:"Bebas Neue", sans-serif; font-size:clamp(52px,8vw,110px); line-height:.9; margin:0; }
+    .deck { border-left:5px solid var(--accent); padding-left:16px; font-size:24px; }
+    .chip { display:inline-block; border:1px solid var(--ink); padding:6px 10px; margin:8px 8px 0 0; font-size:14px; }
+    .panel { background:white; border:2px solid var(--ink); box-shadow:8px 8px 0 #00000014; }
+    .board { padding:14px; margin-top:24px; }
+    .board-head { display:flex; justify-content:space-between; border-bottom:1px solid var(--line); padding-bottom:10px; margin-bottom:10px; font-family:"Bebas Neue"; letter-spacing:.05em; }
+    .cols { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+    .col { background:#fafafa; border:1px solid var(--line); padding:8px; min-height:180px; }
+    .col h3 { font-family:"Bebas Neue"; margin:0 0 8px; font-size:20px; }
+    .ticket { border:1px solid var(--line); background:white; padding:8px; margin-bottom:8px; font-size:14px; }
+    .video { margin-top:26px; padding:12px; }
+    .video video { width:100%; display:block; border:1px solid var(--line); }
+    .footer { margin:24px 0 40px; font-size:14px; opacity:.8; }
+    @media (max-width: 920px){ .hero{grid-template-columns:1fr;} .cols{grid-template-columns:1fr 1fr;} }
+    @media (max-width: 620px){ .cols{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body class="noise">
+  <div class="wrap">
+    <nav>
+      <div class="logo">MYBA</div>
+      <a class="cta" href="#">Start Free</a>
+    </nav>
+
+    <section class="hero">
+      <div>
+        <h1>Turn rough ideas into production tickets.</h1>
+        <p class="deck">Editorial clarity for engineering workflows. MyBA converts product chaos into structured stories, acceptance criteria, and ready-to-scope tasks.</p>
+        <span class="chip">AI Ticket Generation</span><span class="chip">Backlog Refinement</span><span class="chip">Sprint Planning</span>
+      </div>
+      <div class="panel" style="padding:18px; align-self:start;">
+        <h2 style="font-family:'Bebas Neue';font-size:36px;margin:0 0 8px;">How teams use it</h2>
+        <p style="margin:0;font-size:20px;">Paste context. Generate story. Ship with less ambiguity.</p>
+      </div>
+    </section>
+
+    <section class="panel board">
+      <div class="board-head"><span>Board Preview</span><span>MyBA Workspace</span></div>
+      <div class="cols">
+        <div class="col"><h3>Backlog</h3><div class="ticket">MYBA-142: Dark mode analytics</div><div class="ticket">MYBA-144: Export template PDF</div></div>
+        <div class="col"><h3>In Progress</h3><div class="ticket">MYBA-138: Confidence scoring model</div><div class="ticket">MYBA-139: Stale search bug</div></div>
+        <div class="col"><h3>Review</h3><div class="ticket">MYBA-135: Onboarding flow redesign</div></div>
+        <div class="col"><h3>Done</h3><div class="ticket">MYBA-131: Jira cloud sync</div><div class="ticket">MYBA-133: iOS layout fix</div></div>
+      </div>
+    </section>
+
+    <section class="panel video">
+      <h2 style="font-family:'Bebas Neue';font-size:38px;margin:0 0 8px;">See AI Ticket Generation in Motion</h2>
+      <p style="margin-top:0">Remotion demo embedded directly from your showcase render.</p>
+      <video src="../public/videos/ai-ticket-generation-showcase.mp4" autoplay muted loop playsinline controls></video>
+    </section>
+
+    <p class="footer">Concept 01: Editorial Command</p>
+  </div>
+</body>
+</html>

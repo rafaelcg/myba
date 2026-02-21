@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept 4 - Velocity Lanes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff8f0;
+      --surface: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --blue: #004e89;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --shadow: 0 22px 42px -28px rgba(2, 8, 23, 0.55);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 11% 12%, rgba(255,209,102,0.45), transparent 30%),
+        radial-gradient(circle at 90% 11%, rgba(255,107,53,0.2), transparent 30%),
+        radial-gradient(circle at 80% 88%, rgba(0,78,137,0.14), transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell { max-width: 1420px; margin: 0 auto; padding: 22px; }
+
+    .bar {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .title {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--orange), #f7931e);
+      color: #fff;
+      display: grid;
+      place-items: center;
+    }
+
+    .controls {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 9px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.ghost { background: #fff; border: 1px solid var(--line); color: #334155; }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1f8dd6); color: #fff; }
+    .btn.ai { background: linear-gradient(135deg, var(--orange), #f7931e); color: #fff; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: rgba(255,255,255,0.95);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 0.98rem;
+    }
+
+    .panel-head span { color: var(--muted); font-size: 0.78rem; }
+
+    .import-row {
+      padding: 12px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    textarea { min-height: 84px; grid-column: 1 / -1; resize: vertical; }
+
+    .ai-preview {
+      grid-column: 1 / -1;
+      border: 1px dashed #fdba74;
+      background: #fff7ed;
+      color: #7c2d12;
+      border-radius: 10px;
+      padding: 9px;
+      font-size: 0.82rem;
+      line-height: 1.45;
+    }
+
+    .lane-wrap {
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .lanes {
+      min-width: 940px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 10px;
+      min-height: 520px;
+    }
+
+    .lane {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 8px;
+      display: grid;
+      gap: 7px;
+      align-content: start;
+    }
+
+    .lane h3 {
+      margin: 0;
+      font-size: 0.82rem;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .count {
+      font-size: 0.66rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 3px 6px;
+      color: #64748b;
+      background: #fff;
+      font-weight: 800;
+    }
+
+    .ticket {
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: #fff;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .ticket:hover { border-color: #cbd5e1; }
+
+    .ticket p { margin: 0 0 6px; font-size: 0.84rem; line-height: 1.3; font-weight: 700; }
+
+    .tags { display: flex; gap: 5px; flex-wrap: wrap; }
+
+    .tag {
+      font-size: 0.65rem;
+      border-radius: 999px;
+      padding: 3px 6px;
+      font-weight: 700;
+    }
+
+    .tag.assignee { background: #dbeafe; color: #1d4ed8; }
+    .tag.release { background: #fef3c7; color: #92400e; }
+    .tag.sheet { background: #dcfce7; color: #166534; }
+
+    .side-body { padding: 12px; display: grid; gap: 10px; }
+
+    .block {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .block h4 { margin: 0 0 6px; font-size: 0.84rem; color: #334155; }
+
+    .block p { margin: 0; font-size: 0.8rem; color: #475569; line-height: 1.55; }
+
+    .chiplist { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+
+    .mini-chip {
+      font-size: 0.66rem;
+      padding: 4px 7px;
+      border-radius: 999px;
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -420px;
+      width: min(420px, 100vw);
+      height: 100vh;
+      background: #fff;
+      border-left: 1px solid var(--line);
+      box-shadow: -20px 0 40px -30px rgba(2,8,23,0.6);
+      transition: right 0.26s ease;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer.open { right: 0; }
+
+    .drawer-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-head h3 { margin: 0; font-family: "Space Grotesk", sans-serif; font-size: 1rem; }
+
+    .drawer-body {
+      padding: 14px 16px;
+      display: grid;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #334155;
+      line-height: 1.55;
+      overflow: auto;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2,8,23,0.38);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.24s ease;
+      z-index: 29;
+    }
+
+    .overlay.show { opacity: 1; pointer-events: all; }
+
+    .context {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    @media (max-width: 1280px) {
+      .layout { grid-template-columns: 1fr; }
+      .import-row { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 700px) {
+      .import-row { grid-template-columns: 1fr; }
+      .lanes { grid-template-columns: 1fr; min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay" id="overlay" onclick="closeDrawer()"></div>
+  <aside class="drawer" id="drawer">
+    <header class="drawer-head">
+      <h3 id="dTitle">Ticket context</h3>
+      <button class="btn ghost" onclick="closeDrawer()">Close</button>
+    </header>
+    <div class="drawer-body">
+      <div class="tags">
+        <span class="tag assignee" id="dAssignee">Assignee</span>
+        <span class="tag release" id="dRelease">Release</span>
+        <span class="tag sheet" id="dStatus">Status</span>
+      </div>
+      <div class="context" id="dContext"></div>
+      <button class="btn primary">Open GitLab issue link</button>
+    </div>
+  </aside>
+
+  <main class="shell">
+    <header class="bar">
+      <div class="title"><span class="icon">☄</span> MyBA Velocity Lanes</div>
+      <div class="controls">
+        <button class="btn ghost">Spreadsheet import mode</button>
+        <button class="btn primary">GitLab sync enabled</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>From Excel columns to visual flow</h2>
+          <span>feature name / status / assigned to / planned release</span>
+        </header>
+
+        <div class="import-row">
+          <input type="text" placeholder="Feature name" />
+          <select><option>Backlog</option><option>In Progress</option><option>Review</option><option>Done</option></select>
+          <select><option>Marina</option><option>Rafael</option><option>Sam</option></select>
+          <select><option>v2.18.0</option><option>v2.19.0</option><option>v2.20.0</option></select>
+          <button class="btn ai">AI title + summary</button>
+          <button class="btn primary">Create ticket</button>
+          <textarea placeholder="Optional brief: AI can summarize and produce a cleaner ticket before syncing to GitLab."></textarea>
+          <div class="ai-preview"><strong>AI draft:</strong> "Consolidate login and reset states" with acceptance checklist and GitLab-ready description.</div>
+        </div>
+
+        <div class="lane-wrap">
+          <div class="lanes">
+            <section class="lane">
+              <h3>Backlog <span class="count">5</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Consolidate login and reset states" data-assignee="Marina" data-release="v2.18.0" data-status="Backlog" data-context="Unify login UI states and make reset entry points clearer. AI-generated issue body should include acceptance criteria and edge cases for invalid credentials.">
+                <p>Consolidate login and reset states</p>
+                <div class="tags"><span class="tag assignee">Marina</span><span class="tag release">v2.18.0</span><span class="tag sheet">Backlog</span></div>
+              </article>
+            </section>
+
+            <section class="lane">
+              <h3>In Progress <span class="count">3</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="OTP resend resilience" data-assignee="Rafael" data-release="v2.18.0" data-status="In Progress" data-context="Introduce explicit OTP resend countdown, lockout notice, and telemetry for retry flow. Sync updates to GitLab issue labels.">
+                <p>OTP resend resilience</p>
+                <div class="tags"><span class="tag assignee">Rafael</span><span class="tag release">v2.18.0</span><span class="tag sheet">In Progress</span></div>
+              </article>
+            </section>
+
+            <section class="lane">
+              <h3>Review <span class="count">2</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Auth error dictionary" data-assignee="Sam" data-release="v2.18.0" data-status="Review" data-context="Map backend auth failures to consistent client errors and support scripts. Add QA matrix for localization and fallback handling.">
+                <p>Auth error dictionary</p>
+                <div class="tags"><span class="tag assignee">Sam</span><span class="tag release">v2.18.0</span><span class="tag sheet">Review</span></div>
+              </article>
+            </section>
+
+            <section class="lane">
+              <h3>Done <span class="count">6</span></h3>
+              <article class="ticket" onclick="openDrawer(this)" data-title="Session timeout notice" data-assignee="Marina" data-release="v2.17.4" data-status="Done" data-context="Added non-blocking timeout notice and one-click re-auth action. Closed through GitLab MR !291 with test coverage.">
+                <p>Session timeout notice</p>
+                <div class="tags"><span class="tag assignee">Marina</span><span class="tag release">v2.17.4</span><span class="tag sheet">Done</span></div>
+              </article>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <header class="panel-head">
+          <h2>Integration map</h2>
+          <span>GitLab + team metadata</span>
+        </header>
+        <div class="side-body">
+          <section class="block">
+            <h4>Repository targeting</h4>
+            <p>Choose one repo as source of truth. Ticket creation pushes issue title, body, labels, assignee, and milestone in one action.</p>
+          </section>
+
+          <section class="block">
+            <h4>Field mapping</h4>
+            <div class="chiplist">
+              <span class="mini-chip">Feature Name -> Issue Title</span>
+              <span class="mini-chip">Status -> Label</span>
+              <span class="mini-chip">Assigned -> Assignee</span>
+              <span class="mini-chip">Release -> Milestone</span>
+            </div>
+          </section>
+
+          <section class="block">
+            <h4>Sync events</h4>
+            <p>#1849 created from spreadsheet row<br>#1843 moved to review<br>#1837 closed via merge request !295</p>
+          </section>
+
+          <button class="btn primary">Open GitLab configuration</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    function openDrawer(card) {
+      document.getElementById('dTitle').textContent = card.dataset.title;
+      document.getElementById('dAssignee').textContent = card.dataset.assignee;
+      document.getElementById('dRelease').textContent = card.dataset.release;
+      document.getElementById('dStatus').textContent = card.dataset.status;
+      document.getElementById('dContext').textContent = card.dataset.context;
+      document.getElementById('drawer').classList.add('open');
+      document.getElementById('overlay').classList.add('show');
+    }
+
+    function closeDrawer() {
+      document.getElementById('drawer').classList.remove('open');
+      document.getElementById('overlay').classList.remove('show');
+    }
+  </script>
+</body>
+</html>

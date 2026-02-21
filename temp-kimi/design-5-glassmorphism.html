@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyBA — Next-Gen AI Ticket Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Outfit', -apple-system, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+      min-height: 100vh;
+      color: #fff;
+      overflow-x: hidden;
+    }
+    .bg-blobs {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+    }
+    .blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.6;
+      animation: float 20s ease-in-out infinite;
+    }
+    .blob-1 {
+      width: 500px; height: 500px;
+      background: #ff6b6b;
+      top: -10%; left: -10%;
+      animation-delay: 0s;
+    }
+    .blob-2 {
+      width: 400px; height: 400px;
+      background: #4ecdc4;
+      top: 40%; right: -10%;
+      animation-delay: -5s;
+    }
+    .blob-3 {
+      width: 600px; height: 600px;
+      background: #ffe66d;
+      bottom: -20%; left: 30%;
+      animation-delay: -10s;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+    header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 40px;
+    }
+    .header-glass {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 24px;
+    }
+    .logo-icon {
+      width: 40px; height: 40px;
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #764ba2;
+      font-weight: 800;
+      font-size: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    }
+    nav { display: flex; gap: 8px; }
+    nav a {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 12px;
+      transition: all 0.3s;
+    }
+    nav a:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    .header-actions { display: flex; gap: 12px; align-items: center; }
+    .token-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .token-icon {
+      width: 20px; height: 20px;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+    }
+    .btn-glass {
+      padding: 10px 24px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.3);
+      color: #fff;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    .btn-glass:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .btn-solid {
+      padding: 10px 24px;
+      background: #fff;
+      border: none;
+      color: #764ba2;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .btn-solid:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    main {
+      padding-top: 120px;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding-left: 40px;
+      padding-right: 40px;
+    }
+    .hero {
+      text-align: center;
+      padding: 60px 0 80px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 20px;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 32px;
+      backdrop-filter: blur(10px);
+    }
+    .badge-dot {
+      width: 8px; height: 8px;
+      background: #4ade80;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .hero h1 {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 24px;
+      text-shadow: 0 4px 30px rgba(0,0,0,0.1);
+    }
+    .hero h1 span {
+      background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      font-size: 20px;
+      color: rgba(255,255,255,0.8);
+      max-width: 600px;
+      margin: 0 auto 40px;
+      font-weight: 300;
+    }
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      margin-bottom: 60px;
+    }
+    .stat {
+      text-align: center;
+    }
+    .stat-value {
+      font-size: 36px;
+      font-weight: 700;
+      display: block;
+    }
+    .stat-label {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      font-weight: 400;
+    }
+    .generator-card {
+      max-width: 800px;
+      margin: 0 auto 80px;
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 32px;
+      padding: 8px;
+      box-shadow: 0 32px 64px rgba(0,0,0,0.2);
+    }
+    .generator-inner {
+      background: rgba(0,0,0,0.2);
+      border-radius: 24px;
+      padding: 32px;
+    }
+    .generator-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .generator-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+    .ai-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(74,222,128,0.2);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 50px;
+      font-size: 12px;
+      color: #4ade80;
+    }
+    .generator-textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 20px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 16px;
+      resize: vertical;
+      margin-bottom: 20px;
+      transition: all 0.3s;
+    }
+    .generator-textarea:focus {
+      outline: none;
+      border-color: rgba(255,255,255,0.3);
+      background: rgba(0,0,0,0.4);
+    }
+    .generator-textarea::placeholder { color: rgba(255,255,255,0.4); }
+    .generator-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .hint {
+      font-size: 13px;
+      color: rgba(255,255,255,0.5);
+    }
+    .btn-generate {
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+      border: none;
+      color: #764ba2;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-generate:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 100px;
+    }
+    .feature-glass {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+    .feature-glass:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .feature-icon-glass {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    .feature-glass h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .feature-glass p {
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      line-height: 1.6;
+    }
+    .showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+      margin-bottom: 100px;
+    }
+    .showcase-content h2 {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+    .showcase-content p {
+      font-size: 16px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 28px;
+      line-height: 1.7;
+    }
+    .feature-list {
+      list-style: none;
+      margin-bottom: 32px;
+    }
+    .feature-list li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+    .check-glass {
+      width: 24px; height: 24px;
+      background: rgba(74,222,128,0.2);
+      border: 1px solid rgba(74,222,128,0.3);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 12px;
+      color: #4ade80;
+    }
+    .showcase-visual {
+      position: relative;
+    }
+    .ticket-preview {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 24px;
+      padding: 24px;
+      transform: rotate(3deg);
+      transition: transform 0.3s;
+    }
+    .ticket-preview:hover { transform: rotate(0deg); }
+    .ticket-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .ticket-id {
+      font-size: 12px;
+      color: rgba(255,255,255,0.5);
+      font-family: monospace;
+    }
+    .ticket-status {
+      padding: 4px 12px;
+      background: rgba(74,222,128,0.2);
+      border-radius: 50px;
+      font-size: 11px;
+      color: #4ade80;
+    }
+    .ticket-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+    .ticket-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 13px;
+      color: rgba(255,255,255,0.6);
+    }
+    .cta-section {
+      text-align: center;
+      padding: 80px 0;
+      background: rgba(0,0,0,0.2);
+      backdrop-filter: blur(20px);
+      border-radius: 40px;
+      margin-bottom: 60px;
+    }
+    .cta-section h2 {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+    .cta-section p {
+      font-size: 18px;
+      color: rgba(255,255,255,0.8);
+      margin-bottom: 32px;
+    }
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+    .btn-large {
+      padding: 16px 32px;
+      font-size: 16px;
+      border-radius: 16px;
+    }
+    footer {
+      text-align: center;
+      padding: 40px;
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+    }
+    @media (max-width: 968px) {
+      .hero h1 { font-size: 40px; }
+      .features { grid-template-columns: 1fr; }
+      .showcase { grid-template-columns: 1fr; }
+      .header-glass { padding: 12px 16px; }
+      nav { display: none; }
+      .hero-stats { gap: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
+  </div>
+  <header>
+    <div class="header-glass">
+      <div class="logo">
+        <div class="logo-icon">M</div>
+        MyBA
+      </div>
+      <nav>
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it Works</a>
+        <a href="#pricing">Pricing</a>
+      </nav>
+      <div class="header-actions">
+        <div class="token-pill">
+          <span class="token-icon">🎫</span>
+          <span>3 tokens</span>
+        </div>
+        <button class="btn-glass">Sign In</button>
+        <button class="btn-solid">Get Started</button>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        AI-Powered Ticket Generation
+      </div>
+      <h1>Turn ideas into <span>backlog-ready</span> tickets</h1>
+      <p>Describe your work in plain English. Get professional user stories, acceptance criteria, and estimates in seconds.</p>
+      <div class="hero-stats">
+        <div class="stat">
+          <span class="stat-value">10k+</span>
+          <span class="stat-label">Tickets Generated</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">500+</span>
+          <span class="stat-label">Happy Teams</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value">4.9</span>
+          <span class="stat-label">User Rating</span>
+        </div>
+      </div>
+    </section>
+    <section class="generator-card">
+      <div class="generator-inner">
+        <div class="generator-header">
+          <div class="generator-title">
+            <span>✨</span>
+            What should be built?
+          </div>
+          <div class="ai-indicator">
+            <span class="badge-dot"></span>
+            AI Ready
+          </div>
+        </div>
+        <textarea class="generator-textarea" placeholder="Describe the work: who is it for, what do they need, and why? Include any constraints or acceptance criteria..."></textarea>
+        <div class="generator-actions">
+          <span class="hint">💡 Tip: More details = better tickets</span>
+          <button class="btn-generate">
+            <span>⚡</span>
+            Generate Ticket
+          </button>
+        </div>
+      </div>
+    </section>
+    <section class="features" id="features">
+      <div class="feature-glass">
+        <div class="feature-icon-glass">📝</div>
+        <h3>Story-First Approach</h3>
+        <p>Every ticket starts with a clear user story following best practices. No more vague requirements.</p>
+      </div>
+      <div class="feature-glass">
+        <div class="feature-icon-glass">✅</div>
+        <h3>Testable Criteria</h3>
+        <p>Get concrete, verifiable acceptance criteria that QA and developers can actually use.</p>
+      </div>
+      <div class="feature-glass">
+        <div class="feature-icon-glass">🎯</div>
+        <h3>Smart Estimation</h3>
+        <p>AI-suggested story points based on complexity, helping you plan sprints more accurately.</p>
+      </div>
+    </section>
+    <section class="showcase" id="how-it-works">
+      <div class="showcase-content">
+        <h2>From messy notes to structured tickets</h2>
+        <p>Stop wasting time formatting tickets. Just describe what you need in your own words, and let MyBA handle the structure.</p>
+        <ul class="feature-list">
+          <li><span class="check-glass">✓</span> Paste meeting notes or Slack messages</li>
+          <li><span class="check-glass">✓</span> Get consistent, professional formatting</li>
+          <li><span class="check-glass">✓</span> Copy directly to Jira, Linear, or Asana</li>
+          <li><span class="check-glass">✓</span> Save hours every sprint</li>
+        </ul>
+        <button class="btn-glass btn-large">See How It Works</button>
+      </div>
+      <div class="showcase-visual">
+        <div class="ticket-preview">
+          <div class="ticket-header">
+            <span class="ticket-id">MYBA-2847</span>
+            <span class="ticket-status">Ready for Dev</span>
+          </div>
+          <div class="ticket-title">Add passwordless login with magic links</div>
+          <div class="ticket-meta">
+            <span>👤 User Story</span>
+            <span>📊 5 Points</span>
+            <span>🔴 High Priority</span>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="cta-section">
+      <h2>Ready to speed up your workflow?</h2>
+      <p>Start with 3 free tokens. No credit card required.</p>
+      <div class="cta-buttons">
+        <button class="btn-solid btn-large">Get Started Free</button>
+        <button class="btn-glass btn-large">View Pricing</button>
+      </div>
+    </section>
+  </main>
+  <footer>
+    <p>© 2025 MyBA. Crafted with 💜 for product teams everywhere.</p>
+  </footer>
+</body>
+</html>

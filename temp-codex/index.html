@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA UX Concept Picker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --line: #d9e0ea;
+      --ink: #1c2633;
+      --muted: #5b697b;
+      --brand: #1f6fed;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Work Sans", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      padding: 26px 20px 48px;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(28px, 4vw, 42px);
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      margin: 0 0 24px;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 64ch;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .tag {
+      display: inline-block;
+      width: fit-content;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: #345b96;
+      background: #ebf2ff;
+      border-radius: 999px;
+      padding: 6px 9px;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: auto;
+      text-decoration: none;
+      color: #fff;
+      background: var(--brand);
+      border-radius: 10px;
+      padding: 9px 12px;
+      font-weight: 600;
+      width: fit-content;
+    }
+
+    .tip {
+      margin-top: 16px;
+      font-size: 13px;
+      color: #4f5f73;
+      background: #eef4fd;
+      border: 1px solid #d5e4ff;
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>MyBA UX Concept Picker</h1>
+    <p class="sub">
+      Five HTML-only design directions tailored to MyBA's product flow (prompt -> generation -> copy -> tokens). Open each option and pick the direction you want to turn into the final revamp.
+    </p>
+
+    <section class="grid">
+      <article class="card">
+        <span class="tag">Option 1</span>
+        <h2>Editorial Clarity</h2>
+        <p>Warm premium editorial style with a strong first-action composer and trust-driven content hierarchy.</p>
+        <a href="option-1-editorial-clarity.html">Open option 1</a>
+      </article>
+
+      <article class="card">
+        <span class="tag">Option 2</span>
+        <h2>Control Room</h2>
+        <p>Dark technical command-center look focused on reliability, workflow visibility, and operational confidence.</p>
+        <a href="option-2-control-room.html">Open option 2</a>
+      </article>
+
+      <article class="card">
+        <span class="tag">Option 3</span>
+        <h2>Conversion Engine</h2>
+        <p>Bolder, high-energy product marketing direction optimized for fast comprehension and signup conversion.</p>
+        <a href="option-3-conversion-engine.html">Open option 3</a>
+      </article>
+
+      <article class="card">
+        <span class="tag">Option 4</span>
+        <h2>Strategic Canvas</h2>
+        <p>Calm, enterprise-friendly layout that presents ticket creation as strategic planning and alignment workflow.</p>
+        <a href="option-4-strategic-canvas.html">Open option 4</a>
+      </article>
+
+      <article class="card">
+        <span class="tag">Option 5</span>
+        <h2>Premium Glass</h2>
+        <p>Polished modern premium visual language for positioning MyBA as a high-end B2B AI productivity product.</p>
+        <a href="option-5-premium-glass.html">Open option 5</a>
+      </article>
+    </section>
+
+    <p class="tip">
+      Recommendation if you want strongest immediate trust for B2B buyers: start with option 1 or option 5.
+    </p>
+  </main>
+</body>
+</html>

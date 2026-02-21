@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyBA — AI Ticket Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #12121a;
+      --surface-elevated: #1a1a25;
+      --border: #2a2a3a;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #8b5cf6;
+      --accent-glow: rgba(139, 92, 246, 0.3);
+      --success: #10b981;
+      --radius: 16px;
+      --radius-lg: 24px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      background-image: 
+        radial-gradient(ellipse at top, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(16, 185, 129, 0.1) 0%, transparent 40%);
+      min-height: 100vh;
+    }
+
+    /* Navigation */
+    .nav {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      padding: 1.25rem 2rem;
+    }
+
+    .nav-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1.5rem;
+      background: rgba(18, 18, 26, 0.8);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 9999px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1rem;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-elevated);
+      border-color: var(--accent);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 30px var(--accent-glow);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 10rem 1.5rem 4rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -0.03em;
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 2.5rem;
+    }
+
+    .hero-stats {
+      display: flex;
+      justify-content: center;
+      gap: 3rem;
+      margin-top: 3rem;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    /* Generator Card */
+    .generator-section {
+      padding: 2rem 1.5rem 5rem;
+    }
+
+    .generator-card {
+      max-width: 850px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .generator-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .card-glow {
+      position: absolute;
+      top: -50%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .card-header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card-header h2 {
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .token-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .card-body {
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      padding: 1.25rem;
+      background: var(--surface-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: inherit;
+      font-size: 1rem;
+      color: var(--text);
+      resize: vertical;
+      transition: all 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .card-footer {
+      padding: 1.5rem 2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hint {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-large {
+      padding: 0.875rem 2rem;
+      font-size: 1rem;
+    }
+
+    /* Features */
+    .features {
+      padding: 5rem 1.5rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .section-title h2 {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .feature-card {
+      padding: 2rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      transform: scaleX(0);
+      transition: transform 0.3s;
+    }
+
+    .feature-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .feature-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateY(-4px);
+    }
+
+    .feature-number {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .feature-card h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 3rem 1.5rem;
+      text-align: center;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover {
+      color: var(--text);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero {
+        padding: 8rem 1rem 3rem;
+      }
+
+      .hero-stats {
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .card-footer {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: stretch;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .actions .btn {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">◈</div>
+        MyBA
+      </a>
+      <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#docs">Documentation</a>
+        <a href="#api">API</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-ghost">Sign in</button>
+        <button class="btn btn-primary">Start free</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h1>AI-powered tickets<br>for elite teams</h1>
+    <p>Generate user stories, acceptance criteria, and estimates in seconds. From vague idea to sprint-ready.</p>
+    <div class="hero-stats">
+      <div class="stat">
+        <div class="stat-value">50K+</div>
+        <div class="stat-label">Tickets generated</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">4.9</div>
+        <div class="stat-label">User rating</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">&lt;3s</div>
+        <div class="stat-label">Avg. generation</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Generator -->
+  <section class="generator-section">
+    <div class="generator-card">
+      <div class="card-glow"></div>
+      <div class="card-header">
+        <h2>What are we building?</h2>
+        <div class="token-pill">
+          🎫 3 tokens available
+        </div>
+      </div>
+      <div class="card-body">
+        <textarea placeholder="Describe the feature, bug, or improvement. Include who it's for, what problem it solves, and any constraints or requirements..."></textarea>
+      </div>
+      <div class="card-footer">
+        <span class="hint">Pro tip: Mention the user persona and expected outcome</span>
+        <div class="actions">
+          <button class="btn btn-ghost">Clear</button>
+          <button class="btn btn-primary btn-large">Generate →</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="section-title">
+      <h2>Everything you need</h2>
+      <p>Powerful features to streamline your backlog management</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-number">01</div>
+        <h3>Story Generation</h3>
+        <p>Transform rough concepts into well-structured user stories following industry best practices and agile methodologies.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">02</div>
+        <h3>Acceptance Criteria</h3>
+        <p>Get clear, testable conditions that define when work is complete—reducing back-and-forth between teams.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-number">03</div>
+        <h3>Smart Estimation</h3>
+        <p>AI-powered story point suggestions based on complexity, scope, and historical patterns from your projects.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="#">Privacy</a>
+      <a href="#">Terms</a>
+      <a href="#">Contact</a>
+      <a href="#">Twitter</a>
+    </div>
+    <p>© 2025 MyBA. Crafted for product teams.</p>
+  </footer>
+</body>
+</html>

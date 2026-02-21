@@ -9,7 +9,7 @@ export const API_BASE_URL = EXPLICIT_BASE
   ? EXPLICIT_BASE.replace(/\/$/, '')
   : (import.meta.env && (import.meta.env as any).DEV
       ? 'http://localhost:3001/api'
-      : `${window.location.protocol}//${window.location.hostname}/myba/api`);
+      : `${window.location.protocol}//${window.location.hostname}/api`);
 
 // Backend AI Service
 export class BackendAIService {

@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Concept 2 - Release Radar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff8f1;
+      --surface: #ffffff;
+      --text: #1f2937;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --blue: #005f99;
+      --yellow: #ffd166;
+      --green: #06d6a0;
+      --purple: #764ba2;
+      --shadow: 0 20px 40px -25px rgba(16, 24, 40, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(255, 209, 102, 0.48), transparent 30%),
+        radial-gradient(circle at 90% 12%, rgba(255, 107, 53, 0.22), transparent 28%),
+        radial-gradient(circle at 85% 88%, rgba(118, 75, 162, 0.16), transparent 30%),
+        var(--bg);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    .top {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1.04rem;
+      font-weight: 700;
+    }
+
+    .logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #fff;
+      background: linear-gradient(135deg, #ff6b35, #f7931e);
+      box-shadow: 0 12px 20px -12px rgba(255, 107, 53, 0.9);
+    }
+
+    .top-actions {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 11px;
+      padding: 9px 12px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.ghost { background: #fff; border: 1px solid var(--line); color: #334155; }
+    .btn.primary { background: linear-gradient(135deg, var(--blue), #1f8bd5); color: #fff; }
+    .btn.ai { background: linear-gradient(135deg, var(--orange), #f7931e); color: #fff; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-head h2 {
+      margin: 0;
+      font-size: 1rem;
+      font-family: "Space Grotesk", sans-serif;
+    }
+
+    .panel-head span { color: var(--muted); font-size: 0.8rem; }
+
+    .capture {
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+
+    .ai-note {
+      grid-column: 1 / -1;
+      border: 1px dashed #fdba74;
+      background: #fff7ed;
+      border-radius: 10px;
+      padding: 9px;
+      font-size: 0.82rem;
+      color: #7c2d12;
+      line-height: 1.45;
+    }
+
+    .radar-wrap {
+      padding: 12px;
+      overflow: auto;
+    }
+
+    .radar {
+      display: grid;
+      gap: 10px;
+      min-width: 940px;
+    }
+
+    .release-row {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 10px;
+    }
+
+    .release-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .release-head h3 {
+      margin: 0;
+      font-size: 0.92rem;
+      font-family: "Space Grotesk", sans-serif;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .release-chip {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 4px 8px;
+    }
+
+    .lane-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .lane {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      min-height: 120px;
+      padding: 8px;
+      display: grid;
+      gap: 6px;
+      align-content: start;
+    }
+
+    .lane small {
+      color: #64748b;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 700;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    .card:hover { border-color: #cbd5e1; box-shadow: 0 10px 18px -14px rgba(15,23,42,0.45); }
+
+    .card-title {
+      margin: 0 0 6px;
+      font-size: 0.82rem;
+      line-height: 1.3;
+      font-weight: 700;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+
+    .chip {
+      font-size: 0.66rem;
+      padding: 3px 6px;
+      border-radius: 999px;
+      font-weight: 700;
+      background: #f1f5f9;
+      color: #334155;
+    }
+
+    .chip.owner { background: #dbeafe; color: #1d4ed8; }
+    .chip.gitlab { background: #ffedd5; color: #9a3412; }
+
+    .side-body { padding: 12px; display: grid; gap: 10px; }
+
+    .side-card {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .side-card h4 {
+      margin: 0 0 8px;
+      font-size: 0.84rem;
+      color: #334155;
+    }
+
+    .kv { font-size: 0.78rem; color: #475569; line-height: 1.6; }
+
+    .kv strong { color: #0f172a; }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.42);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 20;
+    }
+
+    .modal.show { display: flex; }
+
+    .modal-card {
+      width: min(720px, 100%);
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .modal-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .modal-head h3 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+    }
+
+    .modal-body {
+      padding: 14px 16px;
+      color: #334155;
+      line-height: 1.55;
+      font-size: 0.9rem;
+      display: grid;
+      gap: 10px;
+    }
+
+    .full-context {
+      border: 1px dashed #cbd5e1;
+      border-radius: 10px;
+      padding: 10px;
+      background: #f8fafc;
+    }
+
+    @media (max-width: 1100px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 860px) {
+      .capture { grid-template-columns: 1fr; }
+      .lane-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 580px) {
+      .lane-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="modal" id="ticketModal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <div class="modal-head">
+        <h3 id="modalTitle">Ticket title</h3>
+        <button class="btn ghost" onclick="closeModal()">Close</button>
+      </div>
+      <div class="modal-body">
+        <div class="chips">
+          <span class="chip owner" id="modalOwner">Owner</span>
+          <span class="chip" id="modalStatus">Status</span>
+          <span class="chip" id="modalRelease">Release</span>
+          <span class="chip gitlab" id="modalIssue">GitLab #000</span>
+        </div>
+        <div class="full-context" id="modalContext"></div>
+        <button class="btn primary">Open linked GitLab issue</button>
+      </div>
+    </div>
+  </div>
+
+  <main class="shell">
+    <header class="top">
+      <div class="brand"><span class="logo">⚡</span> MyBA Release Radar</div>
+      <div class="top-actions">
+        <button class="btn ghost">Select GitLab repo</button>
+        <button class="btn primary">Bi-directional sync on</button>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="panel">
+        <header class="panel-head">
+          <h2>Tickets by release version</h2>
+          <span>Fast teams, clear release scope</span>
+        </header>
+
+        <div class="capture">
+          <input type="text" placeholder="Quick capture: new login" />
+          <textarea placeholder="Or write a brief overview. AI will generate clean title + concise ticket body."></textarea>
+          <button class="btn ai">AI summarize</button>
+          <button class="btn primary">Create issue</button>
+          <div class="ai-note">
+            <strong>AI draft:</strong> "Unify login entry points" - normalizes auth entry and validation paths, assigns release milestone automatically.
+          </div>
+        </div>
+
+        <div class="radar-wrap">
+          <div class="radar">
+            <section class="release-row">
+              <div class="release-head">
+                <h3>Release v2.18.0 <span class="release-chip">Current sprint</span></h3>
+                <small>8 tickets</small>
+              </div>
+              <div class="lane-grid">
+                <div class="lane">
+                  <small>Backlog</small>
+                  <article class="card" onclick="openModal(this)" data-title="Streamlined login shell" data-owner="Marina" data-status="Backlog" data-release="v2.18.0" data-issue="#1842" data-context="Build a cleaner login screen and align password + OAuth states. Include accessibility labels, loading states, and revised validation copy.">
+                    <p class="card-title">Streamlined login shell</p>
+                    <div class="chips"><span class="chip owner">Marina</span><span class="chip gitlab">#1842</span></div>
+                  </article>
+                </div>
+                <div class="lane">
+                  <small>In Progress</small>
+                  <article class="card" onclick="openModal(this)" data-title="OTP retry flow" data-owner="Rafael" data-status="In Progress" data-release="v2.18.0" data-issue="#1843" data-context="Add OTP resend countdown and fallback messaging for auth failures. Must emit analytics and support Android + web parity.">
+                    <p class="card-title">OTP retry flow</p>
+                    <div class="chips"><span class="chip owner">Rafael</span><span class="chip gitlab">#1843</span></div>
+                  </article>
+                </div>
+                <div class="lane"><small>Review</small></div>
+                <div class="lane"><small>Done</small></div>
+              </div>
+            </section>
+
+            <section class="release-row">
+              <div class="release-head">
+                <h3>Release v2.19.0 <span class="release-chip" style="background:#ede9fe;color:#6d28d9;border-color:#ddd6fe;">Next</span></h3>
+                <small>5 tickets</small>
+              </div>
+              <div class="lane-grid">
+                <div class="lane">
+                  <small>Backlog</small>
+                  <article class="card" onclick="openModal(this)" data-title="Permission matrix cleanup" data-owner="Sam" data-status="Backlog" data-release="v2.19.0" data-issue="#1851" data-context="Redesign permission assignments for support/admin roles. Define defaults, override rules, and migration behavior from existing user grants.">
+                    <p class="card-title">Permission matrix cleanup</p>
+                    <div class="chips"><span class="chip owner">Sam</span><span class="chip gitlab">#1851</span></div>
+                  </article>
+                </div>
+                <div class="lane"><small>In Progress</small></div>
+                <div class="lane"><small>Review</small></div>
+                <div class="lane"><small>Done</small></div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </article>
+
+      <aside class="panel">
+        <header class="panel-head">
+          <h2>GitLab mirror</h2>
+          <span>Repo + milestone map</span>
+        </header>
+        <div class="side-body">
+          <div class="side-card">
+            <h4>Connection</h4>
+            <p class="kv"><strong>Group:</strong> product/mobile<br><strong>Repo:</strong> mobile-app<br><strong>Milestones:</strong> synced<br><strong>Assignees:</strong> mapped</p>
+          </div>
+          <div class="side-card">
+            <h4>Automation</h4>
+            <p class="kv">- Ticket create -> GitLab issue + labels<br>- Release tag -> milestone assignment<br>- Board status -> workflow label update</p>
+          </div>
+          <div class="side-card">
+            <h4>Recent sync events</h4>
+            <p class="kv">#1843 moved to In Progress by Rafael<br>#1842 created from AI summary<br>#1838 closed after merge !291</p>
+          </div>
+          <button class="btn primary">Open integration settings</button>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script>
+    function openModal(card) {
+      document.getElementById('modalTitle').textContent = card.dataset.title;
+      document.getElementById('modalOwner').textContent = card.dataset.owner;
+      document.getElementById('modalStatus').textContent = card.dataset.status;
+      document.getElementById('modalRelease').textContent = card.dataset.release;
+      document.getElementById('modalIssue').textContent = card.dataset.issue;
+      document.getElementById('modalContext').textContent = card.dataset.context;
+      document.getElementById('ticketModal').classList.add('show');
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.id === 'ticketModal') {
+        document.getElementById('ticketModal').classList.remove('show');
+      }
+    }
+  </script>
+</body>
+</html>

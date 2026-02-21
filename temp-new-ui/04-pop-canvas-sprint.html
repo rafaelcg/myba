@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Concept 04 - Pop Canvas Sprint</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#fff8ea;--ink:#1a1a2e;--a:#ff6b35;--b:#2ec4b6;--c:#ffd166}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(160deg,#fff8ea,#fff3dd);font-family:'Nunito',sans-serif;color:var(--ink)}
+    .blob{position:fixed;filter:blur(80px);opacity:.35;z-index:-1}.one{width:380px;height:380px;background:var(--a);top:-80px;left:-100px}.two{width:320px;height:320px;background:var(--b);right:-60px;top:20%}.three{width:420px;height:420px;background:var(--c);left:30%;bottom:-180px}
+    .wrap{max-width:1160px;margin:0 auto;padding:20px}
+    .hero{background:#ffffffcc;border:2px solid #1a1a2e22;border-radius:28px;padding:22px}
+    .top{display:flex;justify-content:space-between;align-items:center}
+    .logo{font-family:'Baloo 2';font-size:34px;font-weight:700}
+    .btn{border:none;background:var(--ink);color:#fff;padding:10px 16px;border-radius:999px;text-decoration:none}
+    h1{font-family:'Baloo 2';font-size:clamp(44px,7vw,76px);line-height:.95;margin:12px 0 4px}
+    .sub{font-size:21px;max-width:760px}
+    .grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:14px}
+    .card{border:2px solid #1a1a2e22;background:white;border-radius:20px;padding:14px}
+    .cols{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+    .col{background:#fff9f0;border:1px dashed #1a1a2e44;border-radius:14px;padding:8px}
+    .col h3{margin:0 0 8px;font-family:'Baloo 2'}
+    .ticket{background:#fff;border:1px solid #1a1a2e22;border-radius:10px;padding:8px;font-size:13px;margin-bottom:6px}
+    .pill{display:inline-block;padding:2px 8px;background:#1a1a2e;color:#fff;border-radius:99px;font-size:11px;margin-top:4px}
+    video{width:100%;border-radius:12px;border:1px solid #1a1a2e22}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .stat{border-radius:12px;padding:10px;color:#fff;font-family:'Baloo 2'}
+    .s1{background:var(--a)}.s2{background:var(--b)}.s3{background:#6c63ff}.s4{background:#ef476f}
+    @media(max-width:940px){.grid{grid-template-columns:1fr}.cols{grid-template-columns:1fr 1fr}}
+    @media(max-width:640px){.cols,.stats{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="blob one"></div><div class="blob two"></div><div class="blob three"></div>
+  <div class="wrap">
+    <section class="hero">
+      <div class="top"><div class="logo">MyBA</div><a class="btn" href="#">Try it free</a></div>
+      <h1>Make backlog writing actually fun.</h1>
+      <p class="sub">Playful, confident, modern. This concept is for product teams that move fast and want a brand with personality, not another sterile SaaS shell.</p>
+
+      <div class="grid">
+        <article class="card">
+          <h2 style="font-family:'Baloo 2';margin:0 0 8px">Board concept</h2>
+          <div class="cols">
+            <div class="col"><h3>Backlog</h3><div class="ticket">Profile analytics filters <div class="pill">5 pts</div></div></div>
+            <div class="col"><h3>In Progress</h3><div class="ticket">Prompt confidence scoring <div class="pill">13 pts</div></div></div>
+            <div class="col"><h3>Review</h3><div class="ticket">Acceptance criteria rewrite <div class="pill">8 pts</div></div></div>
+            <div class="col"><h3>Done</h3><div class="ticket">Jira sync endpoint patch <div class="pill">3 pts</div></div></div>
+          </div>
+        </article>
+
+        <article class="card">
+          <h2 style="font-family:'Baloo 2';margin:0 0 8px">Video walkthrough</h2>
+          <video src="../public/videos/ai-ticket-generation-showcase.mp4" autoplay muted loop playsinline controls></video>
+          <div class="stats" style="margin-top:8px">
+            <div class="stat s1">10k+ tickets</div><div class="stat s2">500+ teams</div><div class="stat s3">4.9 rating</div><div class="stat s4">under 2 min</div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

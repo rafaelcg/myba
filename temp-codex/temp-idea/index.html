@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Temp Idea - Concept Picker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fff8f0;
+      --surface: #ffffff;
+      --text: #111827;
+      --muted: #64748b;
+      --line: #e2e8f0;
+      --orange: #ff6b35;
+      --blue: #004e89;
+      --yellow: #ffd166;
+      --shadow: 0 20px 40px -24px rgba(2, 8, 23, 0.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "DM Sans", sans-serif;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(255,209,102,0.42), transparent 32%),
+        radial-gradient(circle at 88% 12%, rgba(255,107,53,0.22), transparent 30%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .shell {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 26px 20px 50px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(30px, 4.5vw, 46px);
+      letter-spacing: -0.02em;
+    }
+
+    .sub {
+      margin: 0 0 22px;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 65ch;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-block;
+      width: fit-content;
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 700;
+      color: #92400e;
+      background: #fff7d6;
+      border: 1px solid #fcd34d;
+      border-radius: 999px;
+      padding: 4px 7px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 1rem;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 0.9rem;
+      color: #475569;
+      line-height: 1.5;
+    }
+
+    a {
+      text-decoration: none;
+      display: inline-flex;
+      width: fit-content;
+      margin-top: auto;
+      padding: 8px 10px;
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--blue), #1f8dd6);
+    }
+
+    .tip {
+      margin-top: 14px;
+      border: 1px dashed #fdba74;
+      border-radius: 12px;
+      background: #fff7ed;
+      color: #7c2d12;
+      padding: 10px;
+      font-size: 0.84rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <h1>Temp Idea · 5 UX Concepts</h1>
+    <p class="sub">
+      Concepts are based on your fast-moving team flow and the vibrant style direction from <code>design-03-vibrant-creative.html</code>. Each one includes: easy ticket capture, AI title/summary generation, visible assignee/status/release tags, click-for-full-context behavior, and GitLab integration UX.
+    </p>
+
+    <section class="grid">
+      <article class="card">
+        <span class="badge">Concept 1</span>
+        <h2>Kanban Spark</h2>
+        <p>Balanced 3-panel layout: quick capture, Trello-style board, and GitLab sync monitor.</p>
+        <a href="concept-1-kanban-spark.html">Open concept 1</a>
+      </article>
+
+      <article class="card">
+        <span class="badge">Concept 2</span>
+        <h2>Release Radar</h2>
+        <p>Release-centric swimlanes to track status by version while mirroring to GitLab milestones.</p>
+        <a href="concept-2-release-radar.html">Open concept 2</a>
+      </article>
+
+      <article class="card">
+        <span class="badge">Concept 3</span>
+        <h2>Sync Studio</h2>
+        <p>High-throughput flow with stronger AI drafting interaction and GitLab bridge panel.</p>
+        <a href="concept-3-sync-studio.html">Open concept 3</a>
+      </article>
+
+      <article class="card">
+        <span class="badge">Concept 4</span>
+        <h2>Velocity Lanes</h2>
+        <p>Built around your current spreadsheet fields, then transformed into visual lanes + automation mapping.</p>
+        <a href="concept-4-velocity-lanes.html">Open concept 4</a>
+      </article>
+
+      <article class="card">
+        <span class="badge">Concept 5</span>
+        <h2>Ticket Orbit</h2>
+        <p>More experimental mission-control style with orbit lanes and integrated sync console.</p>
+        <a href="concept-5-ticket-orbit.html">Open concept 5</a>
+      </article>
+    </section>
+
+    <p class="tip">
+      If you want the safest starting point for implementation, pick Concept 1 or 3. If release planning is your biggest pain, Concept 2 is the strongest fit.
+    </p>
+  </main>
+</body>
+</html>

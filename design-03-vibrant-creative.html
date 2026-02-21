@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MyBA — AI Ticket Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fef9f3;
+      --surface: #ffffff;
+      --primary: #ff6b35;
+      --secondary: #004e89;
+      --accent: #ffd166;
+      --success: #06d6a0;
+      --text: #1a1a2e;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --gradient-1: #ff6b35;
+      --gradient-2: #f7931e;
+      --gradient-3: #ffd166;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* Decorative blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.4;
+      z-index: -1;
+      animation: float 20s infinite ease-in-out;
+    }
+
+    .blob-1 {
+      width: 500px;
+      height: 500px;
+      background: var(--gradient-1);
+      top: -200px;
+      right: -100px;
+      animation-delay: 0s;
+    }
+
+    .blob-2 {
+      width: 400px;
+      height: 400px;
+      background: var(--accent);
+      bottom: -100px;
+      left: -100px;
+      animation-delay: -5s;
+    }
+
+    .blob-3 {
+      width: 300px;
+      height: 300px;
+      background: var(--secondary);
+      top: 50%;
+      right: 10%;
+      animation-delay: -10s;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      33% { transform: translate(30px, -30px) scale(1.1); }
+      66% { transform: translate(-20px, 20px) scale(0.9); }
+    }
+
+    /* Navigation */
+    .nav {
+      padding: 1.5rem 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .nav-inner {
+      max-width: 1300px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo-mark {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 1.25rem;
+      transform: rotate(-5deg);
+      transition: transform 0.3s;
+    }
+
+    .logo:hover .logo-mark {
+      transform: rotate(0deg) scale(1.1);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.9375rem;
+      transition: color 0.2s;
+      position: relative;
+    }
+
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--primary);
+      transition: width 0.3s;
+    }
+
+    .nav-links a:hover {
+      color: var(--text);
+    }
+
+    .nav-links a:hover::after {
+      width: 100%;
+    }
+
+    .nav-actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 12px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: inherit;
+    }
+
+    .btn-ghost {
+      background: white;
+      color: var(--text);
+      border: 2px solid var(--border);
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--gradient-1), var(--gradient-2));
+      color: white;
+      box-shadow: 0 10px 30px -10px rgba(255, 107, 53, 0.5);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px -10px rgba(255, 107, 53, 0.6);
+    }
+
+    /* Hero */
+    .hero {
+      padding: 4rem 1.5rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 1.25rem;
+      background: white;
+      border: 2px solid var(--accent);
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--secondary);
+      margin-bottom: 2rem;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0.4); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 209, 102, 0); }
+    }
+
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(2.5rem, 6vw, 5rem);
+      font-weight: 700;
+      line-height: 1.1;
+      max-width: 900px;
+      margin: 0 auto 1.5rem;
+      color: var(--text);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--gradient-1), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto 2rem;
+    }
+
+    /* Generator Card */
+    .generator-section {
+      padding: 2rem 1.5rem 5rem;
+      position: relative;
+    }
+
+    .generator-card {
+      max-width: 850px;
+      margin: 0 auto;
+      background: var(--surface);
+      border-radius: 32px;
+      box-shadow: 
+        0 40px 80px -20px rgba(0, 0, 0, 0.15),
+        0 0 0 1px rgba(0, 0, 0, 0.05);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .card-pattern {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(90deg, var(--gradient-1), var(--gradient-2), var(--accent), var(--secondary));
+      background-size: 300% 100%;
+      animation: shimmer 3s infinite linear;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 300% 50%; }
+    }
+
+    .card-header {
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.125rem;
+      font-weight: 600;
+    }
+
+    .token-bubble {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, rgba(6, 214, 160, 0.1), rgba(6, 214, 160, 0.2));
+      color: #059669;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    .card-body {
+      padding: 2rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      padding: 1.25rem;
+      background: #fafafa;
+      border: 2px solid var(--border);
+      border-radius: 20px;
+      font-family: inherit;
+      font-size: 1.0625rem;
+      resize: vertical;
+      transition: all 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      background: white;
+      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+    }
+
+    textarea::placeholder {
+      color: #9ca3af;
+    }
+
+    .card-footer {
+      padding: 1rem 2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hint-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border-radius: 12px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .hint-icon {
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-size: 0.75rem;
+    }
+
+    .actions {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .btn-large {
+      padding: 1rem 2rem;
+      font-size: 1rem;
+    }
+
+    /* Features */
+    .features {
+      padding: 5rem 1.5rem;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .section-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+
+    .section-header p {
+      font-size: 1.125rem;
+      color: var(--text-muted);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 2rem;
+    }
+
+    .feature-card {
+      padding: 2.5rem;
+      background: var(--surface);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.15);
+      border-color: var(--accent);
+    }
+
+    .feature-emoji {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--bg), white);
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      border: 2px solid var(--border);
+    }
+
+    .feature-card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-card p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .feature-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 1.5rem;
+      color: var(--primary);
+      font-weight: 600;
+      text-decoration: none;
+      transition: gap 0.3s;
+    }
+
+    .feature-link:hover {
+      gap: 0.75rem;
+    }
+
+    /* Footer */
+    .footer {
+      padding: 4rem 1.5rem;
+      text-align: center;
+      background: var(--text);
+      color: white;
+      border-radius: 40px 40px 0 0;
+      margin-top: 3rem;
+    }
+
+    .footer h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .footer p {
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 2rem;
+    }
+
+    .footer-cta {
+      display: inline-flex;
+      gap: 1rem;
+    }
+
+    .btn-white {
+      background: white;
+      color: var(--text);
+    }
+
+    .btn-white:hover {
+      background: var(--accent);
+      color: var(--text);
+    }
+
+    .copyright {
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.875rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .card-footer {
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: stretch;
+      }
+
+      .hint-box {
+        justify-content: center;
+      }
+
+      .actions {
+        justify-content: stretch;
+      }
+
+      .actions .btn {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Decorative blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Navigation -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="logo">
+        <div class="logo-mark">✦</div>
+        MyBA
+      </a>
+      <div class="nav-links">
+        <a href="#features">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#about">About</a>
+        <a href="#blog">Blog</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn btn-ghost">Log in</button>
+        <button class="btn btn-primary">Try free →</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-badge">
+      🚀 Launching new AI models
+    </div>
+    <h1>Turn chaos into <span>clarity</span></h1>
+    <p>The playful way to write tickets that your dev team will actually love. No more vague stories. No more missed requirements.</p>
+  </section>
+
+  <!-- Generator -->
+  <section class="generator-section">
+    <div class="generator-card">
+      <div class="card-pattern"></div>
+      <div class="card-header">
+        <h2>✏️ Describe your idea</h2>
+        <div class="token-bubble">
+          🎫 3 free tokens
+        </div>
+      </div>
+      <div class="card-body">
+        <textarea placeholder="What should we build? Who is it for? What problem does it solve? The more details, the better the ticket..."></textarea>
+      </div>
+      <div class="card-footer">
+        <div class="hint-box">
+          <span class="hint-icon">💡</span>
+          <span>Include user goals and constraints</span>
+        </div>
+        <div class="actions">
+          <button class="btn btn-ghost">Start over</button>
+          <button class="btn btn-primary btn-large">Generate magic ✨</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="features" id="features">
+    <div class="section-header">
+      <h2>Why teams love MyBA</h2>
+      <p>Three powerful features to supercharge your backlog</p>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-emoji">📖</div>
+        <h3>Story-first approach</h3>
+        <p>Get user stories that focus on value, not just tasks. Our AI understands the difference between features and outcomes.</p>
+        <a href="#" class="feature-link">Learn more →</a>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">✅</div>
+        <h3>Test-ready criteria</h3>
+        <p>Every ticket comes with clear, testable acceptance criteria. Your QA team will thank you.</p>
+        <a href="#" class="feature-link">See examples →</a>
+      </div>
+      <div class="feature-card">
+        <div class="feature-emoji">🎯</div>
+        <h3>Smart estimates</h3>
+        <p>AI-powered story points based on complexity, not guesswork. Plan sprints with confidence.</p>
+        <a href="#" class="feature-link">How it works →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <h3>Ready to write better tickets?</h3>
+    <p>Join thousands of product teams shipping faster with MyBA</p>
+    <div class="footer-cta">
+      <button class="btn btn-white">Get started free</button>
+      <button class="btn btn-primary">View pricing</button>
+    </div>
+    <p class="copyright">© 2025 MyBA. Made with ❤️ for product teams everywhere.</p>
+  </footer>
+</body>
+</html>

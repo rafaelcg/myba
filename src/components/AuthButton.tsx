@@ -2,7 +2,7 @@ import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-re
 
 export function AuthButton() {
   const { isSignedIn, user, isLoaded } = useUser();
-  const basePath = import.meta.env.DEV ? '/' : '/myba/';
+  const basePath = '/';
 
   if (!isLoaded) {
     // Loading state

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyBA Option 1 - Editorial Clarity</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f3ea;
+      --surface: #ffffff;
+      --ink: #1a2430;
+      --muted: #5a6674;
+      --brand: #0f8f64;
+      --brand-dark: #0a6c4a;
+      --line: #d8ded3;
+      --accent: #f4cf75;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Manrope", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 85% 10%, #f6d99f 0%, transparent 38%),
+        radial-gradient(circle at 8% 76%, #b9e9d6 0%, transparent 35%),
+        var(--bg);
+    }
+
+    .shell {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 22px 72px;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 48px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(145deg, var(--brand), #38b886);
+      box-shadow: 0 6px 16px rgba(15, 143, 100, 0.3);
+    }
+
+    .nav-links {
+      display: inline-flex;
+      gap: 18px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .nav-cta {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 999px;
+      font-weight: 600;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 26px;
+      align-items: start;
+      margin-bottom: 26px;
+    }
+
+    .hero-copy {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 34px;
+      backdrop-filter: blur(4px);
+      animation: rise 0.6s ease both;
+    }
+
+    .kicker {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--brand-dark);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Fraunces", serif;
+      font-size: clamp(34px, 4.8vw, 60px);
+      line-height: 0.96;
+      letter-spacing: -0.01em;
+    }
+
+    .sub {
+      margin: 20px 0 24px;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 58ch;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .tag {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 12px;
+      color: #314051;
+      font-weight: 600;
+    }
+
+    .composer {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 18px 30px rgba(18, 33, 47, 0.08);
+      animation: rise 0.6s ease 0.15s both;
+    }
+
+    .composer-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #fcfcfa;
+      font-size: 13px;
+      color: #3d4b5c;
+      font-weight: 600;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      border: 0;
+      resize: vertical;
+      padding: 18px;
+      font: inherit;
+      line-height: 1.6;
+      color: #253446;
+      background: #fff;
+    }
+
+    .composer-foot {
+      border-top: 1px solid var(--line);
+      padding: 14px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #627284;
+    }
+
+    .cta {
+      border: 0;
+      border-radius: 10px;
+      background: linear-gradient(130deg, var(--brand), #2ab881);
+      color: #fff;
+      font-weight: 700;
+      padding: 12px 16px;
+      letter-spacing: 0.01em;
+    }
+
+    .strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 18px;
+      min-height: 148px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-family: "Fraunces", serif;
+      font-size: 22px;
+    }
+
+    .card p {
+      margin: 0;
+      color: #526070;
+      line-height: 1.5;
+      font-size: 14px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #39495b;
+    }
+
+    .split div {
+      background: #fff;
+      border: 1px dashed #c8d3c6;
+      border-radius: 11px;
+      padding: 10px;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(22px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 960px) {
+      .hero { grid-template-columns: 1fr; }
+      .strip { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="nav">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>MYBA</span>
+      </div>
+      <nav class="nav-links" aria-label="Primary">
+        <span>How it works</span>
+        <span>Pricing</span>
+        <span>Security</span>
+      </nav>
+      <button class="nav-cta">Open app</button>
+    </header>
+
+    <section class="hero">
+      <article class="hero-copy">
+        <p class="kicker">Editorial direction</p>
+        <h1>Turn rough briefs into tickets your team can ship.</h1>
+        <p class="sub">
+          This concept feels confident and product-led while staying warm. The UX frames one primary action,
+          adds immediate trust cues, and keeps output quality as the hero value.
+        </p>
+        <div class="tags">
+          <span class="tag">Story + acceptance criteria</span>
+          <span class="tag">Priority suggestions</span>
+          <span class="tag">Fast copy to Jira or Linear</span>
+        </div>
+      </article>
+
+      <aside class="composer" aria-label="Prompt composer mockup">
+        <div class="composer-head">
+          <span>Describe the work</span>
+          <span>10+ chars</span>
+        </div>
+        <textarea placeholder="Example: Improve signup conversion for mobile by reducing friction in onboarding and clarifying value in step one."></textarea>
+        <div class="composer-foot">
+          <span class="hint">Best prompts mention user, goal, constraints, and definition of done.</span>
+          <button class="cta">Generate ticket</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="strip" aria-label="Feature summary">
+      <article class="card">
+        <h3>Clear structure</h3>
+        <p>Title, context, criteria, and risk notes are generated in one consistent format.</p>
+      </article>
+      <article class="card">
+        <h3>Team ready</h3>
+        <p>Formatting is optimized for backlog tools so PMs and engineers can act instantly.</p>
+      </article>
+      <article class="card">
+        <h3>Usage control</h3>
+        <p>Token-aware UI makes limits explicit and keeps purchase actions predictable.</p>
+      </article>
+    </section>
+
+    <section class="split" aria-label="Output and analytics preview">
+      <div>
+        <strong>Output preview:</strong> Feature request with acceptance checklist, edge cases, and expected outcomes.
+      </div>
+      <div>
+        <strong>Admin preview:</strong> Usage trend, conversion funnel, and token utilization metrics.
+      </div>
+    </section>
+  </main>
+</body>
+</html>

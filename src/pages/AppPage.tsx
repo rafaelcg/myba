@@ -4629,63 +4629,77 @@ export function AppPage() {
                     </p>
                   )}
                 </section>
+
+                <div style={{
+                  marginTop: 'auto',
+                  paddingTop: '12px',
+                  borderTop: '1px solid var(--modal-border)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px'
+                }}>
+                  <button
+                    onClick={handleSaveTicket}
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: 'var(--modal-btn-primary-bg)',
+                      border: 'none',
+                      borderRadius: '9px',
+                      fontSize: '13px',
+                      color: 'var(--modal-btn-primary-text)',
+                      cursor: 'pointer',
+                      fontWeight: 600
+                    }}
+                  >
+                    Save Changes
+                  </button>
+
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '8px'
+                  }}>
+                    <button
+                      onClick={() => setSelectedTicket(null)}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        background: 'var(--modal-btn-secondary-bg)',
+                        border: '1px solid var(--modal-btn-secondary-border)',
+                        borderRadius: '9px',
+                        fontSize: '13px',
+                        color: 'var(--modal-btn-secondary-text)',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDeleteTicket}
+                      style={{
+                        width: '100%',
+                        padding: '9px 12px',
+                        background: 'var(--modal-btn-danger-bg)',
+                        border: '1px solid var(--modal-btn-danger-border)',
+                        borderRadius: '9px',
+                        fontSize: '13px',
+                        color: 'var(--modal-btn-danger-text)',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--modal-btn-danger-hover-bg)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'var(--modal-btn-danger-bg)';
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               </aside>
-            </div>
-            
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              alignItems: 'center',
-              flexWrap: isPhoneViewport ? 'wrap' : 'nowrap',
-              justifyContent: isPhoneViewport ? 'stretch' : 'flex-end'
-            }}>
-              <button
-                onClick={handleDeleteTicket}
-                style={{
-                  padding: '9px 14px',
-                  background: 'var(--modal-btn-danger-bg)',
-                  border: '1px solid var(--modal-btn-danger-border)',
-                  borderRadius: '9px',
-                  fontSize: '13px',
-                  color: 'var(--modal-btn-danger-text)',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  minWidth: isPhoneViewport ? '100%' : '90px'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--modal-btn-danger-hover-bg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--modal-btn-danger-bg)';
-                }}
-              >Delete</button>
-              <button
-                onClick={() => setSelectedTicket(null)}
-                style={{
-                  padding: '9px 16px',
-                  background: 'var(--modal-btn-secondary-bg)',
-                  border: '1px solid var(--modal-btn-secondary-border)',
-                  borderRadius: '9px',
-                  fontSize: '13px',
-                  color: 'var(--modal-btn-secondary-text)',
-                  cursor: 'pointer',
-                  minWidth: isPhoneViewport ? 'calc(50% - 5px)' : '140px'
-                }}
-              >Cancel</button>
-              <button
-                onClick={handleSaveTicket}
-                style={{
-                  padding: '9px 16px',
-                  background: 'var(--modal-btn-primary-bg)',
-                  border: 'none',
-                  borderRadius: '9px',
-                  fontSize: '13px',
-                  color: 'var(--modal-btn-primary-text)',
-                  cursor: 'pointer',
-                  fontWeight: 600,
-                  minWidth: isPhoneViewport ? 'calc(50% - 5px)' : '180px'
-                }}
-              >Save Changes</button>
             </div>
           </div>
         </div>

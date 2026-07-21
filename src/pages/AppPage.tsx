@@ -7,10 +7,12 @@ import {
   Ticket,
   ProjectField,
   ProjectFieldType,
+  UpdateTicketInput,
   gitlabApi,
   GitLabSyncMode
 } from '../utils/api'
 import { getClerkFallbackAuthUrls } from '../utils/clerk'
+import { useCopyToClipboard } from '../hooks/useCopyToClipboard'
 import {
   useAppUiStore,
   ActiveView,
@@ -62,6 +64,69 @@ const ROADMAP_RELEASE_COLUMNS: Array<{
   { id: 'committed', label: 'Committed', border: '#bfdbfe', background: '#eff6ff' },
   { id: 'shipped', label: 'Shipped', border: '#bbf7d0', background: '#ecfdf5' },
 ]
+
+type InlineSpreadsheetCell = {
+  ticketId: string
+  columnId: TableSortKey
+}
+
+type TableUpdatePlan = {
+  ticketId: string
+  originalTicket: Ticket
+  optimisticTicket: Ticket
+  patch: UpdateTicketInput
+  savingCellKeys: string[]
+}
+
+interface WorkspacePermalinkState {
+  projectKey: string | null
+  view: ActiveView | null
+  ticketId: string | null
+}
+
+function isActiveView(value: string | null): value is ActiveView {
+  return value === 'board' || value === 'table' || value === 'roadmap'
+}
+
+function parseWorkspacePermalink(search: string): WorkspacePermalinkState {
+  const params = new URLSearchParams(search)
+  const projectParam = params.get('project')?.trim() || null
+  const viewParam = params.get('view')?.trim() || null
+  const ticketParam = params.get('ticket')?.trim() || null
+
+  return {
+    projectKey: projectParam,
+    view: isActiveView(viewParam) ? viewParam : null,
+    ticketId: ticketParam || null,
+  }
+}
+
+function getGitLabRepoIdFromProjectKey(projectKey?: string | null): number | null {
+  if (!projectKey) {
+    return null
+  }
+
+  const match = /^gitlab:(\d+)$/.exec(projectKey)
+  if (!match) {
+    return null
+  }
+
+  const repoId = Number.parseInt(match[1], 10)
+  return Number.isFinite(repoId) && repoId > 0 ? repoId : null
+}
+
+function buildWorkspacePermalink(projectKey: string, view: ActiveView, ticketId?: string | null): string {
+  const params = new URLSearchParams()
+  params.set('project', projectKey)
+  params.set('view', view)
+  if (ticketId) {
+    params.set('ticket', ticketId)
+  }
+
+  const query = params.toString()
+  const origin = typeof window === 'undefined' ? '' : window.location.origin
+  return `${origin}/app${query ? `?${query}` : ''}`
+}
 
 function renderGeneratedTicketPreview(content: string): JSX.Element[] {
   return content.split('\n').map((rawLine, index) => {
@@ -342,11 +407,48 @@ export function AppPage() {
   const [regeneratingContent, setRegeneratingContent] = useState(false)
   const [isEditingGeneratedContent, setIsEditingGeneratedContent] = useState(false)
   const [showRegeneratePrompt, setShowRegeneratePrompt] = useState(false)
+  const [tableActiveCell, setTableActiveCell] = useState<InlineSpreadsheetCell | null>(null)
+  const [tableEditingCell, setTableEditingCell] = useState<InlineSpreadsheetCell | null>(null)
+  const [tableEditingValue, setTableEditingValue] = useState('')
+  const [tableSavingCellKeys, setTableSavingCellKeys] = useState<Record<string, true>>({})
+  const [tableSaveError, setTableSaveError] = useState<string | null>(null)
 
   const syncingTicketIdsRef = useRef<Set<string>>(new Set())
+  const tableCellRefs = useRef<Record<string, HTMLTableCellElement | null>>({})
+  const tableEditorRef = useRef<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null>(null)
+  const setTableCellNode = useCallback((cellKey: string, node: HTMLTableCellElement | null) => {
+    if (node) {
+      tableCellRefs.current[cellKey] = node
+      return
+    }
+
+    delete tableCellRefs.current[cellKey]
+  }, [])
+  const setTableEditorNode = useCallback((node: HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null) => {
+    tableEditorRef.current = node
+  }, [])
+  const initialPermalinkRef = useRef<WorkspacePermalinkState>(
+    typeof window === 'undefined'
+      ? { projectKey: null, view: null, ticketId: null }
+      : parseWorkspacePermalink(window.location.search)
+  )
+  const permalinkProjectApplyingRef = useRef(false)
+  const permalinkTicketResolvedRef = useRef<string | null>(null)
+  const permalinkTicketLoadingRef = useRef(false)
   const [viewportWidth, setViewportWidth] = useState(
     typeof window === 'undefined' ? 1280 : window.innerWidth
   )
+  const [permalinkHydrated, setPermalinkHydrated] = useState(false)
+  const {
+    copyToClipboard: copyBoardPermalink,
+    isCopied: isBoardPermalinkCopied,
+    error: boardPermalinkError,
+  } = useCopyToClipboard()
+  const {
+    copyToClipboard: copyTicketPermalink,
+    isCopied: isTicketPermalinkCopied,
+    error: ticketPermalinkError,
+  } = useCopyToClipboard()
 
   // Theme management
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -370,11 +472,46 @@ export function AppPage() {
     }
   }, [theme])
 
+  useEffect(() => {
+    if (!tableEditingCell) {
+      return
+    }
+
+    const frameId = window.requestAnimationFrame(() => {
+      const editor = tableEditorRef.current
+      if (!editor) {
+        return
+      }
+
+      editor.focus()
+      if (editor instanceof HTMLInputElement || editor instanceof HTMLTextAreaElement) {
+        editor.select()
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frameId)
+  }, [tableEditingCell])
+
+  useEffect(() => {
+    if (activeView !== 'table' && tableEditingCell) {
+      setTableEditingCell(null)
+      setTableEditingValue('')
+    }
+    if (activeView !== 'table' && tableActiveCell) {
+      setTableActiveCell(null)
+    }
+  }, [activeView, tableActiveCell, tableEditingCell])
+
   const currentProjectKey = gitlabStatus.repo ? `gitlab:${gitlabStatus.repo.id}` : 'local'
   const preferredRepoStorageKey = userId ? `sprintflow:gitlab:preferred-repo:${userId}` : null
   const tableSortStorageKey = userId ? `sprintflow:table-sort:${userId}:${currentProjectKey}` : null
   const roadmapReleaseStateStorageKey = userId ? `sprintflow:roadmap:release-state:${userId}:${currentProjectKey}` : null
   const tableSortHydratedKeyRef = useRef<string | null>(null)
+  const previousProjectKeyRef = useRef<string>(currentProjectKey)
+  const boardPermalink = buildWorkspacePermalink(currentProjectKey, 'board')
+  const ticketPermalink = selectedTicket
+    ? buildWorkspacePermalink(currentProjectKey, activeView, selectedTicket.id)
+    : null
 
   // Get unique versions from existing tickets
   const existingVersions = Array.from(
@@ -410,6 +547,91 @@ export function AppPage() {
 
     window.localStorage.setItem(preferredRepoStorageKey, String(repoId))
   }, [preferredRepoStorageKey])
+
+  const openTicketDetail = useCallback((ticket: Ticket) => {
+    setSelectedTicket(ticket)
+    setEditingTicket({
+      ...ticket,
+      notes: getTicketCommentsValue(ticket),
+      customFields: { ...(ticket.customFields || {}) },
+    })
+    setVersionInput('')
+    setShowVersionSuggestions(false)
+    setIsEditingGeneratedContent(false)
+    setShowRegeneratePrompt(false)
+    setRegeneratePrompt('')
+  }, [
+    setEditingTicket,
+    setSelectedTicket,
+    setShowVersionSuggestions,
+    setVersionInput,
+  ])
+
+  const closeTicketDetail = useCallback(() => {
+    setSelectedTicket(null)
+    setVersionInput('')
+    setShowVersionSuggestions(false)
+    setIsEditingGeneratedContent(false)
+    setShowRegeneratePrompt(false)
+    setRegeneratePrompt('')
+  }, [setSelectedTicket, setShowVersionSuggestions, setVersionInput])
+
+  useEffect(() => {
+    if (selectedTicket && previousProjectKeyRef.current !== currentProjectKey) {
+      closeTicketDetail()
+    }
+
+    previousProjectKeyRef.current = currentProjectKey
+  }, [closeTicketDetail, currentProjectKey, selectedTicket])
+
+  const setGitLabRepo = useCallback(async (projectId: number, options?: { silent?: boolean }) => {
+    const silent = options?.silent === true
+
+    try {
+      setGitlabRepoSaving(true)
+      setGitlabError(null)
+      if (!silent) {
+        setGitlabMessage(null)
+      }
+
+      const token = await getAuthToken()
+      const result = await gitlabApi.setRepo(token, projectId)
+      const members = await gitlabApi.getMembers(token)
+
+      setGitlabStatus((prev) => ({
+        ...prev,
+        connected: true,
+        repo: result.repo,
+      }))
+      savePreferredRepoId(result.repo.id)
+      setGitlabMembers(members)
+
+      if (result.webhookConfigured === false && result.webhookWarning && result.webhookWarning !== 'local_dev') {
+        if (!silent) {
+          setGitlabMessage(`Repository set to ${result.repo.fullName}`)
+        }
+        setGitlabError('Repo saved, but automatic GitLab->app status sync could not be enabled. Check project webhook permissions.')
+      } else if (!silent) {
+        setGitlabMessage(`Repository set to ${result.repo.fullName}`)
+      }
+
+      return result
+    } catch (err) {
+      console.error('Failed to set GitLab repo:', err)
+      setGitlabError(err instanceof Error ? err.message : 'Failed to select GitLab repository')
+      throw err
+    } finally {
+      setGitlabRepoSaving(false)
+    }
+  }, [
+    getAuthToken,
+    savePreferredRepoId,
+    setGitlabError,
+    setGitlabMembers,
+    setGitlabMessage,
+    setGitlabRepoSaving,
+    setGitlabStatus,
+  ])
 
   // Fetch tickets on mount
   const fetchTickets = useCallback(async () => {
@@ -579,12 +801,76 @@ export function AppPage() {
   }, [loadGitLabState])
 
   useEffect(() => {
+    const targetView = initialPermalinkRef.current.view
+    if (targetView) {
+      setActiveView(targetView)
+    }
+  }, [setActiveView])
+
+  useEffect(() => {
     void loadLocalTicketCount()
   }, [loadLocalTicketCount])
 
   useEffect(() => {
     void loadProjectFields()
   }, [loadProjectFields])
+
+  useEffect(() => {
+    if (permalinkHydrated || !isLoaded || permalinkProjectApplyingRef.current) {
+      return
+    }
+
+    const targetProjectKey = initialPermalinkRef.current.projectKey
+    const targetRepoId = getGitLabRepoIdFromProjectKey(targetProjectKey)
+
+    if (!targetRepoId) {
+      setPermalinkHydrated(true)
+      return
+    }
+
+    if (!isSignedIn) {
+      return
+    }
+
+    if (gitlabLoading) {
+      return
+    }
+
+    if (!gitlabStatus.connected) {
+      setGitlabError('This permalink points to a GitLab project. Connect GitLab to open it.')
+      setPermalinkHydrated(true)
+      return
+    }
+
+    if (gitlabStatus.repo?.id === targetRepoId) {
+      setPermalinkHydrated(true)
+      return
+    }
+
+    const targetRepo = gitlabRepos.find((repo) => repo.id === targetRepoId)
+    if (!targetRepo) {
+      setGitlabError('This permalink points to a GitLab project you do not have access to.')
+      setPermalinkHydrated(true)
+      return
+    }
+
+    permalinkProjectApplyingRef.current = true
+    void setGitLabRepo(targetRepoId, { silent: true })
+      .finally(() => {
+        permalinkProjectApplyingRef.current = false
+        setPermalinkHydrated(true)
+      })
+  }, [
+    gitlabLoading,
+    gitlabRepos,
+    gitlabStatus.connected,
+    gitlabStatus.repo,
+    isLoaded,
+    isSignedIn,
+    permalinkHydrated,
+    setGitLabRepo,
+    setGitlabError,
+  ])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -604,6 +890,87 @@ export function AppPage() {
     const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`
     window.history.replaceState({}, '', nextUrl)
   }, [loadGitLabState])
+
+  useEffect(() => {
+    if (!permalinkHydrated || typeof window === 'undefined') {
+      return
+    }
+
+    const params = new URLSearchParams()
+    params.set('project', currentProjectKey)
+    params.set('view', activeView)
+
+    if (selectedTicket?.id) {
+      params.set('ticket', selectedTicket.id)
+    }
+
+    const nextQuery = params.toString()
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState({}, '', nextUrl)
+    }
+  }, [activeView, currentProjectKey, permalinkHydrated, selectedTicket?.id])
+
+  useEffect(() => {
+    const permalinkTicketId = initialPermalinkRef.current.ticketId
+    const permalinkProjectKey = initialPermalinkRef.current.projectKey
+
+    if (!permalinkTicketId || !permalinkHydrated || loading) {
+      return
+    }
+
+    if (permalinkProjectKey && permalinkProjectKey !== currentProjectKey) {
+      return
+    }
+
+    const resolutionKey = `${currentProjectKey}:${permalinkTicketId}`
+    if (permalinkTicketResolvedRef.current === resolutionKey) {
+      return
+    }
+
+    const existingTicket = tickets.find((ticket) => ticket.id === permalinkTicketId)
+    if (existingTicket) {
+      openTicketDetail(existingTicket)
+      permalinkTicketResolvedRef.current = resolutionKey
+      return
+    }
+
+    if (!isSignedIn || permalinkTicketLoadingRef.current) {
+      return
+    }
+
+    permalinkTicketLoadingRef.current = true
+    void (async () => {
+      try {
+        const token = await getAuthToken()
+        const ticket = await ticketsApi.getById(permalinkTicketId, token, currentProjectKey)
+        setTickets((previous) => (
+          previous.some((existing) => existing.id === ticket.id)
+            ? previous
+            : [ticket, ...previous]
+        ))
+        openTicketDetail(ticket)
+      } catch (err) {
+        console.error('Failed to open ticket permalink:', err)
+        setError(err instanceof Error ? err.message : 'Failed to open ticket permalink')
+      } finally {
+        permalinkTicketResolvedRef.current = resolutionKey
+        permalinkTicketLoadingRef.current = false
+      }
+    })()
+  }, [
+    currentProjectKey,
+    getAuthToken,
+    isSignedIn,
+    loading,
+    openTicketDetail,
+    permalinkHydrated,
+    setError,
+    setTickets,
+    tickets,
+  ])
 
   useEffect(() => {
     if (!tableSortStorageKey || typeof window === 'undefined') {
@@ -757,30 +1124,9 @@ export function AppPage() {
 
   const handleGitLabRepoChange = async (projectId: number) => {
     try {
-      setGitlabRepoSaving(true)
-      setGitlabError(null)
-      setGitlabMessage(null)
-      const token = await getAuthToken()
-      const result = await gitlabApi.setRepo(token, projectId)
-      const members = await gitlabApi.getMembers(token)
-      setGitlabStatus(prev => ({
-        ...prev,
-        connected: true,
-        repo: result.repo,
-      }))
-      savePreferredRepoId(result.repo.id)
-      setGitlabMembers(members)
-      if (result.webhookConfigured === false && result.webhookWarning && result.webhookWarning !== 'local_dev') {
-        setGitlabMessage(`Repository set to ${result.repo.fullName}`)
-        setGitlabError('Repo saved, but automatic GitLab->app status sync could not be enabled. Check project webhook permissions.')
-      } else {
-        setGitlabMessage(`Repository set to ${result.repo.fullName}`)
-      }
+      await setGitLabRepo(projectId)
     } catch (err) {
-      console.error('Failed to set GitLab repo:', err)
-      setGitlabError(err instanceof Error ? err.message : 'Failed to select GitLab repository')
-    } finally {
-      setGitlabRepoSaving(false)
+      console.error('Failed to change GitLab repo from selector:', err)
     }
   }
 
@@ -961,18 +1307,20 @@ export function AppPage() {
 
   // Open ticket detail modal
   const handleTicketClick = (ticket: Ticket) => {
-    setSelectedTicket(ticket)
-    setEditingTicket({
-      ...ticket,
-      notes: ticket.notes ?? ticket.description ?? '',
-      customFields: { ...(ticket.customFields || {}) },
-    })
-    setVersionInput('')
-    setShowVersionSuggestions(false)
-    setIsEditingGeneratedContent(false)
-    setShowRegeneratePrompt(false)
-    setRegeneratePrompt('')
+    openTicketDetail(ticket)
   }
+
+  const handleCopyBoardPermalink = useCallback(() => {
+    void copyBoardPermalink(boardPermalink)
+  }, [boardPermalink, copyBoardPermalink])
+
+  const handleCopyTicketPermalink = useCallback(() => {
+    if (!ticketPermalink) {
+      return
+    }
+
+    void copyTicketPermalink(ticketPermalink)
+  }, [copyTicketPermalink, ticketPermalink])
 
   // Save ticket changes
   const handleSaveTicket = async () => {
@@ -984,7 +1332,7 @@ export function AppPage() {
     const editedPriority = editingTicket.priority || 'medium'
     const originalTitle = (selectedTicket.title || '').trim()
     const editedTitle = (editingTicket.title || '').trim()
-    const originalNotes = (selectedTicket.notes || selectedTicket.description || '').trim()
+    const originalNotes = getTicketCommentsValue(selectedTicket).trim()
     const editedNotes = (editingTicket.notes || '').trim()
     const originalGenerated = (selectedTicket.generatedContent || '').trim()
     const editedGenerated = (editingTicket.generatedContent || '').trim()
@@ -1006,7 +1354,7 @@ export function AppPage() {
     )
 
     if (!hasChanges) {
-      setSelectedTicket(null)
+      closeTicketDetail()
       return
     }
 
@@ -1023,7 +1371,7 @@ export function AppPage() {
       }, token, currentProjectKey)
       
       setTickets(prev => prev.map(t => t.id === selectedTicket.id ? updated : t))
-      setSelectedTicket(null)
+      closeTicketDetail()
       syncTicketInBackground(updated.id, updated.gitlabIssueNumber ? 'update' : 'create')
     } catch (err) {
       console.error('Failed to update ticket:', err)
@@ -1080,7 +1428,7 @@ export function AppPage() {
       const token = await getAuthToken()
       await ticketsApi.delete(selectedTicket.id, token, currentProjectKey)
       setTickets(prev => prev.filter(t => t.id !== selectedTicket.id))
-      setSelectedTicket(null)
+      closeTicketDetail()
     } catch (err) {
       console.error('Failed to delete ticket:', err)
       alert('Failed to delete ticket')
@@ -1176,6 +1524,337 @@ export function AppPage() {
     if (value === null || value === undefined) return ''
     if (typeof value === 'boolean') return value ? 'true' : 'false'
     return String(value).trim()
+  }
+  function getTicketCommentsValue(ticket: Pick<Ticket, 'notes' | 'description'>): string {
+    if (typeof ticket.notes === 'string' && ticket.notes !== '') {
+      return ticket.notes
+    }
+    return ticket.description || ''
+  }
+
+  const getTableCellKey = (ticketId: string, columnId: TableSortKey) => `${ticketId}:${columnId}`
+
+  const getTableCellEditorValue = (ticket: Ticket, columnId: TableSortKey): string => {
+    if (columnId.startsWith('custom:')) {
+      return normalizeCustomValue(ticket.customFields?.[columnId.slice('custom:'.length)])
+    }
+
+    switch (columnId) {
+      case 'title':
+        return ticket.title || ''
+      case 'owner':
+        return ticket.assignee || ''
+      case 'priority':
+        return ticket.priority || 'medium'
+      case 'status':
+        return ticket.status
+      case 'milestone':
+        return ticket.version || ''
+      case 'comments':
+        return getTicketCommentsValue(ticket)
+      case 'ticket':
+      default:
+        return ''
+    }
+  }
+
+  const closeTableCellEditor = () => {
+    setTableEditingCell(null)
+    setTableEditingValue('')
+  }
+
+  const cancelTableCellEdit = (focusCell?: InlineSpreadsheetCell | null) => {
+    closeTableCellEditor()
+    if (focusCell) {
+      focusTableCell(focusCell)
+    }
+  }
+
+  const mergeTableUpdatePatch = (base: UpdateTicketInput, patch: UpdateTicketInput): UpdateTicketInput => {
+    const next: UpdateTicketInput = { ...base, ...patch }
+    if (base.customFields || patch.customFields) {
+      next.customFields = {
+        ...(base.customFields || {}),
+        ...(patch.customFields || {}),
+      }
+    }
+    return next
+  }
+
+  const buildTableUpdatePlan = (
+    ticket: Ticket,
+    columnId: TableSortKey,
+    rawValue: string
+  ): Omit<TableUpdatePlan, 'savingCellKeys'> | null => {
+    let patch: UpdateTicketInput | null = null
+    let optimisticTicket = ticket
+
+    if (columnId.startsWith('custom:')) {
+      const fieldId = columnId.slice('custom:'.length)
+      const currentValue = normalizeCustomValue(ticket.customFields?.[fieldId])
+      const nextValue = normalizeCustomValue(rawValue)
+
+      if (currentValue !== nextValue) {
+        const nextCustomFields = { ...(ticket.customFields || {}) }
+        if (nextValue) {
+          nextCustomFields[fieldId] = nextValue
+        } else {
+          delete nextCustomFields[fieldId]
+        }
+
+        patch = {
+          customFields: {
+            [fieldId]: nextValue || null,
+          },
+        }
+        optimisticTicket = {
+          ...ticket,
+          customFields: nextCustomFields,
+        }
+      }
+    } else if (columnId === 'title') {
+      const nextValue = rawValue.trim()
+      if (!nextValue) {
+        throw new Error('Title cannot be empty')
+      }
+      if ((ticket.title || '').trim() !== nextValue) {
+        patch = { title: nextValue }
+        optimisticTicket = { ...ticket, title: nextValue }
+      }
+    } else if (columnId === 'owner') {
+      const nextValue = rawValue.trim()
+      if ((ticket.assignee || '').trim() !== nextValue) {
+        patch = { assignee: nextValue }
+        optimisticTicket = { ...ticket, assignee: nextValue || undefined }
+      }
+    } else if (columnId === 'priority') {
+      const nextValue = (rawValue || 'medium') as Ticket['priority']
+      if ((ticket.priority || 'medium') !== nextValue) {
+        patch = { priority: nextValue }
+        optimisticTicket = { ...ticket, priority: nextValue }
+      }
+    } else if (columnId === 'status') {
+      const nextValue = rawValue as Ticket['status']
+      if (ticket.status !== nextValue) {
+        patch = { status: nextValue }
+        optimisticTicket = { ...ticket, status: nextValue }
+      }
+    } else if (columnId === 'milestone') {
+      const nextValue = normalizeTicketVersion(rawValue)
+      if (normalizeTicketVersion(ticket.version) !== nextValue) {
+        patch = { version: nextValue }
+        optimisticTicket = { ...ticket, version: nextValue || undefined }
+      }
+    } else if (columnId === 'comments') {
+      const currentValue = getTicketCommentsValue(ticket)
+      if (currentValue !== rawValue) {
+        patch = { notes: rawValue }
+        optimisticTicket = { ...ticket, notes: rawValue }
+      }
+    }
+
+    if (!patch) {
+      return null
+    }
+
+    return {
+      ticketId: ticket.id,
+      originalTicket: ticket,
+      optimisticTicket,
+      patch,
+    }
+  }
+
+  const applyTableUpdatePlans = async (plans: TableUpdatePlan[], errorFallback: string) => {
+    if (!plans.length) {
+      return
+    }
+
+    const savingKeys = Array.from(new Set(plans.flatMap((plan) => plan.savingCellKeys)))
+    const optimisticTicketsById = new Map(plans.map((plan) => [plan.ticketId, plan.optimisticTicket] as const))
+
+    setTableSaveError(null)
+    setTableSavingCellKeys((previous) => {
+      const next = { ...previous }
+      savingKeys.forEach((key) => {
+        next[key] = true
+      })
+      return next
+    })
+    setTickets((previous) => previous.map((ticket) => optimisticTicketsById.get(ticket.id) ?? ticket))
+
+    try {
+      const token = await getAuthToken()
+      const results = await Promise.allSettled(
+        plans.map((plan) => ticketsApi.update(plan.ticketId, plan.patch, token, currentProjectKey))
+      )
+
+      const updatedTicketsById = new Map<string, Ticket>()
+      const revertedTicketsById = new Map<string, Ticket>()
+      const errorMessages: string[] = []
+
+      results.forEach((result, index) => {
+        const plan = plans[index]
+        if (result.status === 'fulfilled') {
+          updatedTicketsById.set(plan.ticketId, result.value)
+          syncTicketInBackground(result.value.id, result.value.gitlabIssueNumber ? 'update' : 'create')
+          return
+        }
+
+        console.error('Failed to update spreadsheet cell:', result.reason)
+        revertedTicketsById.set(plan.ticketId, plan.originalTicket)
+        errorMessages.push(result.reason instanceof Error ? result.reason.message : errorFallback)
+      })
+
+      if (updatedTicketsById.size > 0) {
+        setTickets((previous) => previous.map((ticket) => updatedTicketsById.get(ticket.id) ?? ticket))
+      }
+
+      if (revertedTicketsById.size > 0) {
+        setTickets((previous) => previous.map((ticket) => revertedTicketsById.get(ticket.id) ?? ticket))
+      }
+
+      if (errorMessages.length > 0) {
+        setTableSaveError(errorMessages[0])
+      }
+    } catch (error) {
+      console.error('Failed to update spreadsheet cells:', error)
+      const originalTicketsById = new Map(plans.map((plan) => [plan.ticketId, plan.originalTicket] as const))
+      setTickets((previous) => previous.map((ticket) => originalTicketsById.get(ticket.id) ?? ticket))
+      setTableSaveError(error instanceof Error ? error.message : errorFallback)
+    } finally {
+      setTableSavingCellKeys((previous) => {
+        const next = { ...previous }
+        savingKeys.forEach((key) => {
+          delete next[key]
+        })
+        return next
+      })
+    }
+  }
+
+  const openTableCellEditor = (ticket: Ticket, columnId: TableSortKey) => {
+    if (columnId === 'ticket') {
+      openTicketDetail(ticket)
+      return
+    }
+
+    const cellKey = getTableCellKey(ticket.id, columnId)
+    if (tableSavingCellKeys[cellKey]) {
+      return
+    }
+
+    setTableSaveError(null)
+    setTableActiveCell({ ticketId: ticket.id, columnId })
+    setTableEditingCell({ ticketId: ticket.id, columnId })
+    setTableEditingValue(getTableCellEditorValue(ticket, columnId))
+  }
+
+  const commitTableCellEdit = async (
+    ticketId: string,
+    columnId: TableSortKey,
+    rawValue = tableEditingValue,
+    options?: { focusCell?: InlineSpreadsheetCell | null }
+  ) => {
+    const ticket = tickets.find((item) => item.id === ticketId)
+    if (!ticket || columnId === 'ticket') {
+      closeTableCellEditor()
+      return
+    }
+
+    let plan: Omit<TableUpdatePlan, 'savingCellKeys'> | null = null
+
+    try {
+      plan = buildTableUpdatePlan(ticket, columnId, rawValue)
+    } catch (error) {
+      setTableSaveError(error instanceof Error ? error.message : 'Failed to update cell')
+      return
+    }
+
+    closeTableCellEditor()
+    const focusCell = options?.focusCell
+    if (focusCell) {
+      focusTableCell(focusCell)
+    } else {
+      setTableActiveCell({ ticketId, columnId })
+    }
+
+    if (!plan) {
+      return
+    }
+
+    await applyTableUpdatePlans([
+      {
+        ...plan,
+        savingCellKeys: [getTableCellKey(ticketId, columnId)],
+      },
+    ], 'Failed to save cell')
+  }
+
+  const handleTablePaste = async (startCell: InlineSpreadsheetCell, clipboardText: string) => {
+    const startRowIndex = sortedTableTickets.findIndex((ticket) => ticket.id === startCell.ticketId)
+    const startColumnIndex = editableTableColumnIds.indexOf(startCell.columnId as Exclude<TableSortKey, 'ticket'>)
+    if (startRowIndex === -1 || startColumnIndex === -1) {
+      return
+    }
+
+    const rows = clipboardText.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n')
+    while (rows.length > 1 && rows[rows.length - 1] === '') {
+      rows.pop()
+    }
+    const matrix = rows.map((row) => row.split('\t'))
+    if (!matrix.length || matrix.every((row) => row.length === 1 && row[0] === '')) {
+      return
+    }
+
+    const plansByTicketId = new Map<string, TableUpdatePlan>()
+
+    try {
+      matrix.forEach((rowValues, rowOffset) => {
+        const ticket = sortedTableTickets[startRowIndex + rowOffset]
+        if (!ticket) {
+          return
+        }
+
+        rowValues.forEach((value, columnOffset) => {
+          const columnId = editableTableColumnIds[startColumnIndex + columnOffset]
+          if (!columnId) {
+            return
+          }
+
+          const existingPlan = plansByTicketId.get(ticket.id)
+          const workingTicket = existingPlan?.optimisticTicket || ticket
+          const nextPlan = buildTableUpdatePlan(workingTicket, columnId, value)
+          if (!nextPlan) {
+            return
+          }
+
+          plansByTicketId.set(ticket.id, {
+            ticketId: ticket.id,
+            originalTicket: existingPlan?.originalTicket || ticket,
+            optimisticTicket: nextPlan.optimisticTicket,
+            patch: existingPlan ? mergeTableUpdatePatch(existingPlan.patch, nextPlan.patch) : nextPlan.patch,
+            savingCellKeys: [
+              ...(existingPlan?.savingCellKeys || []),
+              getTableCellKey(ticket.id, columnId),
+            ],
+          })
+        })
+      })
+    } catch (error) {
+      setTableSaveError(error instanceof Error ? error.message : 'Failed to paste cells')
+      return
+    }
+
+    const plans = Array.from(plansByTicketId.values())
+    if (!plans.length) {
+      focusTableCell(startCell)
+      return
+    }
+
+    closeTableCellEditor()
+    focusTableCell(startCell)
+    await applyTableUpdatePlans(plans, 'Failed to paste cells')
   }
 
   const getCustomFieldValue = (ticket: Ticket, fieldId: string): string => {
@@ -1309,7 +1988,7 @@ export function AppPage() {
         return statusRank === -1 ? 999 : statusRank
       }
       case 'comments':
-        return (ticket.notes || ticket.description || '').toLowerCase()
+        return getTicketCommentsValue(ticket).toLowerCase()
       default:
         return ''
     }
@@ -1330,6 +2009,95 @@ export function AppPage() {
         return tableSort.direction === 'asc' ? comparison : -comparison
       })
     : filteredTickets
+  const editableTableColumnIds = tableColumns
+    .map((column) => column.id)
+    .filter((columnId): columnId is Exclude<TableSortKey, 'ticket'> => columnId !== 'ticket')
+  const firstEditableTableCell = sortedTableTickets.length > 0 && editableTableColumnIds.length > 0
+    ? {
+        ticketId: sortedTableTickets[0].id,
+        columnId: editableTableColumnIds[0],
+      }
+    : null
+
+  const focusTableCell = (cell: InlineSpreadsheetCell | null) => {
+    if (!cell) {
+      return
+    }
+
+    setTableActiveCell(cell)
+    window.requestAnimationFrame(() => {
+      tableCellRefs.current[`${cell.ticketId}:${cell.columnId}`]?.focus()
+    })
+  }
+
+  const getTableNavigationTarget = (
+    cell: InlineSpreadsheetCell,
+    direction: 'next' | 'prev' | 'left' | 'right' | 'up' | 'down'
+  ): InlineSpreadsheetCell | null => {
+    const rowIndex = sortedTableTickets.findIndex((ticket) => ticket.id === cell.ticketId)
+    const columnIndex = editableTableColumnIds.indexOf(cell.columnId as Exclude<TableSortKey, 'ticket'>)
+
+    if (rowIndex === -1 || columnIndex === -1) {
+      return firstEditableTableCell
+    }
+
+    if (direction === 'next') {
+      if (columnIndex < editableTableColumnIds.length - 1) {
+        return { ticketId: cell.ticketId, columnId: editableTableColumnIds[columnIndex + 1] }
+      }
+      if (rowIndex < sortedTableTickets.length - 1) {
+        return { ticketId: sortedTableTickets[rowIndex + 1].id, columnId: editableTableColumnIds[0] }
+      }
+      return cell
+    }
+
+    if (direction === 'prev') {
+      if (columnIndex > 0) {
+        return { ticketId: cell.ticketId, columnId: editableTableColumnIds[columnIndex - 1] }
+      }
+      if (rowIndex > 0) {
+        return {
+          ticketId: sortedTableTickets[rowIndex - 1].id,
+          columnId: editableTableColumnIds[editableTableColumnIds.length - 1],
+        }
+      }
+      return cell
+    }
+
+    if (direction === 'left') {
+      return columnIndex > 0
+        ? { ticketId: cell.ticketId, columnId: editableTableColumnIds[columnIndex - 1] }
+        : cell
+    }
+
+    if (direction === 'right') {
+      return columnIndex < editableTableColumnIds.length - 1
+        ? { ticketId: cell.ticketId, columnId: editableTableColumnIds[columnIndex + 1] }
+        : cell
+    }
+
+    if (direction === 'up') {
+      return rowIndex > 0
+        ? { ticketId: sortedTableTickets[rowIndex - 1].id, columnId: editableTableColumnIds[columnIndex] }
+        : cell
+    }
+
+    return rowIndex < sortedTableTickets.length - 1
+      ? { ticketId: sortedTableTickets[rowIndex + 1].id, columnId: editableTableColumnIds[columnIndex] }
+      : cell
+  }
+
+  useEffect(() => {
+    if (!tableActiveCell) {
+      return
+    }
+
+    const activeTicketStillVisible = sortedTableTickets.some((ticket) => ticket.id === tableActiveCell.ticketId)
+    const activeColumnStillVisible = editableTableColumnIds.includes(tableActiveCell.columnId as Exclude<TableSortKey, 'ticket'>)
+    if (!activeTicketStillVisible || !activeColumnStillVisible) {
+      setTableActiveCell(firstEditableTableCell)
+    }
+  }, [editableTableColumnIds, firstEditableTableCell, sortedTableTickets, tableActiveCell])
 
   const roadmapAssigneeOptions = Array.from(
     new Set(tickets.map((ticket) => ticket.assignee).filter((assignee): assignee is string => Boolean(assignee)))
@@ -1752,6 +2520,314 @@ export function AppPage() {
   const handleInlineRetrySync = (event: React.MouseEvent, ticket: Ticket) => {
     event.stopPropagation()
     syncTicketInBackground(ticket.id, ticket.gitlabIssueNumber ? 'update' : 'create')
+  }
+
+  const renderSpreadsheetCellEditor = (ticket: Ticket, columnId: TableSortKey, field?: ProjectField) => {
+    const currentCell: InlineSpreadsheetCell = { ticketId: ticket.id, columnId }
+    const baseInputStyle = {
+      width: '100%',
+      padding: columnId === 'comments' ? '10px 12px' : '8px 10px',
+      background: 'var(--input-bg)',
+      border: '1px solid var(--input-border)',
+      borderRadius: '10px',
+      fontSize: '13px',
+      fontFamily: 'inherit',
+      color: 'var(--text-primary)',
+      outline: 'none',
+      resize: columnId === 'comments' ? 'vertical' as const : 'none' as const,
+      minHeight: columnId === 'comments' ? '92px' : undefined,
+      boxSizing: 'border-box' as const,
+    }
+
+    const handleEditorKeyDown = (
+      event: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+      options?: { multiline?: boolean }
+    ) => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        const focusCell = getTableNavigationTarget(currentCell, event.shiftKey ? 'prev' : 'next')
+        void commitTableCellEdit(ticket.id, columnId, undefined, { focusCell })
+        return
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancelTableCellEdit(currentCell)
+        return
+      }
+
+      if (options?.multiline) {
+        if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+          event.preventDefault()
+          void commitTableCellEdit(ticket.id, columnId, undefined, { focusCell: currentCell })
+        }
+        return
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        void commitTableCellEdit(ticket.id, columnId, undefined, { focusCell: currentCell })
+      }
+    }
+
+    const handleSelectKeyDown = (event: React.KeyboardEvent<HTMLSelectElement>) => {
+      if (event.key === 'Tab') {
+        event.preventDefault()
+        const focusCell = getTableNavigationTarget(currentCell, event.shiftKey ? 'prev' : 'next')
+        void commitTableCellEdit(ticket.id, columnId, event.currentTarget.value, { focusCell })
+        return
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        cancelTableCellEdit(currentCell)
+        return
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        void commitTableCellEdit(ticket.id, columnId, event.currentTarget.value, { focusCell: currentCell })
+      }
+    }
+
+    if (columnId === 'priority') {
+      return (
+        <select
+          ref={setTableEditorNode}
+          value={tableEditingValue || 'medium'}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setTableEditingValue(nextValue)
+            void commitTableCellEdit(ticket.id, columnId, nextValue)
+          }}
+          onBlur={() => {
+            if (tableEditingCell?.ticketId === ticket.id && tableEditingCell.columnId === columnId) {
+              closeTableCellEditor()
+            }
+          }}
+          onKeyDown={handleSelectKeyDown}
+          style={baseInputStyle}
+        >
+          {PRIORITIES.map((priority) => (
+            <option key={priority.value} value={priority.value}>{priority.label}</option>
+          ))}
+        </select>
+      )
+    }
+
+    if (columnId === 'status') {
+      return (
+        <select
+          ref={setTableEditorNode}
+          value={tableEditingValue}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setTableEditingValue(nextValue)
+            void commitTableCellEdit(ticket.id, columnId, nextValue)
+          }}
+          onBlur={() => {
+            if (tableEditingCell?.ticketId === ticket.id && tableEditingCell.columnId === columnId) {
+              closeTableCellEditor()
+            }
+          }}
+          onKeyDown={handleSelectKeyDown}
+          style={baseInputStyle}
+        >
+          {COLUMNS.map((statusColumn) => (
+            <option key={statusColumn.status} value={statusColumn.status}>{statusColumn.title}</option>
+          ))}
+        </select>
+      )
+    }
+
+    if (columnId === 'comments') {
+      return (
+        <textarea
+          ref={setTableEditorNode}
+          value={tableEditingValue}
+          rows={4}
+          onChange={(event) => setTableEditingValue(event.target.value)}
+          onBlur={() => void commitTableCellEdit(ticket.id, columnId)}
+          onKeyDown={(event) => handleEditorKeyDown(event, { multiline: true })}
+          style={baseInputStyle}
+        />
+      )
+    }
+
+    if (columnId.startsWith('custom:') && field?.type === 'select') {
+      return (
+        <select
+          ref={setTableEditorNode}
+          value={tableEditingValue}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setTableEditingValue(nextValue)
+            void commitTableCellEdit(ticket.id, columnId, nextValue)
+          }}
+          onBlur={() => {
+            if (tableEditingCell?.ticketId === ticket.id && tableEditingCell.columnId === columnId) {
+              closeTableCellEditor()
+            }
+          }}
+          onKeyDown={handleSelectKeyDown}
+          style={baseInputStyle}
+        >
+          <option value=''>-</option>
+          {field.options.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+        </select>
+      )
+    }
+
+    if (columnId.startsWith('custom:') && field?.type === 'boolean') {
+      return (
+        <select
+          ref={setTableEditorNode}
+          value={tableEditingValue}
+          onChange={(event) => {
+            const nextValue = event.target.value
+            setTableEditingValue(nextValue)
+            void commitTableCellEdit(ticket.id, columnId, nextValue)
+          }}
+          onBlur={() => {
+            if (tableEditingCell?.ticketId === ticket.id && tableEditingCell.columnId === columnId) {
+              closeTableCellEditor()
+            }
+          }}
+          onKeyDown={handleSelectKeyDown}
+          style={baseInputStyle}
+        >
+          <option value=''>-</option>
+          <option value='true'>Yes</option>
+          <option value='false'>No</option>
+        </select>
+      )
+    }
+
+    const inputType = columnId === 'milestone'
+      ? 'text'
+      : columnId === 'owner'
+        ? 'text'
+        : columnId.startsWith('custom:') && field?.type === 'number'
+          ? 'number'
+          : columnId.startsWith('custom:') && field?.type === 'date'
+            ? 'date'
+            : 'text'
+
+    const listId = columnId === 'owner'
+      ? 'spreadsheet-assignee-options'
+      : columnId === 'milestone'
+        ? 'spreadsheet-version-options'
+        : undefined
+
+    return (
+      <input
+        ref={setTableEditorNode}
+        type={inputType}
+        list={listId}
+        value={tableEditingValue}
+        onChange={(event) => setTableEditingValue(event.target.value)}
+        onBlur={() => void commitTableCellEdit(ticket.id, columnId)}
+        onKeyDown={(event) => handleEditorKeyDown(event)}
+        style={baseInputStyle}
+      />
+    )
+  }
+
+  const renderSpreadsheetCellDisplay = (ticket: Ticket, columnId: TableSortKey, field?: ProjectField) => {
+    if (columnId.startsWith('custom:')) {
+      return field ? formatCustomFieldValue(field, ticket.customFields?.[field.id]) : '-'
+    }
+
+    if (columnId === 'title') {
+      return ticket.title
+    }
+
+    if (columnId === 'ticket') {
+      return (
+        <button
+          type='button'
+          onClick={(event) => {
+            event.stopPropagation()
+            openTicketDetail(ticket)
+          }}
+          style={{
+            border: 'none',
+            background: 'transparent',
+            padding: 0,
+            color: 'var(--text-secondary)',
+            fontSize: '13px',
+            fontFamily: 'inherit',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            textUnderlineOffset: '2px'
+          }}
+        >
+          {ticket.gitlabIssueNumber ? `#${ticket.gitlabIssueNumber}` : ticket.id.slice(0, 8)}
+        </button>
+      )
+    }
+
+    if (columnId === 'owner') {
+      return ticket.assignee ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }} title={getAssigneeTitle(ticket.assignee)}>
+          {getAssigneeMember(ticket.assignee)?.avatarUrl ? (
+            <img
+              src={getAssigneeMember(ticket.assignee)?.avatarUrl ?? ''}
+              alt={ticket.assignee}
+              style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                objectFit: 'cover',
+                border: '1px solid var(--avatar-border)'
+              }}
+            />
+          ) : (
+            <span style={{
+              width: '24px',
+              height: '24px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #667eea, #764ba2)',
+              color: '#fff',
+              display: 'grid',
+              placeItems: 'center',
+              fontSize: '10px',
+              fontWeight: 700,
+              flexShrink: 0
+            }}>
+              {getAssigneeInitials(ticket.assignee)}
+            </span>
+          )}
+          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {getAssigneeTitle(ticket.assignee)}
+          </span>
+        </div>
+      ) : '-'
+    }
+
+    if (columnId === 'priority') {
+      return (
+        <span style={{ color: getPriorityColor(ticket.priority), fontWeight: 600 }}>
+          {getPriorityLabel(ticket.priority)}
+        </span>
+      )
+    }
+
+    if (columnId === 'status') {
+      return (
+        <span style={{ color: getStatusColor(ticket.status), fontWeight: 600 }}>
+          {getStatusLabel(ticket.status)}
+        </span>
+      )
+    }
+
+    if (columnId === 'milestone') {
+      return ticket.version || '-'
+    }
+
+    return getTicketCommentsValue(ticket) || '-'
   }
 
   if (loading) {
@@ -2303,6 +3379,23 @@ export function AppPage() {
                 color: 'var(--text-primary)'
               }}
             />
+            <button
+              onClick={handleCopyBoardPermalink}
+              style={{
+                padding: '10px 14px',
+                background: isBoardPermalinkCopied ? 'var(--modal-status-active-bg)' : 'var(--version-bg)',
+                border: `1px solid ${isBoardPermalinkCopied ? 'var(--modal-status-active-border)' : 'var(--version-border)'}`,
+                borderRadius: '10px',
+                fontSize: '13px',
+                fontWeight: 600,
+                color: isBoardPermalinkCopied ? 'var(--modal-status-active-text)' : 'var(--text-primary)',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap'
+              }}
+              title={boardPermalinkError || 'Copy board permalink'}
+            >
+              {boardPermalinkError ? 'Copy failed' : isBoardPermalinkCopied ? 'Board link copied' : 'Copy board link'}
+            </button>
             {/* Theme Toggle */}
             {!isMobileViewport && (
               <button
@@ -3345,7 +4438,24 @@ export function AppPage() {
 
             {tickets.length > 0 && filteredTickets.length > 0 && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  gap: '12px',
+                  marginBottom: '10px',
+                  flexWrap: 'wrap'
+                }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                      Click to edit, use Tab and arrows to move, and paste blocks directly into the grid. Click the ticket ID for full detail.
+                    </span>
+                    {tableSaveError && (
+                      <span style={{ fontSize: '12px', color: 'var(--priority-high)' }}>
+                        {tableSaveError}
+                      </span>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
                       Drag custom columns to reorder
@@ -3375,6 +4485,21 @@ export function AppPage() {
                   overflow: 'auto',
                   backdropFilter: 'blur(20px)'
                 }}>
+                  <datalist id='spreadsheet-assignee-options'>
+                    {gitlabMembers.map((member) => (
+                      <option key={`member:${member.id}`} value={member.username} label={member.name} />
+                    ))}
+                    {roadmapAssigneeOptions
+                      .filter((assignee) => !gitlabMembers.some((member) => member.username === assignee))
+                      .map((assignee) => (
+                        <option key={`assignee:${assignee}`} value={assignee} />
+                      ))}
+                  </datalist>
+                  <datalist id='spreadsheet-version-options'>
+                    {existingVersions.map((version) => (
+                      <option key={version} value={version} />
+                    ))}
+                  </datalist>
                   <table style={{
                     width: '100%',
                     minWidth: '1260px',
@@ -3480,108 +4605,117 @@ export function AppPage() {
                       {sortedTableTickets.map((ticket, index) => (
                         <tr
                           key={ticket.id}
-                          onClick={() => handleTicketClick(ticket)}
                           style={{
                             background: index % 2 === 0 ? 'var(--card-bg)' : 'var(--surface-dark)',
-                            cursor: 'pointer'
+                            cursor: 'default'
                           }}
                         >
                           {tableColumns.map((column) => {
-                            if (column.id.startsWith('custom:')) {
-                              const fieldId = column.id.slice('custom:'.length)
-                              const field = projectFields.find((item) => item.id === fieldId)
-                              const value = ticket.customFields?.[fieldId]
-                              return (
-                                <td
-                                  key={`${ticket.id}:${column.id}`}
-                                  style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}
-                                >
-                                  {field ? formatCustomFieldValue(field, value) : '-'}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'title') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600, minWidth: '240px' }}>
-                                  {ticket.title}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'ticket') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>
-                                  {ticket.gitlabIssueNumber ? `#${ticket.gitlabIssueNumber}` : ticket.id.slice(0, 8)}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'owner') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                                  {ticket.assignee ? (
-                                    <div style={{ display: 'flex', alignItems: 'center' }} title={getAssigneeTitle(ticket.assignee)}>
-                                      {getAssigneeMember(ticket.assignee)?.avatarUrl ? (
-                                        <img
-                                          src={getAssigneeMember(ticket.assignee)?.avatarUrl ?? ''}
-                                          alt={ticket.assignee}
-                                          style={{
-                                            width: '24px',
-                                            height: '24px',
-                                            borderRadius: '50%',
-                                            objectFit: 'cover',
-                                            border: '1px solid var(--avatar-border)'
-                                          }}
-                                        />
-                                      ) : (
-                                        <span style={{
-                                          width: '24px',
-                                          height: '24px',
-                                          borderRadius: '50%',
-                                          background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                                          color: '#fff',
-                                          display: 'grid',
-                                          placeItems: 'center',
-                                          fontSize: '10px',
-                                          fontWeight: 700
-                                        }}>
-                                          {getAssigneeInitials(ticket.assignee)}
-                                        </span>
-                                      )}
-                                    </div>
-                                  ) : '-'}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'priority') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: getPriorityColor(ticket.priority), fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                  {getPriorityLabel(ticket.priority)}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'status') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: getStatusColor(ticket.status), fontWeight: 600, whiteSpace: 'nowrap' }}>
-                                  {getStatusLabel(ticket.status)}
-                                </td>
-                              )
-                            }
-
-                            if (column.id === 'milestone') {
-                              return (
-                                <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
-                                  {ticket.version || '-'}
-                                </td>
-                              )
-                            }
+                            const cellKey = getTableCellKey(ticket.id, column.id)
+                            const isEditing = tableEditingCell?.ticketId === ticket.id && tableEditingCell.columnId === column.id
+                            const isSaving = Boolean(tableSavingCellKeys[cellKey])
+                            const isEditable = column.id !== 'ticket'
+                            const isActiveCell = tableActiveCell?.ticketId === ticket.id && tableActiveCell.columnId === column.id
+                            const isDefaultTabStop = !tableActiveCell
+                              && firstEditableTableCell?.ticketId === ticket.id
+                              && firstEditableTableCell.columnId === column.id
+                            const field = column.id.startsWith('custom:')
+                              ? projectFields.find((item) => item.id === column.id.slice('custom:'.length))
+                              : undefined
 
                             return (
-                              <td key={`${ticket.id}:${column.id}`} style={{ padding: '12px 14px', borderBottom: '1px solid var(--glass-border)', fontSize: '13px', color: 'var(--text-primary)', minWidth: '280px' }}>
-                                {ticket.notes || ticket.description || '-'}
+                              <td
+                                key={`${ticket.id}:${column.id}`}
+                                ref={isEditable ? (node) => setTableCellNode(cellKey, node) : undefined}
+                                onClick={isEditing ? undefined : () => openTableCellEditor(ticket, column.id)}
+                                onFocus={isEditable ? () => setTableActiveCell({ ticketId: ticket.id, columnId: column.id }) : undefined}
+                                onPaste={isEditable ? (event) => {
+                                  const text = event.clipboardData.getData('text')
+                                  if (!text) {
+                                    return
+                                  }
+                                  event.preventDefault()
+                                  void handleTablePaste({ ticketId: ticket.id, columnId: column.id }, text)
+                                } : undefined}
+                                onKeyDown={isEditable ? (event) => {
+                                  const currentCell: InlineSpreadsheetCell = { ticketId: ticket.id, columnId: column.id }
+
+                                  if (event.key === 'Enter' || event.key === ' ') {
+                                    event.preventDefault()
+                                    openTableCellEditor(ticket, column.id)
+                                    return
+                                  }
+
+                                  if (event.key === 'Tab') {
+                                    event.preventDefault()
+                                    focusTableCell(getTableNavigationTarget(currentCell, event.shiftKey ? 'prev' : 'next'))
+                                    return
+                                  }
+
+                                  if (event.key === 'ArrowLeft') {
+                                    event.preventDefault()
+                                    focusTableCell(getTableNavigationTarget(currentCell, 'left'))
+                                    return
+                                  }
+
+                                  if (event.key === 'ArrowRight') {
+                                    event.preventDefault()
+                                    focusTableCell(getTableNavigationTarget(currentCell, 'right'))
+                                    return
+                                  }
+
+                                  if (event.key === 'ArrowUp') {
+                                    event.preventDefault()
+                                    focusTableCell(getTableNavigationTarget(currentCell, 'up'))
+                                    return
+                                  }
+
+                                  if (event.key === 'ArrowDown') {
+                                    event.preventDefault()
+                                    focusTableCell(getTableNavigationTarget(currentCell, 'down'))
+                                  }
+                                } : undefined}
+                                role={isEditable ? 'button' : undefined}
+                                tabIndex={isEditable ? ((isActiveCell || isDefaultTabStop) ? 0 : -1) : -1}
+                                style={{
+                                  padding: isEditing ? '8px' : '12px 14px',
+                                  borderBottom: '1px solid var(--glass-border)',
+                                  fontSize: '13px',
+                                  color: 'var(--text-primary)',
+                                  minWidth:
+                                    column.id === 'title' ? '240px'
+                                    : column.id === 'comments' ? '320px'
+                                    : column.id === 'owner' ? '240px'
+                                    : column.id === 'ticket' ? '120px'
+                                    : '160px',
+                                  whiteSpace: column.id === 'comments' ? 'normal' : 'nowrap',
+                                  verticalAlign: 'top',
+                                  background: isEditing ? 'var(--surface-dark)' : undefined,
+                                  cursor: isEditable ? 'pointer' : 'default',
+                                  outline: isEditing || isActiveCell ? '2px solid var(--input-border)' : undefined,
+                                  outlineOffset: '-2px'
+                                }}
+                              >
+                                {isEditing ? (
+                                  renderSpreadsheetCellEditor(ticket, column.id, field)
+                                ) : (
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                    <div style={{
+                                      minWidth: 0,
+                                      overflow: column.id === 'comments' ? 'visible' : 'hidden',
+                                      textOverflow: column.id === 'comments' ? 'clip' : 'ellipsis',
+                                      lineHeight: column.id === 'comments' ? 1.45 : undefined,
+                                      fontWeight: column.id === 'title' ? 600 : 400
+                                    }}>
+                                      {renderSpreadsheetCellDisplay(ticket, column.id, field)}
+                                    </div>
+                                    {isSaving && (
+                                      <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                        Saving...
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
                               </td>
                             )
                           })}
@@ -3885,7 +5019,7 @@ export function AppPage() {
           zIndex: 1000,
           overflowY: 'auto'
         }}
-        onClick={() => setSelectedTicket(null)}
+        onClick={closeTicketDetail}
         >
           <div style={{
             width: 'min(1180px, calc(100vw - 32px))',
@@ -4012,33 +5146,52 @@ export function AppPage() {
                   )}
                 </h3>
               </div>
-              <button 
-                onClick={() => setSelectedTicket(null)}
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  background: 'var(--modal-close-bg)',
-                  border: '1px solid var(--modal-close-border)',
-                  fontSize: '22px',
-                  color: 'var(--modal-close-text)',
-                  cursor: 'pointer',
-                  lineHeight: 1,
-                  display: 'grid',
-                  placeItems: 'center',
-                  padding: 0
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'var(--modal-close-hover-bg)'
-                  e.currentTarget.style.color = 'var(--modal-close-hover-text)'
-                  e.currentTarget.style.borderColor = 'var(--modal-close-hover-bg)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'var(--modal-close-bg)'
-                  e.currentTarget.style.color = 'var(--modal-close-text)'
-                  e.currentTarget.style.borderColor = 'var(--modal-close-border)'
-                }}
-              >×</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                <button
+                  onClick={handleCopyTicketPermalink}
+                  style={{
+                    padding: '9px 12px',
+                    borderRadius: '10px',
+                    background: isTicketPermalinkCopied ? 'var(--modal-status-active-bg)' : 'var(--modal-input-bg)',
+                    border: `1px solid ${isTicketPermalinkCopied ? 'var(--modal-status-active-border)' : 'var(--modal-input-border)'}`,
+                    color: isTicketPermalinkCopied ? 'var(--modal-status-active-text)' : 'var(--modal-input-text)',
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                  title={ticketPermalinkError || 'Copy ticket permalink'}
+                >
+                  {ticketPermalinkError ? 'Copy failed' : isTicketPermalinkCopied ? 'Ticket link copied' : 'Copy ticket link'}
+                </button>
+                <button
+                  onClick={closeTicketDetail}
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    background: 'var(--modal-close-bg)',
+                    border: '1px solid var(--modal-close-border)',
+                    fontSize: '22px',
+                    color: 'var(--modal-close-text)',
+                    cursor: 'pointer',
+                    lineHeight: 1,
+                    display: 'grid',
+                    placeItems: 'center',
+                    padding: 0
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'var(--modal-close-hover-bg)'
+                    e.currentTarget.style.color = 'var(--modal-close-hover-text)'
+                    e.currentTarget.style.borderColor = 'var(--modal-close-hover-bg)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'var(--modal-close-bg)'
+                    e.currentTarget.style.color = 'var(--modal-close-text)'
+                    e.currentTarget.style.borderColor = 'var(--modal-close-border)'
+                  }}
+                >×</button>
+              </div>
             </div>
 
             <div style={{
@@ -4661,7 +5814,7 @@ export function AppPage() {
                     gap: '8px'
                   }}>
                     <button
-                      onClick={() => setSelectedTicket(null)}
+                      onClick={closeTicketDetail}
                       style={{
                         width: '100%',
                         padding: '9px 12px',

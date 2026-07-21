@@ -1,5 +1,7 @@
 import { Env } from '../index';
 
+const OPENROUTER_MODEL = 'anthropic/claude-3.5-haiku';
+
 function jsonResponse(data: unknown, status = 200): Response {
   return new Response(JSON.stringify(data), {
     status,
@@ -105,7 +107,7 @@ export const aiHandler = {
           'X-Title': 'SprintFlow',
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3.5-haiku',
+          model: OPENROUTER_MODEL,
           messages: [
             {
               role: 'system',
@@ -186,7 +188,7 @@ Be specific and actionable. Return ONLY the title, nothing else.`
           'X-Title': 'SprintFlow Ticket Content Regeneration',
         },
         body: JSON.stringify({
-          model: 'anthropic/claude-3.5-haiku',
+          model: OPENROUTER_MODEL,
           messages: [
             {
               role: 'system',

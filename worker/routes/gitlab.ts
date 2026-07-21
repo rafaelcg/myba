@@ -4,6 +4,7 @@ import { Env } from '../index';
 import { buildEnhancedPrompt } from '../ticketPrompt';
 
 const GITLAB_BASE_URL = 'https://gitlab.com';
+const OPENROUTER_MODEL = 'anthropic/claude-3.5-haiku';
 const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;
 const TOKEN_EXPIRY_BUFFER_MS = 60 * 1000;
 
@@ -488,7 +489,7 @@ async function buildProfessionalIssueDescription(
         'X-Title': 'SprintFlow GitLab Sync',
       },
       body: JSON.stringify({
-        model: 'anthropic/claude-3.5-haiku',
+        model: OPENROUTER_MODEL,
         messages: [
           {
             role: 'system',

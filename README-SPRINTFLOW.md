@@ -93,14 +93,39 @@ npx wrangler secret put CLERK_SECRET_KEY
 ### 5. Deploy
 
 ```bash
-npm run worker:deploy
+npm run deploy
 ```
 
-### 6. Deploy Frontend (Cloudflare Pages)
+This builds the frontend, deploys the Worker, and deploys Pages to `sprintflow-beta` (generate.ac).
+
+Or deploy pieces separately:
 
 ```bash
 npm run build
-npx wrangler pages deploy dist
+npm run deploy:worker
+npm run deploy:pages
+```
+
+### 6. GitHub Actions CI/CD
+
+Pushes to `main` run build + production deploy. Pull requests to `main` run the build gate only.
+
+Required GitHub repository secrets:
+
+| Secret | Purpose |
+|--------|---------|
+| `CLOUDFLARE_API_TOKEN` | Wrangler auth (Workers Edit + Pages Edit) |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clerk publishable key for production build |
+| `VITE_PUBLIC_POSTHOG_KEY` | PostHog project key |
+| `VITE_PUBLIC_POSTHOG_HOST` | PostHog host (e.g. `https://eu.i.posthog.com`) |
+
+Create a **long-lived** API token at [Cloudflare API Tokens](https://dash.cloudflare.com/profile/api-tokens) with **Edit Cloudflare Workers** and **Cloudflare Pages — Edit**, then store it as `CLOUDFLARE_API_TOKEN`. Do not use a Wrangler OAuth login token for CI — those expire.
+
+D1 migrations are **not** applied by CI. Run them manually when needed:
+
+```bash
+npm run db:migrate -- --remote
 ```
 
 ## Project Structure

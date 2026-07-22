@@ -60,10 +60,10 @@ const ROADMAP_RELEASE_COLUMNS: Array<{
   border: string
   background: string
 }> = [
-  { id: 'planned', label: 'Planned', border: '#c7d2fe', background: '#eef2ff' },
-  { id: 'committed', label: 'Committed', border: '#bfdbfe', background: '#eff6ff' },
-  { id: 'shipped', label: 'Shipped', border: '#bbf7d0', background: '#ecfdf5' },
-]
+    { id: 'planned', label: 'Planned', border: '#c7d2fe', background: '#eef2ff' },
+    { id: 'committed', label: 'Committed', border: '#bfdbfe', background: '#eff6ff' },
+    { id: 'shipped', label: 'Shipped', border: '#bbf7d0', background: '#ecfdf5' },
+  ]
 
 type InlineSpreadsheetCell = {
   ticketId: string
@@ -276,7 +276,7 @@ export function AppPage() {
     importingLocalTickets: state.importingLocalTickets,
     setImportingLocalTickets: state.setImportingLocalTickets,
   })))
-  
+
   const {
     showQuickCreate,
     setShowQuickCreate,
@@ -1161,7 +1161,7 @@ export function AppPage() {
   // Generate AI title with debounce
   const handleInputChange = (value: string) => {
     setQuickInput(value)
-    
+
     if (debounceTimer) {
       clearTimeout(debounceTimer)
     }
@@ -1178,7 +1178,7 @@ export function AppPage() {
           setIsGenerating(false)
         }
       }, 500)
-      
+
       setDebounceTimer(timer)
     } else {
       setAiSuggestion('')
@@ -1188,7 +1188,7 @@ export function AppPage() {
   // Create ticket
   const handleQuickCreate = async () => {
     if (!aiSuggestion) return
-    
+
     setIsCreating(true)
     try {
       const token = await getAuthToken()
@@ -1198,7 +1198,7 @@ export function AppPage() {
         notes: quickInput,
         status: 'todo',
       }, token, currentProjectKey)
-      
+
       setTickets(prev => [newTicket, ...prev])
       setShowQuickCreate(false)
       setQuickInput('')
@@ -1231,7 +1231,7 @@ export function AppPage() {
   const handleDrop = async (e: React.DragEvent, status: Ticket['status']) => {
     e.preventDefault()
     setDragOverColumn(null)
-    
+
     if (!draggedTicket || draggedTicket.status === status) {
       setDraggedTicket(null)
       return
@@ -1283,7 +1283,7 @@ export function AppPage() {
   const handleDeleteZoneDrop = async (e: React.DragEvent) => {
     e.preventDefault()
     setDragOverDelete(false)
-    
+
     if (!draggedTicket) {
       setDraggedTicket(null)
       return
@@ -1369,7 +1369,7 @@ export function AppPage() {
         priority: editingTicket.priority,
         customFields: editingTicket.customFields,
       }, token, currentProjectKey)
-      
+
       setTickets(prev => prev.map(t => t.id === selectedTicket.id ? updated : t))
       closeTicketDetail()
       syncTicketInBackground(updated.id, updated.gitlabIssueNumber ? 'update' : 'create')
@@ -1421,7 +1421,7 @@ export function AppPage() {
   // Delete ticket
   const handleDeleteTicket = async () => {
     if (!selectedTicket) return
-    
+
     if (!confirm('Are you sure you want to delete this ticket?')) return
 
     try {
@@ -1892,19 +1892,19 @@ export function AppPage() {
   const filteredTickets = !normalizedSearch
     ? tickets
     : tickets.filter((ticket) => {
-        const issueNumber = ticket.gitlabIssueNumber ? String(ticket.gitlabIssueNumber) : ''
-        const haystack = [
-          ticket.title,
-          ticket.description || '',
-          ticket.notes || '',
-          ticket.generatedContent || '',
-          ticket.assignee || '',
-          ticket.version || '',
-          issueNumber,
-          ...Object.values(ticket.customFields || {}).map((value) => normalizeCustomValue(value)),
-        ].join(' ').toLowerCase()
-        return haystack.includes(normalizedSearch)
-      })
+      const issueNumber = ticket.gitlabIssueNumber ? String(ticket.gitlabIssueNumber) : ''
+      const haystack = [
+        ticket.title,
+        ticket.description || '',
+        ticket.notes || '',
+        ticket.generatedContent || '',
+        ticket.assignee || '',
+        ticket.version || '',
+        issueNumber,
+        ...Object.values(ticket.customFields || {}).map((value) => normalizeCustomValue(value)),
+      ].join(' ').toLowerCase()
+      return haystack.includes(normalizedSearch)
+    })
 
   const needsLocalImport = currentProjectKey !== 'local' && localTicketCount > 0
   const onboardingSteps = [
@@ -1928,32 +1928,32 @@ export function AppPage() {
     icon: string
     view?: ActiveView
   }> = [
-    { id: 'board', label: 'Board', icon: '📋', view: 'board' },
-    { id: 'table', label: 'Spreadsheet', icon: '🧾', view: 'table' },
-    { id: 'roadmap', label: 'Roadmap', icon: '📊', view: 'roadmap' },
-    { id: 'releases', label: 'Releases', icon: '📁' },
-    { id: 'reports', label: 'Reports', icon: '📈' },
-  ]
+      { id: 'board', label: 'Board', icon: '📋', view: 'board' },
+      { id: 'table', label: 'Spreadsheet', icon: '🧾', view: 'table' },
+      { id: 'roadmap', label: 'Roadmap', icon: '📊', view: 'roadmap' },
+      { id: 'releases', label: 'Releases', icon: '📁' },
+      { id: 'reports', label: 'Reports', icon: '📈' },
+    ]
   const tableColumns: Array<{
     id: TableSortKey
     label: string
     customFieldId?: string
     isCustom?: boolean
   }> = [
-    { id: 'title', label: 'Title' },
-    { id: 'ticket', label: 'Ticket' },
-    { id: 'owner', label: 'Owner' },
-    { id: 'priority', label: 'Priority' },
-    { id: 'status', label: 'Status' },
-    { id: 'milestone', label: 'Milestone' },
-    ...projectFields.map((field) => ({
-      id: `custom:${field.id}` as TableSortKey,
-      label: field.name,
-      customFieldId: field.id,
-      isCustom: true,
-    })),
-    { id: 'comments', label: 'Comments' },
-  ]
+      { id: 'title', label: 'Title' },
+      { id: 'ticket', label: 'Ticket' },
+      { id: 'owner', label: 'Owner' },
+      { id: 'priority', label: 'Priority' },
+      { id: 'status', label: 'Status' },
+      { id: 'milestone', label: 'Milestone' },
+      ...projectFields.map((field) => ({
+        id: `custom:${field.id}` as TableSortKey,
+        label: field.name,
+        customFieldId: field.id,
+        isCustom: true,
+      })),
+      { id: 'comments', label: 'Comments' },
+    ]
 
   const handleTableSort = (key: TableSortKey) => {
     setTableSort((previous) => {
@@ -1996,27 +1996,27 @@ export function AppPage() {
 
   const sortedTableTickets = tableSort
     ? [...filteredTickets].sort((left, right) => {
-        const leftValue = getTableSortValue(left, tableSort.key)
-        const rightValue = getTableSortValue(right, tableSort.key)
+      const leftValue = getTableSortValue(left, tableSort.key)
+      const rightValue = getTableSortValue(right, tableSort.key)
 
-        if (typeof leftValue === 'number' && typeof rightValue === 'number') {
-          return tableSort.direction === 'asc' ? leftValue - rightValue : rightValue - leftValue
-        }
+      if (typeof leftValue === 'number' && typeof rightValue === 'number') {
+        return tableSort.direction === 'asc' ? leftValue - rightValue : rightValue - leftValue
+      }
 
-        const leftText = String(leftValue)
-        const rightText = String(rightValue)
-        const comparison = leftText.localeCompare(rightText, undefined, { numeric: true, sensitivity: 'base' })
-        return tableSort.direction === 'asc' ? comparison : -comparison
-      })
+      const leftText = String(leftValue)
+      const rightText = String(rightValue)
+      const comparison = leftText.localeCompare(rightText, undefined, { numeric: true, sensitivity: 'base' })
+      return tableSort.direction === 'asc' ? comparison : -comparison
+    })
     : filteredTickets
   const editableTableColumnIds = tableColumns
     .map((column) => column.id)
     .filter((columnId): columnId is Exclude<TableSortKey, 'ticket'> => columnId !== 'ticket')
   const firstEditableTableCell = sortedTableTickets.length > 0 && editableTableColumnIds.length > 0
     ? {
-        ticketId: sortedTableTickets[0].id,
-        columnId: editableTableColumnIds[0],
-      }
+      ticketId: sortedTableTickets[0].id,
+      columnId: editableTableColumnIds[0],
+    }
     : null
 
   const focusTableCell = (cell: InlineSpreadsheetCell | null) => {
@@ -2106,25 +2106,25 @@ export function AppPage() {
   const roadmapSelectedCustomField = projectFields.find((field) => field.id === roadmapCustomFieldId) || null
   const roadmapCustomFieldValues = roadmapSelectedCustomField
     ? (() => {
-        const values = new Set<string>()
-        if (roadmapSelectedCustomField.type === 'boolean') {
-          values.add('true')
-          values.add('false')
+      const values = new Set<string>()
+      if (roadmapSelectedCustomField.type === 'boolean') {
+        values.add('true')
+        values.add('false')
+      }
+      roadmapSelectedCustomField.options.forEach((option) => {
+        const normalized = normalizeCustomValue(option)
+        if (normalized) {
+          values.add(normalized)
         }
-        roadmapSelectedCustomField.options.forEach((option) => {
-          const normalized = normalizeCustomValue(option)
-          if (normalized) {
-            values.add(normalized)
-          }
-        })
-        tickets.forEach((ticket) => {
-          const normalized = getCustomFieldValue(ticket, roadmapSelectedCustomField.id)
-          if (normalized) {
-            values.add(normalized)
-          }
-        })
-        return Array.from(values).sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }))
-      })()
+      })
+      tickets.forEach((ticket) => {
+        const normalized = getCustomFieldValue(ticket, roadmapSelectedCustomField.id)
+        if (normalized) {
+          values.add(normalized)
+        }
+      })
+      return Array.from(values).sort((left, right) => left.localeCompare(right, undefined, { sensitivity: 'base' }))
+    })()
     : []
 
   const roadmapFilteredTickets = filteredTickets.filter((ticket) => {
@@ -2439,7 +2439,7 @@ export function AppPage() {
     }
   }
 
-  const getTicketsByStatus = (status: Ticket['status']) => 
+  const getTicketsByStatus = (status: Ticket['status']) =>
     filteredTickets.filter(t => t.status === status)
 
   const getGitLabIssueUrl = (ticket: Ticket): string | null => {
@@ -2480,22 +2480,22 @@ export function AppPage() {
         setTickets(prev => prev.map(ticket => (
           ticket.id === ticketId
             ? {
-                ...ticket,
-                gitlabIssueId: result.gitlabIssueId,
-                gitlabIssueNumber: result.gitlabIssueNumber,
-                generatedContent: result.generatedContent ?? ticket.generatedContent,
-              }
+              ...ticket,
+              gitlabIssueId: result.gitlabIssueId,
+              gitlabIssueNumber: result.gitlabIssueNumber,
+              generatedContent: result.generatedContent ?? ticket.generatedContent,
+            }
             : ticket
         )))
 
         setSelectedTicket(prev => (
           prev && prev.id === ticketId
             ? {
-                ...prev,
-                gitlabIssueId: result.gitlabIssueId,
-                gitlabIssueNumber: result.gitlabIssueNumber,
-                generatedContent: result.generatedContent ?? prev.generatedContent,
-              }
+              ...prev,
+              gitlabIssueId: result.gitlabIssueId,
+              gitlabIssueNumber: result.gitlabIssueNumber,
+              generatedContent: result.generatedContent ?? prev.generatedContent,
+            }
             : prev
         ))
 
@@ -2839,7 +2839,7 @@ export function AppPage() {
 
     return (
       <AppStateScreen
-        title='Something went wrong'
+        title='Something went wrong!'
         description={isAuthError ? 'Session mismatch detected. Re-authenticate to continue.' : error}
         actions={(
           <>
@@ -3207,77 +3207,24 @@ export function AppPage() {
             textAlign: 'center'
           }}>
             <h4 style={{ fontSize: '13px', marginBottom: '6px' }}>🦊 GitLab</h4>
-          {gitlabLoading && (
-            <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>
-              Loading integration...
-            </p>
-          )}
-
-          {!gitlabLoading && !isSignedIn && (
-            <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>
-              Sign in to connect GitLab
-            </p>
-          )}
-
-          {!gitlabLoading && isSignedIn && !gitlabStatus.connected && (
-            <>
-              <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>Connect your repo</p>
-              <button
-                onClick={handleGitLabConnect}
-                disabled={gitlabConnecting}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  background: 'rgba(255,255,255,0.2)',
-                  border: '1px solid rgba(255,255,255,0.3)',
-                  color: '#fff',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                  cursor: gitlabConnecting ? 'not-allowed' : 'pointer',
-                  opacity: gitlabConnecting ? 0.7 : 1
-                }}
-              >
-                {gitlabConnecting ? 'Connecting...' : 'Connect'}
-              </button>
-            </>
-          )}
-
-          {!gitlabLoading && isSignedIn && gitlabStatus.connected && (
-            <>
+            {gitlabLoading && (
               <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>
-                Connected{gitlabStatus.repo ? `: ${gitlabStatus.repo.fullName}` : ''}
+                Loading integration...
               </p>
+            )}
 
-              {gitlabRepos.length > 0 && (
-                <select
-                  value={gitlabStatus.repo?.id ?? ''}
-                  onChange={(e) => handleGitLabRepoChange(Number(e.target.value))}
-                  disabled={gitlabRepoSaving}
-                  style={{
-                    width: '100%',
-                    padding: '8px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255,255,255,0.35)',
-                    background: 'rgba(255,255,255,0.15)',
-                    color: '#fff',
-                    fontSize: '12px',
-                    marginBottom: '8px'
-                  }}
-                >
-                  <option value="" disabled style={{ color: '#111827' }}>
-                    Select repo...
-                  </option>
-                  {gitlabRepos.map(repo => (
-                    <option key={repo.id} value={repo.id} style={{ color: '#111827' }}>
-                      {repo.fullName}
-                    </option>
-                  ))}
-                </select>
-              )}
+            {!gitlabLoading && !isSignedIn && (
+              <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>
+                Sign in to connect GitLab
+              </p>
+            )}
 
-              {gitlabRepos.length === 0 && (
+            {!gitlabLoading && isSignedIn && !gitlabStatus.connected && (
+              <>
+                <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>Connect your repo</p>
                 <button
-                  onClick={loadGitLabState}
+                  onClick={handleGitLabConnect}
+                  disabled={gitlabConnecting}
                   style={{
                     width: '100%',
                     padding: '8px',
@@ -3286,30 +3233,83 @@ export function AppPage() {
                     color: '#fff',
                     borderRadius: '8px',
                     fontSize: '12px',
-                    cursor: 'pointer',
-                    marginBottom: '8px'
+                    cursor: gitlabConnecting ? 'not-allowed' : 'pointer',
+                    opacity: gitlabConnecting ? 0.7 : 1
                   }}
                 >
-                  Refresh Repos
+                  {gitlabConnecting ? 'Connecting...' : 'Connect'}
                 </button>
-              )}
+              </>
+            )}
 
-              {gitlabRepoSaving && (
-                <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '8px' }}>Saving repo...</p>
-              )}
-            </>
-          )}
+            {!gitlabLoading && isSignedIn && gitlabStatus.connected && (
+              <>
+                <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '10px' }}>
+                  Connected{gitlabStatus.repo ? `: ${gitlabStatus.repo.fullName}` : ''}
+                </p>
 
-          {gitlabMessage && (
-            <p style={{ fontSize: '10px', marginTop: '8px', marginBottom: 0, color: '#d1fae5' }}>
-              {gitlabMessage}
-            </p>
-          )}
-          {gitlabError && (
-            <p style={{ fontSize: '10px', marginTop: '8px', marginBottom: 0, color: '#fee2e2' }}>
-              {gitlabError}
-            </p>
-          )}
+                {gitlabRepos.length > 0 && (
+                  <select
+                    value={gitlabStatus.repo?.id ?? ''}
+                    onChange={(e) => handleGitLabRepoChange(Number(e.target.value))}
+                    disabled={gitlabRepoSaving}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      borderRadius: '8px',
+                      border: '1px solid rgba(255,255,255,0.35)',
+                      background: 'rgba(255,255,255,0.15)',
+                      color: '#fff',
+                      fontSize: '12px',
+                      marginBottom: '8px'
+                    }}
+                  >
+                    <option value="" disabled style={{ color: '#111827' }}>
+                      Select repo...
+                    </option>
+                    {gitlabRepos.map(repo => (
+                      <option key={repo.id} value={repo.id} style={{ color: '#111827' }}>
+                        {repo.fullName}
+                      </option>
+                    ))}
+                  </select>
+                )}
+
+                {gitlabRepos.length === 0 && (
+                  <button
+                    onClick={loadGitLabState}
+                    style={{
+                      width: '100%',
+                      padding: '8px',
+                      background: 'rgba(255,255,255,0.2)',
+                      border: '1px solid rgba(255,255,255,0.3)',
+                      color: '#fff',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      marginBottom: '8px'
+                    }}
+                  >
+                    Refresh Repos
+                  </button>
+                )}
+
+                {gitlabRepoSaving && (
+                  <p style={{ fontSize: '11px', opacity: 0.9, marginBottom: '8px' }}>Saving repo...</p>
+                )}
+              </>
+            )}
+
+            {gitlabMessage && (
+              <p style={{ fontSize: '10px', marginTop: '8px', marginBottom: 0, color: '#d1fae5' }}>
+                {gitlabMessage}
+              </p>
+            )}
+            {gitlabError && (
+              <p style={{ fontSize: '10px', marginTop: '8px', marginBottom: 0, color: '#fee2e2' }}>
+                {gitlabError}
+              </p>
+            )}
           </div>
         </div>
       </aside>}
@@ -3490,359 +3490,359 @@ export function AppPage() {
 
         {/* Views */}
         {activeView === 'board' ? (
-        <div style={{
-          flex: 1,
-          overflowX: 'auto',
-          overflowY: 'hidden',
-          padding: isPhoneViewport ? '12px' : '24px'
-        }}>
           <div style={{
-            display: 'flex',
-            gap: isPhoneViewport ? '12px' : '20px',
-            height: '100%',
-            minWidth: 'max-content'
+            flex: 1,
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            padding: isPhoneViewport ? '12px' : '24px'
           }}>
-            {tickets.length === 0 && (
-              <div style={{
-                width: '100%',
-                minWidth: isPhoneViewport ? 'calc(100vw - 24px)' : '520px',
-                background: 'var(--empty-bg)',
-                borderRadius: '20px',
-                padding: isPhoneViewport ? '20px' : '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                textAlign: 'center',
-                border: '1px solid var(--empty-border)'
-              }}>
-                <h3 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>
-                  {isSignedIn ? 'Add your first ticket' : 'Sign in to create tickets'}
-                </h3>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
-                  {isSignedIn
-                    ? 'Start with one issue in To Do and organize from there.'
-                    : 'Your board is scoped to your account and selected project.'}
-                </p>
-                {isSignedIn && (
-                  <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
-                    <button
-                      onClick={() => setShowQuickCreate(true)}
-                      style={{
-                        padding: '10px 20px',
-                        background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(139, 92, 246, 0.8))',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Create First Ticket
-                    </button>
-                    <button
-                      onClick={() => setShowAddFieldModal(true)}
-                      style={{
-                        padding: '10px 16px',
-                        background: '#fff',
-                        color: '#475569',
-                        border: '1px solid #cbd5e1',
-                        borderRadius: '10px',
-                        fontSize: '14px',
-                        fontWeight: 600,
-                        cursor: 'pointer'
-                      }}
-                    >
-                      + Add Column
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tickets.length > 0 && filteredTickets.length === 0 && (
-              <div style={{
-                width: '100%',
-                minWidth: isPhoneViewport ? 'calc(100vw - 24px)' : '520px',
-                background: 'rgba(55, 45, 55, 0.5)',
-                borderRadius: '20px',
-                padding: isPhoneViewport ? '20px' : '32px',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '12px',
-                textAlign: 'center',
-                border: '1px solid rgba(255,255,255,0.06)'
-              }}>
-                <h3 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>No matching tickets</h3>
-                <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
-                  Try a different search term.
-                </p>
-                <button
-                  onClick={() => setSearchQuery('')}
-                  style={{
-                    marginTop: '8px',
-                    padding: '8px 16px',
-                    background: 'var(--btn-secondary-bg)',
-                    color: 'var(--btn-secondary-text)',
-                    border: '1px solid var(--btn-secondary-border)',
-                    borderRadius: '10px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer'
-                  }}
-                >
-                  Clear Search
-                </button>
-              </div>
-            )}
-
-            {tickets.length > 0 && filteredTickets.length > 0 && COLUMNS.map((column) => {
-              const columnTickets = getTicketsByStatus(column.status)
-
-              return (
-              <div
-                key={column.id}
-                style={{
-                  width: isPhoneViewport ? '82vw' : '320px',
-                  background: dragOverColumn === column.id
-                    ? 'var(--surface-card-hover)'
-                    : 'var(--card-bg)',
-                  backdropFilter: 'blur(20px)',
+            <div style={{
+              display: 'flex',
+              gap: isPhoneViewport ? '12px' : '20px',
+              height: '100%',
+              minWidth: 'max-content'
+            }}>
+              {tickets.length === 0 && (
+                <div style={{
+                  width: '100%',
+                  minWidth: isPhoneViewport ? 'calc(100vw - 24px)' : '520px',
+                  background: 'var(--empty-bg)',
                   borderRadius: '20px',
-                  padding: isPhoneViewport ? '16px' : '20px',
+                  padding: isPhoneViewport ? '20px' : '32px',
                   display: 'flex',
                   flexDirection: 'column',
-                  border: dragOverColumn === column.id
-                    ? '2px dashed rgba(168, 85, 247, 0.5)'
-                    : '1px solid var(--card-border)',
-                  transition: 'all 0.2s'
-                }}
-                onDragOver={(e) => handleDragOver(e, column.id)}
-                onDragLeave={handleDragLeave}
-                onDrop={(e) => handleDrop(e, column.status)}
-              >
-                {/* Column Header */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
                   alignItems: 'center',
-                  marginBottom: '16px',
-                  paddingBottom: '12px',
-                  borderBottom: '1px solid var(--column-header-border)'
+                  justifyContent: 'center',
+                  gap: '12px',
+                  textAlign: 'center',
+                  border: '1px solid var(--empty-border)'
                 }}>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '10px',
-                    fontWeight: 600,
-                    fontSize: '13px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    color: 'var(--column-header-text)',
-                    fontFamily: "'Outfit', sans-serif"
-                  }}>
-                    {column.title}
-                  </div>
-                  <span style={{
-                    padding: '4px 12px',
-                    background: 'var(--column-count-bg)',
-                    borderRadius: '999px',
-                    fontSize: '13px',
-                    color: 'var(--column-count-text)',
-                    fontWeight: 600
-                  }}>{columnTickets.length}</span>
-                </div>
-
-                {/* Cards */}
-                <div style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '12px'
-                }}>
-                  {columnTickets.length === 0 && (
-                    <div style={{
-                      padding: '16px',
-                      borderRadius: '12px',
-                      border: '1px dashed rgba(255,255,255,0.1)',
-                      fontSize: '13px',
-                      color: '#6b5d5d',
-                      textAlign: 'center'
-                    }}>
-                      {column.status === 'todo' ? 'No tickets yet. Add your first one.' : 'No tickets in this column yet.'}
+                  <h3 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>
+                    {isSignedIn ? 'Add your first ticket' : 'Sign in to create tickets'}
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    {isSignedIn
+                      ? 'Start with one issue in To Do and organize from there.'
+                      : 'Your board is scoped to your account and selected project.'}
+                  </p>
+                  {isSignedIn && (
+                    <div style={{ marginTop: '8px', display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => setShowQuickCreate(true)}
+                        style={{
+                          padding: '10px 20px',
+                          background: 'linear-gradient(135deg, rgba(168, 85, 247, 0.8), rgba(139, 92, 246, 0.8))',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '10px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Create First Ticket
+                      </button>
+                      <button
+                        onClick={() => setShowAddFieldModal(true)}
+                        style={{
+                          padding: '10px 16px',
+                          background: '#fff',
+                          color: '#475569',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '10px',
+                          fontSize: '14px',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        + Add Column
+                      </button>
                     </div>
                   )}
+                </div>
+              )}
 
-                  {columnTickets.map((ticket, index) => (
-                    <div
-                      key={ticket.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, ticket)}
-                      onClick={() => handleTicketClick(ticket)}
-                      style={{
-                        background: 'var(--surface-card)',
-                        borderRadius: '16px',
-                        padding: isPhoneViewport ? '14px' : '18px',
-                        cursor: 'grab',
-                        transition: 'all 0.2s ease',
-                        border: draggedTicket?.id === ticket.id
-                          ? '1px solid rgba(168, 85, 247, 0.5)'
-                          : '1px solid var(--card-border)',
-                        opacity: draggedTicket?.id === ticket.id ? 0.8 : 1,
-                        transform: draggedTicket?.id === ticket.id ? 'rotate(2deg)' : 'none',
-                        animation: `cardEnter 0.3s ease ${index * 0.05}s both`
-                      }}
-                      onMouseEnter={(e) => {
-                        if (draggedTicket?.id !== ticket.id) {
-                          e.currentTarget.style.transform = 'translateY(-2px)'
-                          e.currentTarget.style.background = 'var(--surface-card-hover)'
-                          e.currentTarget.style.borderColor = 'var(--glass-border-hover)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (draggedTicket?.id !== ticket.id) {
-                          e.currentTarget.style.transform = 'translateY(0)'
-                          e.currentTarget.style.background = 'var(--surface-card)'
-                          e.currentTarget.style.borderColor = 'var(--card-border)'
-                        }
-                      }}
-                    >
-                      {/* Top Row: Priority + GitLab */}
+              {tickets.length > 0 && filteredTickets.length === 0 && (
+                <div style={{
+                  width: '100%',
+                  minWidth: isPhoneViewport ? 'calc(100vw - 24px)' : '520px',
+                  background: 'rgba(55, 45, 55, 0.5)',
+                  borderRadius: '20px',
+                  padding: isPhoneViewport ? '20px' : '32px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '12px',
+                  textAlign: 'center',
+                  border: '1px solid rgba(255,255,255,0.06)'
+                }}>
+                  <h3 style={{ margin: 0, fontSize: '22px', color: 'var(--text-primary)', fontFamily: "'Outfit', sans-serif" }}>No matching tickets</h3>
+                  <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+                    Try a different search term.
+                  </p>
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      marginTop: '8px',
+                      padding: '8px 16px',
+                      background: 'var(--btn-secondary-bg)',
+                      color: 'var(--btn-secondary-text)',
+                      border: '1px solid var(--btn-secondary-border)',
+                      borderRadius: '10px',
+                      fontSize: '13px',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Clear Search
+                  </button>
+                </div>
+              )}
+
+              {tickets.length > 0 && filteredTickets.length > 0 && COLUMNS.map((column) => {
+                const columnTickets = getTicketsByStatus(column.status)
+
+                return (
+                  <div
+                    key={column.id}
+                    style={{
+                      width: isPhoneViewport ? '82vw' : '320px',
+                      background: dragOverColumn === column.id
+                        ? 'var(--surface-card-hover)'
+                        : 'var(--card-bg)',
+                      backdropFilter: 'blur(20px)',
+                      borderRadius: '20px',
+                      padding: isPhoneViewport ? '16px' : '20px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      border: dragOverColumn === column.id
+                        ? '2px dashed rgba(168, 85, 247, 0.5)'
+                        : '1px solid var(--card-border)',
+                      transition: 'all 0.2s'
+                    }}
+                    onDragOver={(e) => handleDragOver(e, column.id)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, column.status)}
+                  >
+                    {/* Column Header */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '16px',
+                      paddingBottom: '12px',
+                      borderBottom: '1px solid var(--column-header-border)'
+                    }}>
                       <div style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: '16px'
-                      }}>
-                        {/* Priority Label - Dynamic colors: HIGH=red, MEDIUM=yellow, LOW=green */}
-                        <span style={{
-                          padding: '6px 14px',
-                          borderRadius: '10px',
-                          fontSize: '10px',
-                          fontWeight: 600,
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.5px',
-                          background: (() => {
-                            switch (ticket.priority) {
-                              case 'high': return 'var(--priority-high-bg)';
-                              case 'medium': return 'var(--priority-medium-bg)';
-                              case 'low': return 'var(--priority-low-bg)';
-                              default: return 'var(--priority-low-bg)';
-                            }
-                          })(),
-                          color: (() => {
-                            switch (ticket.priority) {
-                              case 'high': return 'var(--priority-high-text)';
-                              case 'medium': return 'var(--priority-medium-text)';
-                              case 'low': return 'var(--priority-low-text)';
-                              default: return 'var(--priority-low-text)';
-                            }
-                          })(),
-                          border: (() => {
-                            switch (ticket.priority) {
-                              case 'high': return '1px solid var(--priority-high-border)';
-                              case 'medium': return '1px solid var(--priority-medium-border)';
-                              case 'low': return '1px solid var(--priority-low-border)';
-                              default: return '1px solid var(--priority-low-border)';
-                            }
-                          })()
-                        }}>
-                          {getPriorityLabel(ticket.priority)}
-                        </span>
-                        
-                        {/* Version - Top right */}
-                        {ticket.version && (
-                          <span style={{
-                            padding: '6px 14px',
-                            background: 'var(--version-bg)',
-                            color: 'var(--version-text)',
-                            borderRadius: '10px',
-                            fontSize: '11px',
-                            fontWeight: 500,
-                            border: '1px solid var(--version-border)'
-                          }}>
-                            {ticket.version}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Title */}
-                      <div style={{
-                        fontSize: isPhoneViewport ? '14px' : '15px',
-                        fontWeight: 500,
-                        color: 'var(--text-primary)',
-                        marginBottom: '16px',
-                        lineHeight: 1.5,
+                        gap: '10px',
+                        fontWeight: 600,
+                        fontSize: '13px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        color: 'var(--column-header-text)',
                         fontFamily: "'Outfit', sans-serif"
-                      }}>{ticket.title}</div>
+                      }}>
+                        {column.title}
+                      </div>
+                      <span style={{
+                        padding: '4px 12px',
+                        background: 'var(--column-count-bg)',
+                        borderRadius: '999px',
+                        fontSize: '13px',
+                        color: 'var(--column-count-text)',
+                        fontWeight: 600
+                      }}>{columnTickets.length}</span>
+                    </div>
 
-                       {/* Bottom Row: Version + Status + Avatar */}
-                       <div style={{
-                         display: 'flex',
-                         justifyContent: 'space-between',
-                         alignItems: 'center'
-                       }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            {/* GitLab Issue Number - Orange fox pill */}
-                            {ticket.gitlabIssueNumber && (
+                    {/* Cards */}
+                    <div style={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}>
+                      {columnTickets.length === 0 && (
+                        <div style={{
+                          padding: '16px',
+                          borderRadius: '12px',
+                          border: '1px dashed rgba(255,255,255,0.1)',
+                          fontSize: '13px',
+                          color: '#6b5d5d',
+                          textAlign: 'center'
+                        }}>
+                          {column.status === 'todo' ? 'No tickets yet. Add your first one.' : 'No tickets in this column yet.'}
+                        </div>
+                      )}
+
+                      {columnTickets.map((ticket, index) => (
+                        <div
+                          key={ticket.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, ticket)}
+                          onClick={() => handleTicketClick(ticket)}
+                          style={{
+                            background: 'var(--surface-card)',
+                            borderRadius: '16px',
+                            padding: isPhoneViewport ? '14px' : '18px',
+                            cursor: 'grab',
+                            transition: 'all 0.2s ease',
+                            border: draggedTicket?.id === ticket.id
+                              ? '1px solid rgba(168, 85, 247, 0.5)'
+                              : '1px solid var(--card-border)',
+                            opacity: draggedTicket?.id === ticket.id ? 0.8 : 1,
+                            transform: draggedTicket?.id === ticket.id ? 'rotate(2deg)' : 'none',
+                            animation: `cardEnter 0.3s ease ${index * 0.05}s both`
+                          }}
+                          onMouseEnter={(e) => {
+                            if (draggedTicket?.id !== ticket.id) {
+                              e.currentTarget.style.transform = 'translateY(-2px)'
+                              e.currentTarget.style.background = 'var(--surface-card-hover)'
+                              e.currentTarget.style.borderColor = 'var(--glass-border-hover)'
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (draggedTicket?.id !== ticket.id) {
+                              e.currentTarget.style.transform = 'translateY(0)'
+                              e.currentTarget.style.background = 'var(--surface-card)'
+                              e.currentTarget.style.borderColor = 'var(--card-border)'
+                            }
+                          }}
+                        >
+                          {/* Top Row: Priority + GitLab */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '16px'
+                          }}>
+                            {/* Priority Label - Dynamic colors: HIGH=red, MEDIUM=yellow, LOW=green */}
+                            <span style={{
+                              padding: '6px 14px',
+                              borderRadius: '10px',
+                              fontSize: '10px',
+                              fontWeight: 600,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.5px',
+                              background: (() => {
+                                switch (ticket.priority) {
+                                  case 'high': return 'var(--priority-high-bg)';
+                                  case 'medium': return 'var(--priority-medium-bg)';
+                                  case 'low': return 'var(--priority-low-bg)';
+                                  default: return 'var(--priority-low-bg)';
+                                }
+                              })(),
+                              color: (() => {
+                                switch (ticket.priority) {
+                                  case 'high': return 'var(--priority-high-text)';
+                                  case 'medium': return 'var(--priority-medium-text)';
+                                  case 'low': return 'var(--priority-low-text)';
+                                  default: return 'var(--priority-low-text)';
+                                }
+                              })(),
+                              border: (() => {
+                                switch (ticket.priority) {
+                                  case 'high': return '1px solid var(--priority-high-border)';
+                                  case 'medium': return '1px solid var(--priority-medium-border)';
+                                  case 'low': return '1px solid var(--priority-low-border)';
+                                  default: return '1px solid var(--priority-low-border)';
+                                }
+                              })()
+                            }}>
+                              {getPriorityLabel(ticket.priority)}
+                            </span>
+
+                            {/* Version - Top right */}
+                            {ticket.version && (
                               <span style={{
-                                padding: '6px 12px',
-                                background: 'var(--gitlab-bg)',
-                                color: 'var(--gitlab-text)',
+                                padding: '6px 14px',
+                                background: 'var(--version-bg)',
+                                color: 'var(--version-text)',
                                 borderRadius: '10px',
-                                fontSize: '10px',
-                                fontWeight: 600,
-                                border: '1px solid var(--gitlab-border)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
-                              }}
-                              >
-                                🦊 #{ticket.gitlabIssueNumber}
+                                fontSize: '11px',
+                                fontWeight: 500,
+                                border: '1px solid var(--version-border)'
+                              }}>
+                                {ticket.version}
                               </span>
                             )}
-                             
-                             {/* Sync Status */}
-                             {isTicketSyncing(ticket.id) && (
-                               <span style={{
-                                 padding: '6px 12px',
-                                 background: 'var(--sync-pending-bg)',
-                                 color: 'var(--sync-pending-text)',
-                                 borderRadius: '10px',
-                                 fontSize: '10px',
-                                 fontWeight: 600,
-                                 border: '1px solid var(--sync-pending-border)',
-                                 display: 'flex',
-                                 alignItems: 'center',
-                                 gap: '4px'
-                               }}
-                             >
-                                 ⏳ Syncing...
-                               </span>
-                             )}
-                             {gitlabSyncErrors[ticket.id] && !isTicketSyncing(ticket.id) && (
-                               <button
-                                 onClick={(event) => handleInlineRetrySync(event, ticket)}
-                                 style={{
-                                   padding: '6px 12px',
-                                   background: 'var(--sync-error-bg)',
-                                   color: 'var(--sync-error-text)',
-                                   borderRadius: '10px',
-                                   fontSize: '10px',
-                                   fontWeight: 600,
-                                   border: '1px solid var(--sync-error-border)',
-                                   cursor: 'pointer'
-                                 }}
-                                 title={gitlabSyncErrors[ticket.id]}
-                               >
-                                 Retry
-                               </button>
-                             )}
+                          </div>
+
+                          {/* Title */}
+                          <div style={{
+                            fontSize: isPhoneViewport ? '14px' : '15px',
+                            fontWeight: 500,
+                            color: 'var(--text-primary)',
+                            marginBottom: '16px',
+                            lineHeight: 1.5,
+                            fontFamily: "'Outfit', sans-serif"
+                          }}>{ticket.title}</div>
+
+                          {/* Bottom Row: Version + Status + Avatar */}
+                          <div style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              {/* GitLab Issue Number - Orange fox pill */}
+                              {ticket.gitlabIssueNumber && (
+                                <span style={{
+                                  padding: '6px 12px',
+                                  background: 'var(--gitlab-bg)',
+                                  color: 'var(--gitlab-text)',
+                                  borderRadius: '10px',
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                  border: '1px solid var(--gitlab-border)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                >
+                                  🦊 #{ticket.gitlabIssueNumber}
+                                </span>
+                              )}
+
+                              {/* Sync Status */}
+                              {isTicketSyncing(ticket.id) && (
+                                <span style={{
+                                  padding: '6px 12px',
+                                  background: 'var(--sync-pending-bg)',
+                                  color: 'var(--sync-pending-text)',
+                                  borderRadius: '10px',
+                                  fontSize: '10px',
+                                  fontWeight: 600,
+                                  border: '1px solid var(--sync-pending-border)',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                >
+                                  ⏳ Syncing...
+                                </span>
+                              )}
+                              {gitlabSyncErrors[ticket.id] && !isTicketSyncing(ticket.id) && (
+                                <button
+                                  onClick={(event) => handleInlineRetrySync(event, ticket)}
+                                  style={{
+                                    padding: '6px 12px',
+                                    background: 'var(--sync-error-bg)',
+                                    color: 'var(--sync-error-text)',
+                                    borderRadius: '10px',
+                                    fontSize: '10px',
+                                    fontWeight: 600,
+                                    border: '1px solid var(--sync-error-border)',
+                                    cursor: 'pointer'
+                                  }}
+                                  title={gitlabSyncErrors[ticket.id]}
+                                >
+                                  Retry
+                                </button>
+                              )}
                               {!gitlabSyncErrors[ticket.id] && gitlabLastSyncedAt[ticket.id] && !isTicketSyncing(ticket.id) && (
                                 <span style={{
                                   padding: '6px 12px',
@@ -3856,75 +3856,76 @@ export function AppPage() {
                                   alignItems: 'center',
                                   gap: '4px'
                                 }}
-                              >
+                                >
                                   ✓ Synced {formatSyncTime(gitlabLastSyncedAt[ticket.id])}
                                 </span>
                               )}
-                           </div>
-                         {getAssigneeMember(ticket.assignee)?.avatarUrl ? (
-                           <img
-                            src={getAssigneeMember(ticket.assignee)?.avatarUrl ?? ''}
-                            alt={ticket.assignee || 'Assignee avatar'}
-                            style={{
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '50%',
-                              objectFit: 'cover',
-                              border: '1px solid var(--avatar-border)'
-                            }}
-                            title={getAssigneeTitle(ticket.assignee)}
-                          />
-                        ) : (
-                          <div style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '50%',
-                            background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                            display: 'grid',
-                            placeItems: 'center',
-                            color: '#fff',
-                            fontSize: '11px',
-                            fontWeight: 600
-                          }}
-                          title={getAssigneeTitle(ticket.assignee)}
-                          >
-                            {getAssigneeInitials(ticket.assignee)}
+                            </div>
+                            {getAssigneeMember(ticket.assignee)?.avatarUrl ? (
+                              <img
+                                src={getAssigneeMember(ticket.assignee)?.avatarUrl ?? ''}
+                                alt={ticket.assignee || 'Assignee avatar'}
+                                style={{
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover',
+                                  border: '1px solid var(--avatar-border)'
+                                }}
+                                title={getAssigneeTitle(ticket.assignee)}
+                              />
+                            ) : (
+                              <div style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                background: 'linear-gradient(135deg, #667eea, #764ba2)',
+                                display: 'grid',
+                                placeItems: 'center',
+                                color: '#fff',
+                                fontSize: '11px',
+                                fontWeight: 600
+                              }}
+                                title={getAssigneeTitle(ticket.assignee)}
+                              >
+                                {getAssigneeInitials(ticket.assignee)}
+                              </div>
+                            )}
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ))}
+
+                      {/* Add card button */}
+                      <div style={{
+                        padding: '14px',
+                        border: '1px dashed var(--add-btn-border)',
+                        borderRadius: '12px',
+                        textAlign: 'center',
+                        color: 'var(--add-btn-text)',
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        marginTop: '8px',
+                        background: 'transparent'
+                      }}
+                        onClick={() => setShowQuickCreate(true)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--add-btn-hover-border)'
+                          e.currentTarget.style.color = 'var(--add-btn-hover-text)'
+                          e.currentTarget.style.background = 'var(--add-btn-hover-bg)'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = 'var(--add-btn-border)'
+                          e.currentTarget.style.color = 'var(--add-btn-text)'
+                          e.currentTarget.style.background = 'transparent'
+                        }}
+                      >+ Add Ticket</div>
                     </div>
-                  ))}
-                  
-                  {/* Add card button */}
-                  <div style={{
-                    padding: '14px',
-                    border: '1px dashed var(--add-btn-border)',
-                    borderRadius: '12px',
-                    textAlign: 'center',
-                    color: 'var(--add-btn-text)',
-                    fontSize: '14px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    marginTop: '8px',
-                    background: 'transparent'
-                  }}
-                  onClick={() => setShowQuickCreate(true)}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--add-btn-hover-border)'
-                    e.currentTarget.style.color = 'var(--add-btn-hover-text)'
-                    e.currentTarget.style.background = 'var(--add-btn-hover-bg)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'var(--add-btn-border)'
-                    e.currentTarget.style.color = 'var(--add-btn-text)'
-                    e.currentTarget.style.background = 'transparent'
-                  }}
-                  >+ Add Ticket</div>
-                </div>
-              </div>
-            )})}
+                  </div>
+                )
+              })}
+            </div>
           </div>
-        </div>
         ) : activeView === 'roadmap' ? (
           <div style={{
             flex: 1,
@@ -4249,14 +4250,14 @@ export function AppPage() {
                                   const roadmapTicketFieldPreview = roadmapSelectedCustomField
                                     ? formatCustomFieldValue(roadmapSelectedCustomField, ticket.customFields?.[roadmapSelectedCustomField.id])
                                     : (() => {
-                                        const nextField = projectFields.find((field) => normalizeCustomValue(ticket.customFields?.[field.id]))
-                                        return nextField
-                                          ? formatCustomFieldValue(nextField, ticket.customFields?.[nextField.id])
-                                          : ''
-                                      })()
+                                      const nextField = projectFields.find((field) => normalizeCustomValue(ticket.customFields?.[field.id]))
+                                      return nextField
+                                        ? formatCustomFieldValue(nextField, ticket.customFields?.[nextField.id])
+                                        : ''
+                                    })()
 
                                   return (
-                                      <article
+                                    <article
                                       key={ticket.id}
                                       draggable
                                       onDragStart={(event) => handleRoadmapTicketDragStart(event, ticket.id)}
@@ -4684,10 +4685,10 @@ export function AppPage() {
                                   color: 'var(--text-primary)',
                                   minWidth:
                                     column.id === 'title' ? '240px'
-                                    : column.id === 'comments' ? '320px'
-                                    : column.id === 'owner' ? '240px'
-                                    : column.id === 'ticket' ? '120px'
-                                    : '160px',
+                                      : column.id === 'comments' ? '320px'
+                                        : column.id === 'owner' ? '240px'
+                                          : column.id === 'ticket' ? '120px'
+                                            : '160px',
                                   whiteSpace: column.id === 'comments' ? 'normal' : 'nowrap',
                                   verticalAlign: 'top',
                                   background: isEditing ? 'var(--surface-dark)' : undefined,
@@ -4745,7 +4746,7 @@ export function AppPage() {
           zIndex: 1000,
           padding: isPhoneViewport ? '10px' : 0
         }}
-        onClick={() => setShowQuickCreate(false)}
+          onClick={() => setShowQuickCreate(false)}
         >
           <div style={{
             width: 'min(480px, calc(100vw - 20px))',
@@ -4757,7 +4758,7 @@ export function AppPage() {
             maxHeight: isPhoneViewport ? '88vh' : 'none',
             overflowY: 'auto'
           }}
-          onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div style={{
               display: 'flex',
@@ -4768,7 +4769,7 @@ export function AppPage() {
               <h3 style={{ fontSize: '18px', fontWeight: 600, color: 'var(--modal-title-text)' }}>✨ Quick Create</h3>
               <span style={{ color: 'var(--modal-label-text)', fontSize: '14px' }}>ESC to close</span>
             </div>
-            
+
             <textarea
               value={quickInput}
               onChange={(e) => handleInputChange(e.target.value)}
@@ -4788,7 +4789,7 @@ export function AppPage() {
               }}
               autoFocus
             />
-            
+
             {isGenerating && (
               <div style={{
                 padding: '10px',
@@ -4802,7 +4803,7 @@ export function AppPage() {
                 Generating title...
               </div>
             )}
-            
+
             {aiSuggestion && !isGenerating && (
               <div style={{
                 padding: '14px',
@@ -4823,7 +4824,7 @@ export function AppPage() {
                 <div style={{ fontSize: '14px', color: 'var(--modal-ai-text)', fontWeight: 500 }}>{aiSuggestion}</div>
               </div>
             )}
-            
+
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 onClick={() => setShowQuickCreate(false)}
@@ -4866,7 +4867,7 @@ export function AppPage() {
             left: 0,
             right: 0,
             bottom: 0,
-          background: 'var(--modal-overlay-bg)',
+            background: 'var(--modal-overlay-bg)',
             display: 'flex',
             alignItems: isPhoneViewport ? 'flex-end' : 'center',
             justifyContent: 'center',
@@ -5019,7 +5020,7 @@ export function AppPage() {
           zIndex: 1000,
           overflowY: 'auto'
         }}
-        onClick={closeTicketDetail}
+          onClick={closeTicketDetail}
         >
           <div style={{
             width: 'min(1180px, calc(100vw - 32px))',
@@ -5031,7 +5032,7 @@ export function AppPage() {
             padding: '26px',
             overflowY: 'auto'
           }}
-          onClick={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
           >
             <div style={{
               display: 'flex',

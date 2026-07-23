@@ -4,7 +4,7 @@
   "scripts": {
     "dev": "concurrently \"npm run worker:dev\" \"npm run frontend:dev\"",
     "frontend:dev": "vite --port 3000 --host 0.0.0.0",
-    "worker:dev": "wrangler dev worker/index.ts --port 8787 --local",
+    "worker:dev": "wrangler dev worker/index.ts --port 8789 --local",
     "worker:deploy": "wrangler deploy",
     "deploy:worker": "wrangler deploy",
     "deploy:pages": "wrangler pages deploy dist/public --project-name=sprintflow-beta --branch=main --commit-dirty=true",

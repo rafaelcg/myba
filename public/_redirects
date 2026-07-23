@@ -1,2 +1,4 @@
-/api/* https://sprintflow.rafaelcg-a0a.workers.dev/api/:splat 200
-/* /index.html 200
+# SPA fallback only.
+# Do NOT proxy /api/* here — Cloudflare Pages cannot proxy external origins
+# via _redirects. /api/* is handled by functions/api/[[path]].ts.
+/*    /index.html   200

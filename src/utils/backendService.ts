@@ -3,13 +3,13 @@ import { analyzeInput, buildEnhancedPrompt } from './promptEngine';
 import { TOKEN_COSTS } from './tokenSystem';
 
 // Backend API Configuration
-// Prefer explicit env, then dev detection via Vite, else relative prod path
-const EXPLICIT_BASE = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
+// Prefer explicit env, then local MyBA worker, else production Worker URL.
+const EXPLICIT_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
 export const API_BASE_URL = EXPLICIT_BASE
   ? EXPLICIT_BASE.replace(/\/$/, '')
-  : (import.meta.env && (import.meta.env as any).DEV
-      ? 'http://localhost:3001/api'
-      : `${window.location.protocol}//${window.location.hostname}/api`);
+  : (import.meta.env.DEV
+      ? 'http://localhost:8789/api'
+      : 'https://sprintflow.rafaelcg-a0a.workers.dev/api');
 
 // Backend AI Service
 export class BackendAIService {

@@ -21,15 +21,15 @@ export function ClerkProvider({ children }: ClerkProviderProps) {
     );
   }
 
-  const basePath = '/';
+  // Modal-only auth: do not set signInUrl/signUpUrl to `/` — that makes Clerk
+  // treat the landing page as the sign-in route and breaks OAuth/email handoffs.
+  const afterAuthUrl = '/app';
 
   return (
     <BaseClerkProvider 
       publishableKey={PUBLISHABLE_KEY}
-      afterSignInUrl={basePath}
-      afterSignUpUrl={basePath}
-      signInUrl={basePath}
-      signUpUrl={basePath}
+      afterSignInUrl={afterAuthUrl}
+      afterSignUpUrl={afterAuthUrl}
       appearance={{
         baseTheme: undefined,
         elements: {

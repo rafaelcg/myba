@@ -1,14 +1,12 @@
-// API client for the Cloudflare Worker backend
-const EXPLICIT_BASE = (import.meta as any).env?.VITE_API_BASE_URL as string | undefined;
-const NORMALIZED_EXPLICIT_BASE = EXPLICIT_BASE?.trim().replace(/\/$/, '');
-
-const API_BASE = import.meta.env.DEV
-  ? 'http://localhost:8787/api'
-  : (NORMALIZED_EXPLICIT_BASE
-      ? (NORMALIZED_EXPLICIT_BASE.endsWith('/api')
-          ? NORMALIZED_EXPLICIT_BASE
-          : `${NORMALIZED_EXPLICIT_BASE}/api`)
-      : '/api');
+// API client for the Cloudflare Worker backend.
+// Prefer VITE_API_BASE_URL. Production falls back to the Worker URL because
+// Cloudflare Pages cannot proxy external origins via `_redirects` — relative
+// `/api` used to return index.html and blow up with DOCTYPE JSON parse errors.
+const ENV_API_BASE = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '');
+const PRODUCTION_API_FALLBACK = 'https://sprintflow.rafaelcg-a0a.workers.dev/api';
+const API_BASE = ENV_API_BASE
+  ? (ENV_API_BASE.endsWith('/api') ? ENV_API_BASE : `${ENV_API_BASE}/api`)
+  : (import.meta.env.DEV ? 'http://localhost:8789/api' : PRODUCTION_API_FALLBACK);
 
 interface BackendTicket {
   id: string;
@@ -107,6 +105,23 @@ async function getErrorMessage(res: Response, fallback: string): Promise<string>
   }
 }
 
+async function readJson<T>(res: Response, fallback: string): Promise<T> {
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      `${fallback}. API at ${API_BASE} returned ${res.status} ${contentType || 'non-JSON'} — is the MyBA worker running?`
+    );
+  }
+
+  try {
+    return await res.json() as T;
+  } catch {
+    throw new Error(
+      `${fallback}. API at ${API_BASE} returned invalid JSON — is the MyBA worker running on the expected port?`
+    );
+  }
+}
+
 export interface Ticket {
   id: string;
   title: string;
@@ -185,7 +200,7 @@ export const ticketsApi = {
       headers: withTicketContext(token, projectKey),
     });
     if (!res.ok) throw new Error(await getErrorMessage(res, 'Failed to fetch tickets'));
-    const data = await res.json() as BackendTicket[];
+    const data = await readJson<BackendTicket[]>(res, 'Failed to fetch tickets');
     return data.map(mapTicket);
   },
 

@@ -1,5 +1,85 @@
+import { FormEvent, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useUser, useClerk } from '../lib/auth'
+import { authClient, useUser, useClerk } from '../lib/auth'
+
+function ChangePasswordForm() {
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null)
+  const [saving, setSaving] = useState(false)
+
+  const inputStyle = {
+    width: '100%',
+    padding: '10px 12px',
+    borderRadius: 8,
+    border: '1px solid #e2e8f0',
+    fontSize: 14,
+    boxSizing: 'border-box' as const
+  }
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault()
+    setSaving(true)
+    setMessage(null)
+    const result = await authClient.changePassword({
+      currentPassword,
+      newPassword,
+      revokeOtherSessions: true
+    })
+    if (result.error) {
+      setMessage({ ok: false, text: result.error.message || 'Could not change password.' })
+    } else {
+      setMessage({ ok: true, text: 'Password updated.' })
+      setCurrentPassword('')
+      setNewPassword('')
+    }
+    setSaving(false)
+  }
+
+  return (
+    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+      <div style={{ fontSize: 12, color: '#94a3b8', textTransform: 'uppercase' }}>Change password</div>
+      <input
+        type="password"
+        value={currentPassword}
+        onChange={(event) => setCurrentPassword(event.target.value)}
+        placeholder="Current password"
+        required
+        autoComplete="current-password"
+        style={inputStyle}
+      />
+      <input
+        type="password"
+        value={newPassword}
+        onChange={(event) => setNewPassword(event.target.value)}
+        placeholder="New password (min 8 characters)"
+        required
+        minLength={8}
+        autoComplete="new-password"
+        style={inputStyle}
+      />
+      {message && (
+        <div style={{ fontSize: 13, color: message.ok ? '#27ae60' : '#e74c3c' }}>{message.text}</div>
+      )}
+      <button
+        type="submit"
+        disabled={saving}
+        style={{
+          padding: '10px 16px',
+          borderRadius: 8,
+          border: '1px solid #e2e8f0',
+          background: 'white',
+          color: '#0f172a',
+          fontSize: 14,
+          fontWeight: 600,
+          cursor: saving ? 'wait' : 'pointer'
+        }}
+      >
+        {saving ? 'Saving…' : 'Update password'}
+      </button>
+    </form>
+  )
+}
 
 export function UserProfilePage() {
   const { user, isLoaded } = useUser()
@@ -49,6 +129,7 @@ export function UserProfilePage() {
                 </div>
               </div>
             </div>
+            <ChangePasswordForm />
             <div style={{ display: 'flex', gap: 12 }}>
               <Link
                 to="/app"

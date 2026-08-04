@@ -1,6 +1,8 @@
 name = "sprintflow"
 main = "worker/index.ts"
-compatibility_date = "2024-01-01"
+compatibility_date = "2025-01-01"
+# Better Auth's password hashing imports node:crypto.
+compatibility_flags = ["nodejs_compat"]
 
 # Cloudflare D1 Database
 [[d1_databases]]
@@ -11,6 +13,9 @@ database_id = "71848299-73a0-4d98-a265-8653eac26a0b"
 # Environment variables
 [vars]
 ENVIRONMENT = "production"
+# Public origin the SPA is served from; Better Auth builds OAuth redirect
+# URLs and cookies against this (requests arrive via the Pages /api proxy).
+BETTER_AUTH_URL = "https://sprintflow-beta.pages.dev"
 
 # Secrets (set via wrangler secret put)
 # - OPENROUTER_API_KEY
@@ -18,7 +23,9 @@ ENVIRONMENT = "production"
 # - GITLAB_CLIENT_SECRET
 # - GITLAB_TOKEN_ENCRYPTION_KEY
 # - GITLAB_WEBHOOK_SECRET
-# - CLERK_SECRET_KEY
+# - BETTER_AUTH_SECRET
+# - GOOGLE_CLIENT_ID (Google OAuth client for "Sign in with Google")
+# - GOOGLE_CLIENT_SECRET
 # Optional non-secret var:
 # - APP_BASE_URL (frontend origin, e.g. https://app.yourdomain.com)
 

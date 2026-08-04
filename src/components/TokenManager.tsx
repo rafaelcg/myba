@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '../lib/auth';
 import { getTokenBalance, TokenBalance, getUsageStats, isNewUser, addTokens } from '../utils/tokenSystem';
 import { API_BASE_URL } from '../utils/backendService';
 import { trackCheckoutStarted, trackPurchaseInitiated } from '../utils/analytics';

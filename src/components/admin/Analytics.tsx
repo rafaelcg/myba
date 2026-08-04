@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 import { API_BASE_URL } from '../../utils/backendService';
 import { Bar, Pie } from 'react-chartjs-2';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../../lib/auth';
 
 ChartJS.register(
   CategoryScale,

@@ -1,4 +1,4 @@
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
+import { SignInButton, SignUpButton, UserButton, useUser } from '../lib/auth';
 
 export function AuthButton() {
   const { isSignedIn, user, isLoaded } = useUser();
@@ -55,7 +55,7 @@ export function AuthButton() {
           backdropFilter: 'blur(10px)',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
         }}>
-          Hi, {user.firstName || user.emailAddresses[0]?.emailAddress.split('@')[0]}!
+          Hi, {user?.firstName || user?.emailAddresses[0]?.emailAddress.split('@')[0]}!
         </div>
         
         {/* User button with profile/logout */}

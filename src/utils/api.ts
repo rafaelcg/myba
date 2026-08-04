@@ -1,12 +1,11 @@
 // API client for the Cloudflare Worker backend.
-// Prefer VITE_API_BASE_URL. Production falls back to the Worker URL because
-// Cloudflare Pages cannot proxy external origins via `_redirects` — relative
-// `/api` used to return index.html and blow up with DOCTYPE JSON parse errors.
+// Same-origin `/api` everywhere: production proxies to the Worker via the
+// Pages Function (functions/api/[[path]].ts), dev proxies via vite.config.ts.
+// Same-origin is required so Better Auth session cookies ride along.
 const ENV_API_BASE = import.meta.env.VITE_API_BASE_URL?.trim().replace(/\/$/, '');
-const PRODUCTION_API_FALLBACK = 'https://sprintflow.rafaelcg-a0a.workers.dev/api';
 const API_BASE = ENV_API_BASE
   ? (ENV_API_BASE.endsWith('/api') ? ENV_API_BASE : `${ENV_API_BASE}/api`)
-  : (import.meta.env.DEV ? 'http://localhost:8789/api' : PRODUCTION_API_FALLBACK);
+  : '/api';
 
 interface BackendTicket {
   id: string;

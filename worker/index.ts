@@ -3,6 +3,7 @@ import { ticketsHandler } from './routes/tickets';
 import { aiHandler } from './routes/ai';
 import { gitlabHandler } from './routes/gitlab';
 import { initializeDatabase } from './db';
+import { getAuth } from './betterAuth';
 
 export interface Env {
   DB: D1Database;
@@ -11,7 +12,10 @@ export interface Env {
   GITLAB_CLIENT_SECRET: string;
   GITLAB_TOKEN_ENCRYPTION_KEY: string;
   GITLAB_WEBHOOK_SECRET?: string;
-  CLERK_SECRET_KEY: string;
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL?: string;
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
   APP_BASE_URL?: string;
   ENVIRONMENT: string;
 }
@@ -42,6 +46,14 @@ export default {
       } catch (error) {
         console.error('Failed to initialize database:', error);
       }
+    }
+
+    // Better Auth owns everything under /api/auth (sessions, OAuth, sign-in).
+    // Reached same-origin via the Pages proxy, so no CORS headers here —
+    // wildcard origins are incompatible with credentialed cookie requests.
+    const url = new URL(request.url);
+    if (url.pathname.startsWith('/api/auth/')) {
+      return getAuth(env).handler(request);
     }
 
     // Routes

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, SignUpButton, useAuth } from '@clerk/clerk-react';
+import { useUser, SignUpButton, useAuth } from '../lib/auth';
 import { InputField } from './InputField';
 import { GenerateButton } from './GenerateButton';
 import { LoadingSpinner } from './LoadingSpinner';

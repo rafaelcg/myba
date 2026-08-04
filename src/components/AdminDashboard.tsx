@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useUser, useAuth } from '@clerk/clerk-react';
+import { useUser, useAuth } from '../lib/auth';
 import { API_BASE_URL } from '../utils/backendService';
 import { UserList } from './admin/UserList';
 import { Analytics } from './admin/Analytics';

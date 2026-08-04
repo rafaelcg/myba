@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { API_BASE_URL } from '../../utils/backendService';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth } from '../../lib/auth';
 
 interface SystemHealthData {
   timestamp: string;

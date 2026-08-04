@@ -3,13 +3,10 @@ import { analyzeInput, buildEnhancedPrompt } from './promptEngine';
 import { TOKEN_COSTS } from './tokenSystem';
 
 // Backend API Configuration
-// Prefer explicit env, then local MyBA worker, else production Worker URL.
-const EXPLICIT_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
-export const API_BASE_URL = EXPLICIT_BASE
-  ? EXPLICIT_BASE.replace(/\/$/, '')
-  : (import.meta.env.DEV
-      ? 'http://localhost:8789/api'
-      : 'https://sprintflow.rafaelcg-a0a.workers.dev/api');
+// Same-origin /api so Better Auth session cookies are sent with requests
+// (Pages Function proxy in production, vite proxy in dev).
+const EXPLICIT_BASE = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim();
+export const API_BASE_URL = EXPLICIT_BASE ? EXPLICIT_BASE.replace(/\/$/, '') : '/api';
 
 // Backend AI Service
 export class BackendAIService {

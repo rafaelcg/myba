@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { SignInButton, UserButton, useAuth, useClerk, useUser } from '@clerk/clerk-react'
+import { SignInButton, UserButton, useAuth, useClerk, useUser } from '../lib/auth'
 import { useShallow } from 'zustand/react/shallow'
 import {
   ticketsApi,

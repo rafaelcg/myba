@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { LandingPage } from './pages/LandingPage'
 import { UserProfilePage } from './components/UserProfilePage'
-import { ClerkProvider } from './components/ClerkProvider'
+import { AuthProvider } from './lib/auth'
 import { AppShellSkeleton } from './components/app/AppShellSkeleton'
 import { initAnalytics } from './utils/analytics'
 import { PrivacyPage } from './pages/PrivacyPage'
@@ -22,7 +22,7 @@ initAnalytics()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ClerkProvider>
+    <AuthProvider>
       <BrowserRouter>
         <Suspense fallback={<AppShellSkeleton message='Opening workspace...' />}>
           <Routes>
@@ -37,6 +37,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </Routes>
         </Suspense>
       </BrowserRouter>
-    </ClerkProvider>
+    </AuthProvider>
   </React.StrictMode>,
 )

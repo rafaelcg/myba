@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react'
+import { SignInButton, SignUpButton, UserButton, useUser } from '../lib/auth'
 import { Link } from 'react-router-dom'
 import { SeoHead } from '../components/SeoHead'
 import { getClerkFallbackAuthUrls } from '../utils/clerk'

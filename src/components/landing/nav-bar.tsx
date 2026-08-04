@@ -1,4 +1,4 @@
-import { SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react'
+import { SignInButton, SignUpButton, UserButton, useUser } from '../../lib/auth'
 import { useEffect, useState } from 'react'
 import { getClerkFallbackAuthUrls } from '../../utils/clerk'
 

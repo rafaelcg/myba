@@ -1,5 +1,5 @@
-import { verifyToken } from '@clerk/backend';
 import type { Env } from './index';
+import { getAuth } from './betterAuth';
 
 export class AuthError extends Error {
   status: number;
@@ -13,30 +13,20 @@ export class AuthError extends Error {
 }
 
 export async function requireUserId(request: Request, env: Env): Promise<string> {
-  const authHeader = request.headers.get('Authorization') || '';
-  const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
-
-  if (!token) {
-    throw new AuthError(401, 'unauthorized', 'Authorization token required');
-  }
-
-  if (!env.CLERK_SECRET_KEY) {
+  if (!env.BETTER_AUTH_SECRET) {
     throw new AuthError(500, 'auth_not_configured', 'Server auth not configured');
   }
 
   try {
-    const payload = await verifyToken(token, { secretKey: env.CLERK_SECRET_KEY });
-    const userId = payload?.sub;
-
-    if (!userId) {
-      throw new AuthError(401, 'unauthorized', 'Invalid token');
+    const session = await getAuth(env).api.getSession({ headers: request.headers });
+    if (session?.user?.id) {
+      return session.user.id;
     }
-
-    return userId;
   } catch (error) {
     if (error instanceof AuthError) {
       throw error;
     }
-    throw new AuthError(401, 'unauthorized', 'Invalid or expired token');
   }
+
+  throw new AuthError(401, 'unauthorized', 'Sign-in required');
 }

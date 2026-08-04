@@ -6,6 +6,7 @@ import { UserProfilePage } from './components/UserProfilePage'
 import { AuthProvider } from './lib/auth'
 import { AppShellSkeleton } from './components/app/AppShellSkeleton'
 import { initAnalytics } from './utils/analytics'
+import { ResetPasswordPage } from './pages/ResetPasswordPage'
 import { PrivacyPage } from './pages/PrivacyPage'
 import { TermsPage } from './pages/TermsPage'
 import { SecurityPage } from './pages/SecurityPage'
@@ -29,6 +30,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <Route path="/" element={<LandingPage />} />
             <Route path="/app" element={<AppPage />} />
             <Route path="/user-profile" element={<UserProfilePage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/security" element={<SecurityPage />} />

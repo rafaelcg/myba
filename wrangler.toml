@@ -10,6 +10,11 @@ binding = "DB"
 database_name = "sprintflow-db"
 database_id = "71848299-73a0-4d98-a265-8653eac26a0b"
 
+# Cloudflare Email Sending (domain mail.generate.ac onboarded in dashboard);
+# used for Better Auth password-reset emails.
+[[send_email]]
+name = "EMAIL"
+
 # Environment variables
 [vars]
 ENVIRONMENT = "production"

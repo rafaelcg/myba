@@ -5,8 +5,21 @@ import { gitlabHandler } from './routes/gitlab';
 import { initializeDatabase } from './db';
 import { getAuth } from './betterAuth';
 
+// Minimal shape of the Cloudflare send_email binding (worker/ isn't covered
+// by tsconfig, so generated worker-configuration types aren't available).
+export interface SendEmailBinding {
+  send(message: {
+    to: string | string[];
+    from: { email: string; name?: string };
+    subject: string;
+    html?: string;
+    text?: string;
+  }): Promise<unknown>;
+}
+
 export interface Env {
   DB: D1Database;
+  EMAIL: SendEmailBinding;
   OPENROUTER_API_KEY: string;
   GITLAB_CLIENT_ID: string;
   GITLAB_CLIENT_SECRET: string;

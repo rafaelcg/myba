@@ -267,6 +267,8 @@ function AuthModal({
   const [name, setName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [forgotView, setForgotView] = useState(false);
+  const [resetRequested, setResetRequested] = useState(false);
 
   useEffect(() => {
     if (data?.user) onClose();
@@ -276,6 +278,19 @@ function AuthModal({
     event.preventDefault();
     setLoading(true);
     setError('');
+    if (forgotView) {
+      const result = await authClient.requestPasswordReset({
+        email,
+        redirectTo: '/reset-password',
+      });
+      if (result.error) {
+        setError(result.error.message || 'Could not send the reset email. Please try again.');
+      } else {
+        setResetRequested(true);
+      }
+      setLoading(false);
+      return;
+    }
     const result =
       mode === 'signIn'
         ? await authClient.signIn.email({ email, password })
@@ -326,16 +341,23 @@ function AuthModal({
         }}
       >
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 600, color: '#2c3e50' }}>
-          {mode === 'signIn' ? 'Sign in to MyBA' : 'Create your MyBA account'}
+          {forgotView ? 'Reset your password' : mode === 'signIn' ? 'Sign in to MyBA' : 'Create your MyBA account'}
         </h2>
         <p style={{ margin: '6px 0 20px', fontSize: 13, color: '#7f8c8d' }}>
-          {mode === 'signIn'
-            ? 'Welcome back! Sign in to continue.'
-            : 'Start turning ideas into sprint-ready tickets.'}
+          {forgotView
+            ? 'Enter your email and we will send you a reset link.'
+            : mode === 'signIn'
+              ? 'Welcome back! Sign in to continue.'
+              : 'Start turning ideas into sprint-ready tickets.'}
         </p>
 
+        {resetRequested ? (
+          <p style={{ margin: 0, fontSize: 14, color: '#27ae60' }}>
+            If an account exists for {email}, a reset link is on its way. Check your inbox.
+          </p>
+        ) : (
         <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {mode === 'signUp' && (
+          {mode === 'signUp' && !forgotView && (
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -353,16 +375,18 @@ function AuthModal({
             autoComplete="email"
             style={inputStyle}
           />
-          <input
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder="Password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
-            style={inputStyle}
-          />
+          {!forgotView && (
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              placeholder="Password"
+              type="password"
+              required
+              minLength={8}
+              autoComplete={mode === 'signIn' ? 'current-password' : 'new-password'}
+              style={inputStyle}
+            />
+          )}
           {error && (
             <div style={{ fontSize: 13, color: '#e74c3c' }}>{error}</div>
           )}
@@ -382,9 +406,34 @@ function AuthModal({
               opacity: loading ? 0.7 : 1,
             }}
           >
-            {loading ? 'Please wait…' : mode === 'signIn' ? 'Sign in' : 'Create account'}
+            {loading
+              ? 'Please wait…'
+              : forgotView
+                ? 'Send reset link'
+                : mode === 'signIn'
+                  ? 'Sign in'
+                  : 'Create account'}
           </button>
+          {mode === 'signIn' && !forgotView && (
+            <button
+              type="button"
+              onClick={() => { setForgotView(true); setError(''); }}
+              style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer', fontSize: 13, padding: 0, alignSelf: 'center' }}
+            >
+              Forgot password?
+            </button>
+          )}
+          {forgotView && (
+            <button
+              type="button"
+              onClick={() => { setForgotView(false); setResetRequested(false); setError(''); }}
+              style={{ background: 'none', border: 'none', color: '#667eea', cursor: 'pointer', fontSize: 13, padding: 0, alignSelf: 'center' }}
+            >
+              Back to sign in
+            </button>
+          )}
         </form>
+        )}
 
         <p style={{ margin: '16px 0 0', fontSize: 13, color: '#64748b', textAlign: 'center' }}>
           {mode === 'signIn' ? (

@@ -9,8 +9,10 @@ import {
   FormEvent,
   ReactNode,
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react';
@@ -54,25 +56,36 @@ function mapUser(
   };
 }
 
+// Hook return values must be referentially stable across renders (as Clerk's
+// are) — components put `user`/`getToken` in useEffect deps, and fresh
+// identities every render would re-run data loading forever.
 export function useUser() {
   const { data, isPending } = authClient.useSession();
-  return {
-    isLoaded: !isPending,
-    isSignedIn: Boolean(data?.user),
-    user: mapUser(data?.user),
-  };
+  const sessionUser = data?.user;
+  const user = useMemo(() => mapUser(sessionUser), [sessionUser]);
+  const isLoaded = !isPending;
+  const isSignedIn = Boolean(sessionUser);
+  return useMemo(() => ({ isLoaded, isSignedIn, user }), [isLoaded, isSignedIn, user]);
 }
 
 export function useAuth() {
   const { data, isPending } = authClient.useSession();
   const isSignedIn = Boolean(data?.user);
-  return {
-    isLoaded: !isPending,
-    isSignedIn,
-    userId: data?.user?.id ?? null,
-    getToken: async (_options?: unknown): Promise<string | null> =>
-      isSignedIn ? 'session-cookie' : null,
-  };
+  const isLoaded = !isPending;
+  const userId = data?.user?.id ?? null;
+
+  const isSignedInRef = useRef(isSignedIn);
+  isSignedInRef.current = isSignedIn;
+  const getToken = useCallback(
+    async (_options?: unknown): Promise<string | null> =>
+      isSignedInRef.current ? 'session-cookie' : null,
+    []
+  );
+
+  return useMemo(
+    () => ({ isLoaded, isSignedIn, userId, getToken }),
+    [isLoaded, isSignedIn, userId, getToken]
+  );
 }
 
 async function signOutAndRedirect(redirectUrl = '/') {
@@ -83,11 +96,13 @@ async function signOutAndRedirect(redirectUrl = '/') {
   }
 }
 
+const clerkCompat = {
+  signOut: (options?: { redirectUrl?: string }) =>
+    signOutAndRedirect(options?.redirectUrl || '/'),
+};
+
 export function useClerk() {
-  return {
-    signOut: (options?: { redirectUrl?: string }) =>
-      signOutAndRedirect(options?.redirectUrl || '/'),
-  };
+  return clerkCompat;
 }
 
 type AuthModalMode = 'signIn' | 'signUp';

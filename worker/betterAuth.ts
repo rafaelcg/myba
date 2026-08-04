@@ -36,6 +36,8 @@ export function getAuth(env: Env) {
     },
     trustedOrigins: [
       'http://localhost:3000',
+      'https://generate.ac',
+      'https://www.generate.ac',
       'https://sprintflow-beta.pages.dev',
     ],
   });

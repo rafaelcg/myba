@@ -13,9 +13,9 @@ database_id = "71848299-73a0-4d98-a265-8653eac26a0b"
 # Environment variables
 [vars]
 ENVIRONMENT = "production"
-# Public origin the SPA is served from; Better Auth builds OAuth redirect
-# URLs and cookies against this (requests arrive via the Pages /api proxy).
-BETTER_AUTH_URL = "https://sprintflow-beta.pages.dev"
+# Canonical public origin (custom domain on the Pages project; the
+# pages.dev and www domains are additionally allowed via trustedOrigins).
+BETTER_AUTH_URL = "https://generate.ac"
 
 # Secrets (set via wrangler secret put)
 # - OPENROUTER_API_KEY
